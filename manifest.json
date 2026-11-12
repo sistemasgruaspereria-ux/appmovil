@@ -1,0 +1,20 @@
+{
+  "name": "Ayax - Grúas Pereira",
+  "short_name": "Ayax",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#040B5D",
+  "theme_color": "#040B5D",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

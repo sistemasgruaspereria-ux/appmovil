@@ -1,0 +1,351 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: #ffffff;
+  color: #111;
+  display: flex;
+  justify-content: center;
+}
+
+/* PANTALLA DE LOGIN Y RECUPERACIÓN */
+.login-screen {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #040B5D;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  z-index: 998;
+}
+
+.login-card {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 400px;
+  padding: 30px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-top: 5px solid #BF956E;
+}
+
+.login-logo {
+  height: 48px;
+  width: auto;
+  margin-bottom: 15px;
+  object-fit: contain;
+}
+
+.login-card h2 {
+  color: #040B5D;
+  font-size: 1.25rem;
+  margin-bottom: 5px;
+}
+
+.login-subtitle {
+  color: #666;
+  font-size: 0.85rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.form-group {
+  width: 100%;
+  margin-bottom: 12px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #040B5D;
+  margin-bottom: 4px;
+}
+
+.form-group input, .form-control, textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #DDC9B8;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  outline: none;
+  background-color: #fff;
+}
+
+.form-group input:focus, .form-control:focus, textarea:focus {
+  border-color: #040B5D;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+}
+
+/* CONTENEDOR TIPO MÓVIL */
+.app-container {
+  width: 100%;
+  max-width: 480px;
+  background-color: #ffffff;
+  min-height: 100vh;
+  box-shadow: 0 0 15px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.hidden { display: none !important; }
+
+/* ENCABEZADO */
+.main-header {
+  background-color: #040B5D;
+  color: #ffffff;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 3px solid #BF956E;
+}
+
+.logo-zone {
+  display: flex;
+  align-items: center;
+}
+
+.real-logo {
+  height: 34px;
+  width: auto;
+  object-fit: contain;
+  background-color: #ffffff;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.user-badge {
+  background-color: #BF956E;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 12px;
+}
+
+/* PESTAÑAS NAV */
+.nav-tabs {
+  display: flex;
+  background-color: #DDC9B8;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: none;
+  font-weight: 600;
+  color: #333333;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+}
+
+.tab-btn.active {
+  color: #040B5D;
+  background-color: #ffffff;
+  border-bottom-color: #BF956E;
+}
+
+/* CONTENIDO */
+.tab-content {
+  padding: 16px;
+  flex: 1;
+}
+
+/* TARJETAS DE TAREA */
+.task-card {
+  border: 1px solid #DDC9B8;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(4, 11, 93, 0.05);
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.task-code {
+  font-weight: 700;
+  color: #040B5D;
+}
+
+.task-client {
+  font-size: 0.9rem;
+  color: #333333;
+  margin-bottom: 8px;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  background-color: #040B5D;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #BF956E;
+}
+
+/* BOTÓN DE CREAR DÍA MUY VISIBLE Y LLAMATIVO */
+.btn-visible-add {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #040B5D 0%, #1a258a 100%);
+  color: #ffffff;
+  border: 2px dashed #BF956E;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 15px;
+  box-shadow: 0 4px 10px rgba(4, 11, 93, 0.2);
+  transition: transform 0.1s, background 0.2s;
+}
+
+.btn-visible-add:hover {
+  background: linear-gradient(135deg, #BF956E 0%, #a67d56 100%);
+  border-color: #040B5D;
+}
+
+/* ESTILOS DEL ASISTENTE WIZARD Y TARJETAS DE DÍAS */
+.wizard-header-top {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.btn-back {
+  background: none;
+  border: 1px solid #DDC9B8;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #040B5D;
+}
+
+.day-card {
+  border: 2px solid #BF956E;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 15px;
+  background-color: #fdfbf7;
+}
+
+.day-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #DDC9B8;
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+}
+
+.day-card-title {
+  font-weight: 700;
+  color: #040B5D;
+  font-size: 1rem;
+}
+
+.calculated-hours {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #27ae60;
+  background-color: #e8f8f5;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.btn-save-day {
+  background-color: #BF956E;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.85rem;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.btn-save-day.saved {
+  background-color: #27ae60;
+}
+
+.file-upload-box {
+  margin-top: 4px;
+  font-size: 0.8rem;
+}
+
+/* CANVASES DE FIRMA */
+.signature-box-container {
+  border: 2px solid #DDC9B8;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px;
+  text-align: center;
+}
+
+.sig-canvas {
+  width: 100%;
+  max-width: 100%;
+  height: 140px;
+  background-color: #fafafa;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.btn-clear-sig {
+  background: none;
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #DDC9B8;
+  border-radius: 6px;
+  margin-bottom: 14px;
+}
+
+.empty-msg {
+  text-align: center;
+  color: #666666;
+  margin-top: 20px;
+}

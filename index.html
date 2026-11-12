@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ayax - Grúas Pereira</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Enlace al Manifiesto PWA -->
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+  <!-- PANTALLA 1: LOGIN PRINCIPAL -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <img src="logo.png" alt="Ayax" class="login-logo">
+      <h2>Portal de Operarios</h2>
+      <p class="login-subtitle">Ingrese sus credenciales para continuar</p>
+      
+      <div class="form-group">
+        <label>Número de Teléfono</label>
+        <input type="tel" id="loginPhone" placeholder="Ej: 3101234567" value="3101234567">
+      </div>
+
+      <div class="form-group">
+        <label>PIN de Acceso (4 dígitos)</label>
+        <input type="password" id="loginPin" maxlength="4" placeholder="••••" value="1234">
+      </div>
+
+      <button class="btn-primary" onclick="handleLogin()">Ingresar al Sistema 🚚</button>
+      
+      <div style="text-align: center; margin-top: 15px;">
+        <button type="button" onclick="showRecoverStep1()" style="background: none; border: none; color: #040B5D; font-weight: 600; cursor: pointer; font-size: 0.85rem; text-decoration: underline;">
+          ¿Olvidaste tu PIN?
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANTALLA 2: RECUPERAR PIN - PASO 1 -->
+  <div id="recoverStep1" class="login-screen hidden">
+    <div class="login-card">
+      <img src="logo.png" alt="Ayax" class="login-logo">
+      <h2>Restablecer PIN</h2>
+      <p class="login-subtitle">Ingresa tu número registrado para enviarte un código.</p>
+      <div class="form-group">
+        <label>Número de Teléfono</label>
+        <input type="tel" id="recoverPhone" placeholder="Ej: 3101234567">
+      </div>
+      <button class="btn-primary" onclick="sendVerificationCode()">Enviar Código 📩</button>
+      <div style="text-align: center; margin-top: 15px;">
+        <button type="button" onclick="backToLogin()" style="background: none; border: none; color: #040B5D; font-weight: 600; cursor: pointer; font-size: 0.85rem; text-decoration: underline;">Volver al Login</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANTALLA 3: RECUPERAR PIN - PASO 2 -->
+  <div id="recoverStep2" class="login-screen hidden">
+    <div class="login-card">
+      <img src="logo.png" alt="Ayax" class="login-logo">
+      <h2>Nuevo PIN de Acceso</h2>
+      <p class="login-subtitle">Ingresa el código recibido y define tu nuevo PIN.</p>
+      <div class="form-group">
+        <label>Código de Verificación</label>
+        <input type="text" id="verificationCode" maxlength="4" placeholder="4 dígitos">
+      </div>
+      <div class="form-group">
+        <label>Nuevo PIN (4 dígitos)</label>
+        <input type="password" id="newPin" maxlength="4" placeholder="••••">
+      </div>
+      <div class="form-group">
+        <label>Confirmar Nuevo PIN</label>
+        <input type="password" id="confirmPin" maxlength="4" placeholder="••••">
+      </div>
+      <button class="btn-primary" onclick="saveNewPin()">Actualizar PIN y Entrar 🔒</button>
+      <div style="text-align: center; margin-top: 15px;">
+        <button type="button" onclick="backToLogin()" style="background: none; border: none; color: #040B5D; font-weight: 600; cursor: pointer; font-size: 0.85rem; text-decoration: underline;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENEDOR PRINCIPAL DE LA APP -->
+  <div id="app" class="app-container hidden">
+
+    <!-- ENCABEZADO -->
+    <header class="main-header">
+      <div class="logo-zone">
+        <img src="logo.png" alt="Ayax" class="real-logo">
+      </div>
+      <span class="user-badge" id="userBadge">Operario</span>
+    </header>
+
+    <!-- NAVEGACIÓN PRINCIPAL -->
+    <nav class="nav-tabs" id="mainNavTabs">
+      <button id="btnTabPendientes" class="tab-btn active" onclick="switchTab('pendientes')">
+        📋 Pendientes (<span id="countPendientes">2</span>)
+      </button>
+      <button id="btnTabFinalizadas" class="tab-btn" onclick="switchTab('finalizadas')">
+        ✅ Finalizadas (<span id="countFinalizadas">1</span>)
+      </button>
+    </nav>
+
+    <!-- VISTA 1: TAREAS PENDIENTES -->
+    <section id="secPendientes" class="tab-content active">
+      <div class="cards-list" id="listPendientes"></div>
+    </section>
+
+    <!-- VISTA 2: TAREAS FINALIZADAS CON FILTRO DE FECHAS PARA PDF -->
+    <section id="secFinalizadas" class="tab-content hidden">
+      <div class="search-box" style="display: flex; gap: 8px; margin-bottom: 10px;">
+        <input type="text" id="searchInput" placeholder="Buscar por código..." onkeyup="filterFinalized()" style="flex: 2;">
+        <input type="date" id="searchDate" onchange="filterFinalized()" style="flex: 1.5; padding: 10px; border: 1px solid #DDC9B8; border-radius: 6px;">
+      </div>
+      
+      <div class="cards-list" id="listFinalizadas">
+        <p class="empty-msg">No hay tareas finalizadas en el último mes.</p>
+      </div>
+
+      <!-- CONTENEDOR DE FILTRO DE RANGO Y DESCARGA PDF -->
+      <div id="pdfButtonContainer" style="margin-top: 35px; padding: 16px; background: #fdfbf7; border: 2px solid #BF956E; border-radius: 10px; box-shadow: 0 4px 10px rgba(4,11,93,0.05);">
+        <p style="font-size: 0.9rem; font-weight: 700; color: #040B5D; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+          📅 Generar Reporte Mensual en PDF
+        </p>
+        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+          <div style="flex: 1;">
+            <label style="font-size: 0.75rem; color: #666; font-weight: 600;">Desde:</label>
+            <input type="date" id="pdfStartDate" class="form-control" style="padding: 8px;">
+          </div>
+          <div style="flex: 1;">
+            <label style="font-size: 0.75rem; color: #666; font-weight: 600;">Hasta:</label>
+            <input type="date" id="pdfEndDate" class="form-control" style="padding: 8px;">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="descargarReportePDF()" style="background-color: #040B5D; padding: 12px; font-size: 0.95rem; border-top: 3px solid #BF956E;">
+          📥 Descargar Reporte PDF por Rango
+        </button>
+      </div>
+    </section>
+
+    <!-- VISTA 3: ASISTENTE / FORMULARIO MULTI-DÍA (WIZARD) -->
+    <section id="secWizard" class="tab-content hidden">
+      <div class="wizard-header-top">
+        <button type="button" class="btn-back" onclick="closeWizard()">← Volver</button>
+        <h3 id="wizardTitle">Servicio #1045</h3>
+      </div>
+
+      <div class="wizard-form">
+        <div id="daysContainer"></div>
+
+        <button type="button" id="btnAddDay" class="btn-visible-add" onclick="addNewDay()">
+          ➕ Crear Día Adicional
+        </button>
+
+        <button type="button" id="btnNextToSign" class="btn-primary" onclick="goToSignSection()" style="margin-top: 20px; background-color: #040B5D; padding: 14px; font-size: 1rem;">
+          Siguiente: Firmas y Cierre ✍️
+        </button>
+      </div>
+    </section>
+
+    <!-- VISTA 4: SECCIÓN DE FIRMAS Y FINALIZACIÓN -->
+    <section id="secSignatures" class="tab-content hidden">
+      <div class="wizard-header-top">
+        <button type="button" class="btn-back" onclick="backToWizardDays()">← Volver a Días</button>
+        <h3>Firmas y Finalización de Servicio</h3>
+      </div>
+
+      <div class="wizard-form">
+        <div class="form-section-title" style="font-weight: 700; color: #040B5D; margin-bottom: 5px;">Firma del Operador</div>
+        <p style="font-size: 0.8rem; color: #666; margin-bottom: 5px;">Firme dentro del recuadro:</p>
+        <div class="signature-box-container">
+          <canvas id="canvasOperador" class="sig-canvas" width="400" height="150"></canvas>
+          <button type="button" class="btn-clear-sig" onclick="clearCanvas('canvasOperador')">Limpiar Firma</button>
+        </div>
+
+        <div class="form-section-title" style="font-weight: 700; color: #040B5D; margin-top: 20px; margin-bottom: 5px;">Firma del Cliente</div>
+        <p style="font-size: 0.8rem; color: #666; margin-bottom: 5px;">Firme dentro del recuadro:</p>
+        <div class="signature-box-container">
+          <canvas id="canvasCliente" class="sig-canvas" width="400" height="150"></canvas>
+          <button type="button" class="btn-clear-sig" onclick="clearCanvas('canvasCliente')">Limpiar Firma</button>
+        </div>
+
+        <button class="btn-primary" onclick="finalizeTask()" style="margin-top: 25px; background-color: #27ae60;">
+          Finalizar Servicio 🚀
+        </button>
+      </div>
+    </section>
+
+    <!-- VISTA 5: REPORTE INDIVIDUAL POST-CIERRE -->
+    <section id="secReporte" class="tab-content hidden">
+      <div class="wizard-header-top">
+        <button type="button" class="btn-back" onclick="closeWizard()">← Ir a Inicio</button>
+        <h3>Reporte de Servicio #<span id="repTaskId"></span></h3>
+      </div>
+
+      <div class="wizard-form" style="background: #fdfbf7; padding: 15px; border-radius: 8px; border: 1px solid #DDC9B8;">
+        <div style="text-align: center; margin-bottom: 15px;">
+          <img src="logo.png" alt="Ayax" style="height: 40px; width: auto; margin-bottom: 5px;">
+          <h4 style="color: #040B5D;">AYAX - GRÚAS PEREIRA</h4>
+          <p style="font-size: 0.8rem; color: #666;">Reporte Oficial de Operación en Campo</p>
+        </div>
+
+        <div id="reportContent" style="font-size: 0.85rem; color: #333; margin-bottom: 15px;"></div>
+
+        <div style="display: flex; gap: 10px; flex-direction: column;">
+          <button class="btn-primary" onclick="window.print()" style="background-color: #BF956E;">
+            🖨️ Descargar / Guardar PDF Inalterable
+          </button>
+          <button class="btn-primary" onclick="syncWithOdoo()" style="background-color: #27ae60;">
+            ☁️ Sincronizar con Odoo (Guardar en Nube)
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="app.js"></script>
+  <!-- Registro del Service Worker para PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+          .catch(err => console.log('Error al registrar el Service Worker:', err));
+      });
+    }
+  </script>
+</body>
+</html>
