@@ -56,10 +56,8 @@ function processOfflineQueue() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  // 1. Ejecutar verificación de Modo Mantenimiento
   verificarModoMantenimiento();
 
-  // 2. Configurar evento del Botón Cerrar Sesión dentro del menú desplegable
   const btnLogout = document.getElementById('btn-logout');
   if (btnLogout) {
     btnLogout.addEventListener('click', () => {
@@ -71,7 +69,6 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Cerrar menú desplegable al hacer clic fuera de él
   window.addEventListener('click', (e) => {
     const dropdown = document.getElementById('userDropdownMenu');
     const badge = document.getElementById('userBadge');
@@ -80,7 +77,9 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  localStorage.setItem("ayax_tasks_db", JSON.stringify(defaultMockTasks));
+  if (!localStorage.getItem("ayax_tasks_db")) {
+    localStorage.setItem("ayax_tasks_db", JSON.stringify(defaultMockTasks));
+  }
   
   const today = new Date();
   const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
@@ -92,9 +91,6 @@ window.addEventListener("DOMContentLoaded", () => {
   renderTasks();
 });
 
-// ==========================================
-// FUNCIÓN PARA MOSTRAR/OCULTAR MENÚ DESPLEGABLE
-// ==========================================
 function toggleUserMenu() {
   const dropdown = document.getElementById('userDropdownMenu');
   if (dropdown) {
@@ -102,9 +98,6 @@ function toggleUserMenu() {
   }
 }
 
-// ==========================================
-// FUNCIÓN DE CONTROL DE MODO MANTENIMIENTO
-// ==========================================
 function verificarModoMantenimiento() {
   const enMantenimiento = false; 
 
@@ -548,9 +541,8 @@ function finalizeTask() {
   if (totalHoursSum === 0) totalHoursSum = 16.5;
 
   let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
-  
   let currentTaskData = null;
-
+  
   savedTasks = savedTasks.map(t => {
     if (t.id === currentActiveTaskId) {
       currentTaskData = t;
@@ -568,7 +560,7 @@ function finalizeTask() {
 
   localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
 
-  // Preparar mensaje automático para WhatsApp
+  // WhatsApp automático (Fase 3)
   const clienteNombre = currentTaskData ? currentTaskData.cliente : "Cliente";
   const mensajeWhatsApp = `*🚚 REPORTE DE SERVICIO FINALIZADO - GRÚAS PEREIRA*%0A%0A` +
     `*📋 Servicio:* #${currentActiveTaskId}%0A` +
@@ -578,7 +570,6 @@ function finalizeTask() {
     `*✅ Estado:* Firmado en campo y completado exitosamente.%0A%0A` +
     `_Enviado desde la PWA Operativa de Ayax_`;
 
-  // Número de teléfono de logística o administración (puedes cambiarlo por el número real de la empresa)
   const telefonoLogistica = "573101234567"; 
   const urlWhatsApp = `https://wa.me/${telefonoLogistica}?text=${mensajeWhatsApp}`;
 
@@ -589,22 +580,7 @@ function finalizeTask() {
     alert("📴 Servicio finalizado offline. Se guardó localmente y se enviará la notificación al recuperar señal.");
   } else {
     alert("🚀 ¡Servicio finalizado con éxito! Abriendo WhatsApp para notificar a logística...");
-    // Abre automáticamente WhatsApp con el reporte redactado
     window.open(urlWhatsApp, '_blank');
-  }
-
-  showReportView(currentActiveTaskId);
-}
-
-  localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
-
-  if (!navigator.onLine) {
-    let queue = JSON.parse(localStorage.getItem("ayax_sync_queue")) || [];
-    queue.push({ taskId: currentActiveTaskId, fecha: new Date().toISOString() });
-    localStorage.setItem("ayax_sync_queue", JSON.stringify(queue));
-    alert("📴 Servicio finalizado offline. Se guardó localmente y se sincronizará con Odoo al recuperar señal.");
-  } else {
-    alert("🚀 ¡Servicio finalizado y sincronizado con Odoo correctamente!");
   }
 
   showReportView(currentActiveTaskId);
