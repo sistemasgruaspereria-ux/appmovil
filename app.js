@@ -56,6 +56,30 @@ function processOfflineQueue() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  // 1. Ejecutar verificación de Modo Mantenimiento
+  verificarModoMantenimiento();
+
+  // 2. Configurar evento del Botón Cerrar Sesión dentro del menú desplegable
+  const btnLogout = document.getElementById('btn-logout');
+  if (btnLogout) {
+    btnLogout.addEventListener('click', () => {
+      if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+        localStorage.removeItem('usuario_activo');
+        localStorage.removeItem('token_sesion');
+        window.location.reload();
+      }
+    });
+  }
+
+  // Cerrar menú desplegable al hacer clic fuera de él
+  window.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('userDropdownMenu');
+    const badge = document.getElementById('userBadge');
+    if (dropdown && badge && !badge.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.add('hidden');
+    }
+  });
+
   localStorage.setItem("ayax_tasks_db", JSON.stringify(defaultMockTasks));
   
   const today = new Date();
@@ -68,6 +92,35 @@ window.addEventListener("DOMContentLoaded", () => {
   renderTasks();
 });
 
+// ==========================================
+// FUNCIÓN PARA MOSTRAR/OCULTAR MENÚ DESPLEGABLE
+// ==========================================
+function toggleUserMenu() {
+  const dropdown = document.getElementById('userDropdownMenu');
+  if (dropdown) {
+    dropdown.classList.toggle('hidden');
+  }
+}
+
+// ==========================================
+// FUNCIÓN DE CONTROL DE MODO MANTENIMIENTO
+// ==========================================
+function verificarModoMantenimiento() {
+  const enMantenimiento = false; 
+
+  const pantallaMantenimiento = document.getElementById('maintenance-screen');
+  const appContainer = document.getElementById('app');
+  const loginScreen = document.getElementById('loginScreen');
+
+  if (enMantenimiento && pantallaMantenimiento) {
+    pantallaMantenimiento.style.display = 'flex';
+    if (appContainer) appContainer.classList.add('hidden');
+    if (loginScreen) loginScreen.classList.add('hidden');
+  } else if (pantallaMantenimiento) {
+    pantallaMantenimiento.style.display = 'none';
+  }
+}
+
 function handleLogin() {
   const phoneInput = document.getElementById("loginPhone").value.trim();
   const pinInput = document.getElementById("loginPin").value.trim();
@@ -75,7 +128,7 @@ function handleLogin() {
   const operator = authorizedOperators.find(op => op.phone === phoneInput && op.pin === pinInput);
 
   if (operator) {
-    document.getElementById("userBadge").innerText = operator.name;
+    document.getElementById("userBadge").innerHTML = `<span>${operator.name}</span> ▾`;
     document.getElementById("loginScreen").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
     renderTasks();
@@ -242,7 +295,7 @@ function openTask(id) {
   const secWizard = document.getElementById("secWizard");
   secWizard.classList.remove("hidden");
   
-  document.getElementById("wizardTitle").innerText = `Servicio #${id} - Operación`;
+  document.getElementById("wizardTitle").innerText = `Servicio #${id} Operación`;
   document.getElementById("daysContainer").innerHTML = "";
   totalDaysCreated = 0;
   currentDaysData = [];
