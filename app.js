@@ -549,8 +549,11 @@ function finalizeTask() {
 
   let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   
+  let currentTaskData = null;
+
   savedTasks = savedTasks.map(t => {
     if (t.id === currentActiveTaskId) {
+      currentTaskData = t;
       return {
         ...t,
         estado: "finalizada",
@@ -562,6 +565,36 @@ function finalizeTask() {
     }
     return t;
   });
+
+  localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
+
+  // Preparar mensaje automático para WhatsApp
+  const clienteNombre = currentTaskData ? currentTaskData.cliente : "Cliente";
+  const mensajeWhatsApp = `*🚚 REPORTE DE SERVICIO FINALIZADO - GRÚAS PEREIRA*%0A%0A` +
+    `*📋 Servicio:* #${currentActiveTaskId}%0A` +
+    `*🏢 Cliente:* ${clienteNombre}%0A` +
+    `*⏱️ Total Horas:* ${totalHoursSum.toFixed(1)} hrs%0A` +
+    `*📅 Días Laborados:* ${totalDaysCreated}%0A` +
+    `*✅ Estado:* Firmado en campo y completado exitosamente.%0A%0A` +
+    `_Enviado desde la PWA Operativa de Ayax_`;
+
+  // Número de teléfono de logística o administración (puedes cambiarlo por el número real de la empresa)
+  const telefonoLogistica = "573101234567"; 
+  const urlWhatsApp = `https://wa.me/${telefonoLogistica}?text=${mensajeWhatsApp}`;
+
+  if (!navigator.onLine) {
+    let queue = JSON.parse(localStorage.getItem("ayax_sync_queue")) || [];
+    queue.push({ taskId: currentActiveTaskId, fecha: new Date().toISOString() });
+    localStorage.setItem("ayax_sync_queue", JSON.stringify(queue));
+    alert("📴 Servicio finalizado offline. Se guardó localmente y se enviará la notificación al recuperar señal.");
+  } else {
+    alert("🚀 ¡Servicio finalizado con éxito! Abriendo WhatsApp para notificar a logística...");
+    // Abre automáticamente WhatsApp con el reporte redactado
+    window.open(urlWhatsApp, '_blank');
+  }
+
+  showReportView(currentActiveTaskId);
+}
 
   localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
 
