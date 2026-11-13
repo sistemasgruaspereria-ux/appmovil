@@ -165,7 +165,7 @@
       </div>
     </section>
 
-    <!-- VISTA 3: ASISTENTE / FORMULARIO MULTI-DÍA (WIZARD) -->
+    <!-- VISTA 3: ASISTENTE / FORMULARIO MULTI-DÍA (WIZARD CON ACORDEONES) -->
     <section id="secWizard" class="tab-content hidden">
       <div class="wizard-header-top">
         <button type="button" class="btn-back" onclick="closeWizard()">← Volver</button>
@@ -173,10 +173,15 @@
       </div>
 
       <div class="wizard-form">
+        
+        <!-- CONTENEDOR DE DÍAS YA GUARDADOS EN FORMATO DESPLEGABLE (ACORDEÓN) -->
+        <div id="daysListContainer" class="days-list-container" style="margin-bottom: 15px;"></div>
+
+        <!-- CONTENEDOR DEL FORMULARIO ACTIVO PARA EL DÍA EN CURSO -->
         <div id="daysContainer"></div>
 
-        <button type="button" id="btnAddDay" class="btn-visible-add" onclick="addNewDay()">
-          ➕ Crear Día Adicional
+        <button type="button" id="btnAddDay" class="btn-visible-add" onclick="addNewDay()" style="margin-top: 15px;">
+          ➕ Guardar y Crear Día Adicional
         </button>
 
         <button type="button" id="btnNextToSign" class="btn-primary" onclick="goToSignSection()" style="margin-top: 20px; background-color: #040B5D; padding: 14px; font-size: 1rem;">
