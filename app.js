@@ -733,3 +733,63 @@ function syncWithOdoo() {
   closeWizard();
   renderTasks();
 }
+
+// Función para comprimir cualquier foto subida desde la cámara del celular
+function compressImage(file, maxWidth = 1024, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Retorna la imagen comprimida en Base64 con calidad al 70%
+        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedBase64);
+      };
+      img.onerror = (err) => reject(err);
+    };
+  });
+}
+
+// Borra del celular las tareas finalizadas que ya fueron enviadas con éxito
+function purgeSyncedTasks() {
+  let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || [];
+  
+  // Mantenemos solo las pendientes y las finalizadas de los últimos 7 días como respaldo
+  const retentionDays = 7;
+  const now = new Date();
+
+  const cleanedTasks = savedTasks.filter(task => {
+    if (task.estado === "pendiente") return true; // Nunca borrar pendientes
+    
+    if (task.estado === "finalizada" && task.sincronizadoOdoo) {
+      const finishDate = new Date(task.fechaFinalizacion);
+      const diffTime = Math.abs(now - finishDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      // Si ya se envió a Odoo y tiene más de 7 días en el celular, se purga
+      return diffDays <= retentionDays;
+    }
+    return true;
+  });
+
+  localStorage.setItem("ayax_tasks_db", JSON.stringify(cleanedTasks));
+  console.log("🧹 Limpieza automática ejecutada: Almacenamiento optimizado.");
+}
+     
