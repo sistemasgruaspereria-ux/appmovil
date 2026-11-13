@@ -78,7 +78,9 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  if (!localStorage.getItem("ayax_tasks_db")) {
+  // Validar y asegurar que existan tareas mock si el almacenamiento está vacío
+  let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db"));
+  if (!savedTasks || savedTasks.length === 0) {
     localStorage.setItem("ayax_tasks_db", JSON.stringify(defaultMockTasks));
   }
   
@@ -312,7 +314,7 @@ function closeWizard() {
 function addNewDay() {
   totalDaysCreated++;
   const container = document.getElementById("daysContainer");
-  container.innerHTML = ""; // Limpiar formulario activo anterior
+  container.innerHTML = ""; // Limpiar el formulario anterior si existía
 
   const dayCard = document.createElement("div");
   dayCard.className = "day-card";
@@ -834,4 +836,3 @@ function purgeSyncedTasks() {
   localStorage.setItem("ayax_tasks_db", JSON.stringify(cleanedTasks));
   console.log("🧹 Limpieza automática ejecutada: Almacenamiento optimizado.");
 }
-
