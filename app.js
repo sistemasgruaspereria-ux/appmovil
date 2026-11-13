@@ -312,7 +312,7 @@ function closeWizard() {
 function addNewDay() {
   totalDaysCreated++;
   const container = document.getElementById("daysContainer");
-  container.innerHTML = ""; // Limpiar el formulario activo anterior
+  container.innerHTML = ""; // Limpiar formulario activo anterior
 
   const dayCard = document.createElement("div");
   dayCard.className = "day-card";
@@ -419,7 +419,7 @@ function addNewDay() {
     </div>
 
     <button type="button" id="btnSaveDay-${totalDaysCreated}" class="btn-save-day" onclick="saveDayRecord(${totalDaysCreated})" style="background-color: #040B5D; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px;">
-      💾 Guardar Día #${totalDaysCreated} y Continuar
+      💾 Guardar Día #${totalDaysCreated}
     </button>
   `;
 
@@ -479,11 +479,13 @@ function saveDayRecord(dayNum) {
 
   currentDaysData.push(dayData);
 
-  // Renderizar la lista superior en formato acordeón
+  // 1. Renderizar la lista superior en formato acordeón colapsable
   renderDaysAccordion();
 
-  // Crear automáticamente un nuevo formulario limpio para el siguiente día
-  addNewDay();
+  // 2. Limpiar el formulario activo para que no se abra automáticamente el siguiente día
+  document.getElementById("daysContainer").innerHTML = "";
+
+  alert(`Día #${dayNum} guardado correctamente.`);
 }
 
 function renderDaysAccordion() {
@@ -832,4 +834,4 @@ function purgeSyncedTasks() {
   localStorage.setItem("ayax_tasks_db", JSON.stringify(cleanedTasks));
   console.log("🧹 Limpieza automática ejecutada: Almacenamiento optimizado.");
 }
-  
+
