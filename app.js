@@ -57,6 +57,7 @@ function processOfflineQueue() {
 
 window.addEventListener("DOMContentLoaded", () => {
   verificarModoMantenimiento();
+  purgeSyncedTasks();
 
   const btnLogout = document.getElementById('btn-logout');
   if (btnLogout) {
@@ -290,6 +291,9 @@ function openTask(id) {
   
   document.getElementById("wizardTitle").innerText = `Servicio #${id} Operación`;
   document.getElementById("daysContainer").innerHTML = "";
+  const daysListContainer = document.getElementById("daysListContainer");
+  if (daysListContainer) daysListContainer.innerHTML = "";
+  
   totalDaysCreated = 0;
   currentDaysData = [];
 
@@ -308,13 +312,14 @@ function closeWizard() {
 function addNewDay() {
   totalDaysCreated++;
   const container = document.getElementById("daysContainer");
+  container.innerHTML = ""; // Limpiar el formulario activo anterior
 
   const dayCard = document.createElement("div");
   dayCard.className = "day-card";
   dayCard.id = `dayCard-${totalDaysCreated}`;
   dayCard.innerHTML = `
     <div class="day-card-header">
-      <span class="day-card-title">📅 Día #${totalDaysCreated}</span>
+      <span class="day-card-title">📅 Día #${totalDaysCreated} (En curso)</span>
       <span id="hours-display-${totalDaysCreated}" class="calculated-hours">0.0 Horas</span>
     </div>
     
@@ -413,8 +418,8 @@ function addNewDay() {
       <input type="file" id="photos-day-${totalDaysCreated}" accept="image/*" multiple class="file-upload-box">
     </div>
 
-    <button type="button" id="btnSaveDay-${totalDaysCreated}" class="btn-save-day" onclick="saveDayRecord(${totalDaysCreated})">
-      💾 Guardar Día #${totalDaysCreated}
+    <button type="button" id="btnSaveDay-${totalDaysCreated}" class="btn-save-day" onclick="saveDayRecord(${totalDaysCreated})" style="background-color: #040B5D; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px;">
+      💾 Guardar Día #${totalDaysCreated} y Continuar
     </button>
   `;
 
@@ -457,7 +462,8 @@ function saveDayRecord(dayNum) {
     return;
   }
 
-  currentDaysData.push({
+  // Guardar datos del día
+  const dayData = {
     dayNum,
     direccion: dir,
     labor: desc,
@@ -469,16 +475,53 @@ function saveDayRecord(dayNum) {
     horasTrabajadas: hoursWorked,
     ureaInicial: ureai,
     ureaFinal: ureaf
+  };
+
+  currentDaysData.push(dayData);
+
+  // Renderizar la lista superior en formato acordeón
+  renderDaysAccordion();
+
+  // Crear automáticamente un nuevo formulario limpio para el siguiente día
+  addNewDay();
+}
+
+function renderDaysAccordion() {
+  const container = document.getElementById("daysListContainer");
+  if (!container) return;
+  
+  container.innerHTML = "";
+
+  currentDaysData.forEach((day) => {
+    const details = document.createElement("details");
+    details.className = "day-accordion";
+    details.style.cssText = "background: #f8f9fa; border: 1px solid #DDC9B8; border-radius: 8px; margin-bottom: 10px; overflow: hidden;";
+
+    const summary = document.createElement("summary");
+    summary.style.cssText = "background: #ffffff; padding: 12px 16px; font-weight: 600; color: #040B5D; cursor: pointer; display: flex; justify-content: space-between; align-items: center;";
+    summary.innerHTML = `<span>📅 Día #${day.dayNum} - ${day.grua} (${day.horasTrabajadas} hrs)</span> <span style="font-size: 12px; color: #BF956E;">Ver detalle ▾</span>`;
+
+    const content = document.createElement("div");
+    content.style.cssText = "padding: 15px; background: #ffffff; border-top: 1px solid #DDC9B8; font-size: 0.85rem; color: #333;";
+    content.innerHTML = `
+      <p><strong>Labor:</strong> ${day.labor}</p>
+      <p><strong>Ubicación:</strong> ${day.direccion}</p>
+      <p>👷 <strong>Operador:</strong> ${day.operador} | 🦺 <strong>Aparejador:</strong> ${day.aparejador}</p>
+      <p>⏰ <strong>Horario:</strong> ${day.horaInicio} - ${day.horaFin} (${day.horasTrabajadas} Horas)</p>
+      <p>💧 <strong>Urea:</strong> Inicial ${day.ureaInicial} Gal / Final ${day.ureaFinal} Gal</p>
+    `;
+
+    details.appendChild(summary);
+    details.appendChild(content);
+    container.appendChild(details);
   });
-
-  const btn = document.getElementById(`btnSaveDay-${dayNum}`);
-  btn.innerText = `✅ Día #${dayNum} Guardado`;
-  btn.classList.add("saved");
-
-  alert(`Día #${dayNum} guardado correctamente.`);
 }
 
 function goToSignSection() {
+  if (currentDaysData.length === 0) {
+    alert("Por favor guarde al menos un día de trabajo antes de continuar a firmas.");
+    return;
+  }
   document.getElementById("secWizard").classList.add("hidden");
   document.getElementById("secSignatures").classList.remove("hidden");
   initSignCanvas('canvasOperador');
@@ -549,7 +592,7 @@ function finalizeTask() {
       return {
         ...t,
         estado: "finalizada",
-        totalDias: totalDaysCreated,
+        totalDias: currentDaysData.length,
         totalHoras: totalHoursSum.toFixed(1),
         diasDetalle: currentDaysData,
         fechaFinalizacion: new Date().toISOString()
@@ -566,7 +609,7 @@ function finalizeTask() {
     `*📋 Servicio:* #${currentActiveTaskId}%0A` +
     `*🏢 Cliente:* ${clienteNombre}%0A` +
     `*⏱️ Total Horas:* ${totalHoursSum.toFixed(1)} hrs%0A` +
-    `*📅 Días Laborados:* ${totalDaysCreated}%0A` +
+    `*📅 Días Laborados:* ${currentDaysData.length}%0A` +
     `*✅ Estado:* Firmado en campo y completado exitosamente.%0A%0A` +
     `_Enviado desde la PWA Operativa de Ayax_`;
 
@@ -758,7 +801,6 @@ function compressImage(file, maxWidth = 1024, quality = 0.7) {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Retorna la imagen comprimida en Base64 con calidad al 70%
         const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
         resolve(compressedBase64);
       };
@@ -771,19 +813,17 @@ function compressImage(file, maxWidth = 1024, quality = 0.7) {
 function purgeSyncedTasks() {
   let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || [];
   
-  // Mantenemos solo las pendientes y las finalizadas de los últimos 7 días como respaldo
   const retentionDays = 7;
   const now = new Date();
 
   const cleanedTasks = savedTasks.filter(task => {
-    if (task.estado === "pendiente") return true; // Nunca borrar pendientes
+    if (task.estado === "pendiente") return true;
     
     if (task.estado === "finalizada" && task.sincronizadoOdoo) {
       const finishDate = new Date(task.fechaFinalizacion);
       const diffTime = Math.abs(now - finishDate);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
-      // Si ya se envió a Odoo y tiene más de 7 días en el celular, se purga
       return diffDays <= retentionDays;
     }
     return true;
@@ -792,4 +832,4 @@ function purgeSyncedTasks() {
   localStorage.setItem("ayax_tasks_db", JSON.stringify(cleanedTasks));
   console.log("🧹 Limpieza automática ejecutada: Almacenamiento optimizado.");
 }
-     
+  
