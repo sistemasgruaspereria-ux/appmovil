@@ -26,8 +26,8 @@ const defaultMockTasks = [
     totalDias: 2,
     totalHoras: "16.5",
     diasDetalle: [
-      { dayNum: 1, operador: "Carlos Operario", aparejador: "Juan Pérez", horasTrabajadas: 8.5, labor: "Izaje pesado", ureaInicial: 10, ureaFinal: 5 },
-      { dayNum: 2, operador: "Carlos Operario", aparejador: "Juan Pérez", horasTrabajadas: 8.0, labor: "Montaje de vigas", ureaInicial: 5, ureaFinal: 2 }
+      { dayNum: 1, operador: "Carlos Operario", aparejador: "Juan Pérez", horasTrabajadas: 8.5, labor: "Izaje pesado", combustibleInicial: 40, combustibleFinal: 25, ureaInicial: 10, ureaFinal: 5 },
+      { dayNum: 2, operador: "Carlos Operario", aparejador: "Juan Pérez", horasTrabajadas: 8.0, labor: "Montaje de vigas", combustibleInicial: 25, combustibleFinal: 10, ureaInicial: 5, ureaFinal: 2 }
     ],
     estado: "finalizada"
   }
@@ -58,7 +58,7 @@ function processOfflineQueue() {
 window.addEventListener("DOMContentLoaded", () => {
   verificarModoMantenimiento();
   purgeSyncedTasks();
-
+  
   const btnLogout = document.getElementById('btn-logout');
   if (btnLogout) {
     btnLogout.addEventListener('click', () => {
@@ -78,12 +78,11 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Validar y asegurar que existan tareas mock si el almacenamiento está vacío
   let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db"));
   if (!savedTasks || savedTasks.length === 0) {
     localStorage.setItem("ayax_tasks_db", JSON.stringify(defaultMockTasks));
   }
-  
+
   const today = new Date();
   const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
   const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
@@ -102,8 +101,7 @@ function toggleUserMenu() {
 }
 
 function verificarModoMantenimiento() {
-  const enMantenimiento = false; 
-
+  const enMantenimiento = false;
   const pantallaMantenimiento = document.getElementById('maintenance-screen');
   const appContainer = document.getElementById('app');
   const loginScreen = document.getElementById('loginScreen');
@@ -120,9 +118,9 @@ function verificarModoMantenimiento() {
 function handleLogin() {
   const phoneInput = document.getElementById("loginPhone").value.trim();
   const pinInput = document.getElementById("loginPin").value.trim();
-
+  
   const operator = authorizedOperators.find(op => op.phone === phoneInput && op.pin === pinInput);
-
+  
   if (operator) {
     document.getElementById("userBadge").innerHTML = `<span>${operator.name}</span> ▾`;
     document.getElementById("loginScreen").classList.add("hidden");
@@ -150,16 +148,16 @@ function backToLogin() {
 function sendVerificationCode() {
   const phone = document.getElementById("recoverPhone").value.trim();
   const operator = authorizedOperators.find(op => op.phone === phone);
-
+  
   if (!operator) {
     alert("Este número de teléfono no está registrado.");
     return;
   }
-
+  
   tempPhoneForRecovery = phone;
   generatedVerificationCode = Math.floor(1000 + Math.random() * 9000).toString();
-  alert(`📲 [CÓDIGO ENVIADO]: Tu código de acceso es: ${generatedVerificationCode}`);
-
+  alert(`[CÓDIGO ENVIADO]: Tu código de acceso es: ${generatedVerificationCode}`);
+  
   document.getElementById("recoverStep1").classList.add("hidden");
   document.getElementById("recoverStep2").classList.remove("hidden");
 }
@@ -168,17 +166,17 @@ function saveNewPin() {
   const enteredCode = document.getElementById("verificationCode").value.trim();
   const newPin = document.getElementById("newPin").value.trim();
   const confirmPin = document.getElementById("confirmPin").value.trim();
-
+  
   if (enteredCode !== generatedVerificationCode) {
     alert("El código de verificación es incorrecto.");
     return;
   }
-
+  
   if (newPin.length !== 4 || newPin !== confirmPin) {
     alert("El PIN debe tener 4 dígitos y coincidir.");
     return;
   }
-
+  
   const operatorIndex = authorizedOperators.findIndex(op => op.phone === tempPhoneForRecovery);
   if (operatorIndex !== -1) {
     authorizedOperators[operatorIndex].pin = newPin;
@@ -192,12 +190,11 @@ function saveNewPin() {
 function renderTasks() {
   const containerPendientes = document.getElementById("listPendientes");
   if (!containerPendientes) return;
-
   containerPendientes.innerHTML = "";
-
+  
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   let countP = 0;
-
+  
   savedTasks.forEach(task => {
     if (task.estado === "pendiente") {
       countP++;
@@ -210,12 +207,12 @@ function renderTasks() {
         </div>
         <p class="task-client"><strong>Cliente:</strong> ${task.cliente}</p>
         <p class="task-client"><strong>Ubicación:</strong> ${task.direccion}</p>
-        <button class="btn-primary" onclick="openTask('${task.id}')">Iniciar Servicio 🚚</button>
+        <button class="btn-primary" onclick="openTask('${task.id}')">Iniciar Servicio</button>
       `;
       containerPendientes.appendChild(card);
     }
   });
-
+  
   const countPendElem = document.getElementById("countPendientes");
   if (countPendElem) countPendElem.innerText = countP;
   filterFinalized();
@@ -224,32 +221,29 @@ function renderTasks() {
 function filterFinalized() {
   const textQuery = document.getElementById("searchInput") ? document.getElementById("searchInput").value.toLowerCase().trim() : "";
   const dateQuery = document.getElementById("searchDate") ? document.getElementById("searchDate").value : "";
-  
   const containerFinalizadas = document.getElementById("listFinalizadas");
   if (!containerFinalizadas) return;
+  
   containerFinalizadas.innerHTML = "";
-
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
+  
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
-
   let matchCount = 0;
   let totalFinalizedCount = 0;
-
+  
   savedTasks.forEach(task => {
     if (task.estado === "finalizada") {
       const taskDateObj = new Date(task.fechaFinalizacion || task.fechaCreacion || Date.now());
       const taskDateStr = taskDateObj.toISOString().split('T')[0];
-
       const matchesCurrentMonthYear = (taskDateObj.getMonth() === currentMonth && taskDateObj.getFullYear() === currentYear);
       
       if (matchesCurrentMonthYear || dateQuery) {
         totalFinalizedCount++;
-        
         const matchesText = task.id.toLowerCase().includes(textQuery) || task.cliente.toLowerCase().includes(textQuery);
         const matchesDate = !dateQuery || taskDateStr === dateQuery;
-
+        
         if (matchesText && matchesDate) {
           matchCount++;
           const card = document.createElement("div");
@@ -262,17 +256,17 @@ function filterFinalized() {
             </div>
             <p class="task-client"><strong>Cliente:</strong> ${task.cliente}</p>
             <p class="task-client"><strong>Total Días:</strong> ${task.totalDias || 1}</p>
-            <p class="task-client" style="color: #27ae60; font-weight: 700; margin-top: 6px;">⏱️ Total Horas: ${task.totalHoras || 0.0} Horas</p>
+            <p class="task-client" style="color: #27ae60; font-weight: 700; margin-top: 6px;">Total Horas: ${task.totalHoras || 0.0} Horas</p>
           `;
           containerFinalizadas.appendChild(card);
         }
       }
     }
   });
-
+  
   const countElem = document.getElementById("countFinalizadas");
   if (countElem) countElem.innerText = totalFinalizedCount;
-
+  
   const btnPdfContainer = document.getElementById("pdfButtonContainer");
   if (matchCount === 0) {
     containerFinalizadas.innerHTML = `<p class="empty-msg">No se encontraron tareas finalizadas para este mes o con esos criterios.</p>`;
@@ -290,15 +284,14 @@ function openTask(id) {
   
   const secWizard = document.getElementById("secWizard");
   secWizard.classList.remove("hidden");
-  
   document.getElementById("wizardTitle").innerText = `Servicio #${id} Operación`;
+  
   document.getElementById("daysContainer").innerHTML = "";
   const daysListContainer = document.getElementById("daysListContainer");
   if (daysListContainer) daysListContainer.innerHTML = "";
   
   totalDaysCreated = 0;
   currentDaysData = [];
-
   addNewDay();
 }
 
@@ -314,27 +307,24 @@ function closeWizard() {
 function addNewDay() {
   totalDaysCreated++;
   const container = document.getElementById("daysContainer");
-  container.innerHTML = ""; // Limpiar el formulario anterior si existía
-
+  container.innerHTML = ""; 
+  
   const dayCard = document.createElement("div");
   dayCard.className = "day-card";
   dayCard.id = `dayCard-${totalDaysCreated}`;
   dayCard.innerHTML = `
     <div class="day-card-header">
-      <span class="day-card-title">📅 Día #${totalDaysCreated} (En curso)</span>
+      <span class="day-card-title">Día #${totalDaysCreated} (En curso)</span>
       <span id="hours-display-${totalDaysCreated}" class="calculated-hours">0.0 Horas</span>
     </div>
-    
     <div class="form-group">
       <label>Dirección de Trabajo *</label>
       <input type="text" id="dir-day-${totalDaysCreated}" placeholder="Ej: Vía Cerritos Km 4">
     </div>
-
     <div class="form-group">
       <label>Descripción Corta de la Labor Realizada *</label>
       <input type="text" id="desc-day-${totalDaysCreated}" placeholder="Ej: Izaje de estructura metálica">
     </div>
-
     <div class="form-row">
       <div class="form-group">
         <label>Vehículo / Grúa *</label>
@@ -346,7 +336,6 @@ function addNewDay() {
         </select>
       </div>
     </div>
-
     <div class="form-row">
       <div class="form-group">
         <label>Operador *</label>
@@ -365,15 +354,22 @@ function addNewDay() {
         </select>
       </div>
     </div>
-
+    
+    <!-- Selectores de hora sencillos con botón "Ahora" -->
     <div class="form-row">
       <div class="form-group">
         <label>Hora Inicio *</label>
-        <input type="time" id="hini-day-${totalDaysCreated}" onchange="calculateHours(${totalDaysCreated})">
+        <div style="display: flex; gap: 6px;">
+          <input type="time" id="hini-day-${totalDaysCreated}" class="form-control" onchange="calculateHours(${totalDaysCreated})" style="flex: 1;">
+          <button type="button" onclick="setNow('hini-day-${totalDaysCreated}')" style="padding: 0 10px; background: #BF956E; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Ahora</button>
+        </div>
       </div>
       <div class="form-group">
         <label>Hora Final *</label>
-        <input type="time" id="hfin-day-${totalDaysCreated}" onchange="calculateHours(${totalDaysCreated})">
+        <div style="display: flex; gap: 6px;">
+          <input type="time" id="hfin-day-${totalDaysCreated}" class="form-control" onchange="calculateHours(${totalDaysCreated})" style="flex: 1;">
+          <button type="button" onclick="setNow('hfin-day-${totalDaysCreated}')" style="padding: 0 10px; background: #BF956E; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Ahora</button>
+        </div>
       </div>
     </div>
 
@@ -387,25 +383,25 @@ function addNewDay() {
         <input type="number" id="kmfin-day-${totalDaysCreated}" placeholder="Ej: 12150">
       </div>
     </div>
-
+    
+    <!-- Combustible y Urea Opcionales -->
     <div class="form-row">
       <div class="form-group">
-        <label>Combustible Inicial (Gal) *</label>
+        <label>Combustible Inicial (Gal)</label>
         <input type="number" id="combi-day-${totalDaysCreated}" placeholder="Ej: 40">
       </div>
       <div class="form-group">
-        <label>Combustible Final (Gal) *</label>
+        <label>Combustible Final (Gal)</label>
         <input type="number" id="combf-day-${totalDaysCreated}" placeholder="Ej: 25">
       </div>
     </div>
-
     <div class="form-row">
       <div class="form-group">
-        <label>Urea Inicial (Gal) *</label>
+        <label>Urea Inicial (Gal)</label>
         <input type="number" id="ureai-day-${totalDaysCreated}" placeholder="Ej: 10">
       </div>
       <div class="form-group">
-        <label>Urea Final (Gal) *</label>
+        <label>Urea Final (Gal)</label>
         <input type="number" id="ureaf-day-${totalDaysCreated}" placeholder="Ej: 5">
       </div>
     </div>
@@ -414,34 +410,46 @@ function addNewDay() {
       <label>Observaciones (Opcional)</label>
       <textarea id="obs-day-${totalDaysCreated}" rows="2" placeholder="Novedades en sitio..."></textarea>
     </div>
-
     <div class="form-group">
       <label>Subir Fotos de Evidencia</label>
       <input type="file" id="photos-day-${totalDaysCreated}" accept="image/*" multiple class="file-upload-box">
     </div>
-
     <button type="button" id="btnSaveDay-${totalDaysCreated}" class="btn-save-day" onclick="saveDayRecord(${totalDaysCreated})" style="background-color: #040B5D; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px;">
-      💾 Guardar Día #${totalDaysCreated}
+      Guardar Día #${totalDaysCreated}
     </button>
   `;
-
   container.appendChild(dayCard);
+}
+
+function setNow(fieldId) {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const inputElem = document.getElementById(fieldId);
+  if (inputElem) {
+    inputElem.value = `${hours}:${minutes}`;
+    const parts = fieldId.split('-');
+    if (parts.length >= 3) {
+      calculateHours(parts[2]);
+    }
+  }
 }
 
 function calculateHours(dayNum) {
   const hini = document.getElementById(`hini-day-${dayNum}`).value;
   const hfin = document.getElementById(`hfin-day-${dayNum}`).value;
   const display = document.getElementById(`hours-display-${dayNum}`);
-
+  
+  let hours = 0.0;
   if (hini && hfin) {
     const [h1, m1] = hini.split(':').map(Number);
     const [h2, m2] = hfin.split(':').map(Number);
     let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
     if (diff < 0) diff += 24 * 60;
-    const hours = (diff / 60).toFixed(1);
-    display.dataset.hours = hours;
-    display.innerText = `${hours} Horas`;
+    hours = (diff / 60).toFixed(1);
   }
+  display.dataset.hours = hours;
+  display.innerText = `${hours} Horas`;
 }
 
 function saveDayRecord(dayNum) {
@@ -454,17 +462,20 @@ function saveDayRecord(dayNum) {
   const hfin = document.getElementById(`hfin-day-${dayNum}`).value;
   const kmini = document.getElementById(`kmini-day-${dayNum}`).value;
   const kmfin = document.getElementById(`kmfin-day-${dayNum}`).value;
-  const ureai = document.getElementById(`ureai-day-${dayNum}`).value;
-  const ureaf = document.getElementById(`ureaf-day-${dayNum}`).value;
+  
+  const combi = document.getElementById(`combi-day-${dayNum}`).value || null;
+  const combf = document.getElementById(`combf-day-${dayNum}`).value || null;
+  const ureai = document.getElementById(`ureai-day-${dayNum}`).value || null;
+  const ureaf = document.getElementById(`ureaf-day-${dayNum}`).value || null;
+  
   const hoursDisplay = document.getElementById(`hours-display-${dayNum}`);
-  const hoursWorked = hoursDisplay && hoursDisplay.dataset.hours ? parseFloat(hoursDisplay.dataset.hours) : 8.0;
+  const hoursWorked = hoursDisplay && hoursDisplay.dataset.hours ? parseFloat(hoursDisplay.dataset.hours) : 0.0;
 
-  if (!dir || !desc || !grua || !op || !ap || !hini || !hfin || !kmini || !kmfin || !ureai || !ureaf) {
+  if (!dir || !desc || !grua || !op || !ap || !hini || !hfin || !kmini || !kmfin) {
     alert("Por favor complete todos los campos obligatorios (*)");
     return;
   }
 
-  // Guardar datos del día
   const dayData = {
     dayNum,
     direccion: dir,
@@ -475,46 +486,43 @@ function saveDayRecord(dayNum) {
     horaInicio: hini,
     horaFin: hfin,
     horasTrabajadas: hoursWorked,
+    combustibleInicial: combi,
+    combustibleFinal: combf,
     ureaInicial: ureai,
     ureaFinal: ureaf
   };
 
   currentDaysData.push(dayData);
-
-  // 1. Renderizar la lista superior en formato acordeón colapsable
   renderDaysAccordion();
-
-  // 2. Limpiar el formulario activo para que no se abra automáticamente el siguiente día
   document.getElementById("daysContainer").innerHTML = "";
-
   alert(`Día #${dayNum} guardado correctamente.`);
 }
 
 function renderDaysAccordion() {
   const container = document.getElementById("daysListContainer");
   if (!container) return;
-  
   container.innerHTML = "";
-
+  
   currentDaysData.forEach((day) => {
     const details = document.createElement("details");
     details.className = "day-accordion";
     details.style.cssText = "background: #f8f9fa; border: 1px solid #DDC9B8; border-radius: 8px; margin-bottom: 10px; overflow: hidden;";
-
+    
     const summary = document.createElement("summary");
     summary.style.cssText = "background: #ffffff; padding: 12px 16px; font-weight: 600; color: #040B5D; cursor: pointer; display: flex; justify-content: space-between; align-items: center;";
-    summary.innerHTML = `<span>📅 Día #${day.dayNum} - ${day.grua} (${day.horasTrabajadas} hrs)</span> <span style="font-size: 12px; color: #BF956E;">Ver detalle ▾</span>`;
-
+    summary.innerHTML = `<span>Día #${day.dayNum} - ${day.grua} (${day.horasTrabajadas} hrs)</span> <span style="font-size: 12px; color: #BF956E;">Ver detalle ▾</span>`;
+    
     const content = document.createElement("div");
     content.style.cssText = "padding: 15px; background: #ffffff; border-top: 1px solid #DDC9B8; font-size: 0.85rem; color: #333;";
     content.innerHTML = `
       <p><strong>Labor:</strong> ${day.labor}</p>
       <p><strong>Ubicación:</strong> ${day.direccion}</p>
-      <p>👷 <strong>Operador:</strong> ${day.operador} | 🦺 <strong>Aparejador:</strong> ${day.aparejador}</p>
-      <p>⏰ <strong>Horario:</strong> ${day.horaInicio} - ${day.horaFin} (${day.horasTrabajadas} Horas)</p>
-      <p>💧 <strong>Urea:</strong> Inicial ${day.ureaInicial} Gal / Final ${day.ureaFinal} Gal</p>
+      <p><strong>Operador:</strong> ${day.operador} | <strong>Aparejador:</strong> ${day.aparejador}</p>
+      <p><strong>Horario:</strong> ${day.horaInicio} - ${day.horaFin} (${day.horasTrabajadas} Horas)</p>
+      <p><strong>Combustible:</strong> Inicial ${day.combustibleInicial || 'N/A'} Gal | Final ${day.combustibleFinal || 'N/A'} Gal</p>
+      <p><strong>Urea:</strong> Inicial ${day.ureaInicial || 'N/A'} Gal | Final ${day.ureaFinal || 'N/A'} Gal</p>
     `;
-
+    
     details.appendChild(summary);
     details.appendChild(content);
     container.appendChild(details);
@@ -539,6 +547,7 @@ function backToWizardDays() {
 
 function initSignCanvas(canvasId) {
   const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
   let painting = false;
 
@@ -556,11 +565,11 @@ function initSignCanvas(canvasId) {
     if (!painting) return;
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
-    ctx.strokeStyle = '#000';
+    ctx.strokeStyle = '#000000';
 
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX || e.touches[0].clientX) - rect.left;
-    const y = (e.clientY || e.touches[0].clientY) - rect.top;
+    const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+    const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
 
     ctx.lineTo(x, y);
     ctx.stroke();
@@ -572,13 +581,14 @@ function initSignCanvas(canvasId) {
   canvas.addEventListener('mouseup', endPosition);
   canvas.addEventListener('mousemove', draw);
 
-  canvas.addEventListener('touchstart', startPosition);
-  canvas.addEventListener('touchend', endPosition);
-  canvas.addEventListener('touchmove', draw);
+  canvas.addEventListener('touchstart', (e) => { startPosition(e); e.preventDefault(); });
+  canvas.addEventListener('touchend', (e) => { endPosition(); e.preventDefault(); });
+  canvas.addEventListener('touchmove', (e) => { draw(e); e.preventDefault(); });
 }
 
 function clearCanvas(canvasId) {
   const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
@@ -589,7 +599,7 @@ function finalizeTask() {
 
   let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   let currentTaskData = null;
-  
+
   savedTasks = savedTasks.map(t => {
     if (t.id === currentActiveTaskId) {
       currentTaskData = t;
@@ -607,29 +617,28 @@ function finalizeTask() {
 
   localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
 
-  // WhatsApp automático (Fase 3)
   const clienteNombre = currentTaskData ? currentTaskData.cliente : "Cliente";
-  const mensajeWhatsApp = `*🚚 REPORTE DE SERVICIO FINALIZADO - GRÚAS PEREIRA*%0A%0A` +
-    `*📋 Servicio:* #${currentActiveTaskId}%0A` +
-    `*🏢 Cliente:* ${clienteNombre}%0A` +
-    `*⏱️ Total Horas:* ${totalHoursSum.toFixed(1)} hrs%0A` +
-    `*📅 Días Laborados:* ${currentDaysData.length}%0A` +
-    `*✅ Estado:* Firmado en campo y completado exitosamente.%0A%0A` +
+  const mensajeWhatsApp = `*REPORTE DE SERVICIO FINALIZADO - GRÚAS PEREIRA*%0A%0A` +
+    `*Servicio:* #${currentActiveTaskId}%0A` +
+    `*Cliente:* ${clienteNombre}%0A` +
+    `*Total Horas:* ${totalHoursSum.toFixed(1)} hrs%0A` +
+    `*Días Laborados:* ${currentDaysData.length}%0A` +
+    `*Estado:* Firmado en campo y completado exitosamente.%0A%0A` +
     `_Enviado desde la PWA Operativa de Ayax_`;
 
-  const telefonoLogistica = "573101234567"; 
+  const telefonoLogistica = "573101234567";
   const urlWhatsApp = `https://wa.me/${telefonoLogistica}?text=${mensajeWhatsApp}`;
 
   if (!navigator.onLine) {
     let queue = JSON.parse(localStorage.getItem("ayax_sync_queue")) || [];
     queue.push({ taskId: currentActiveTaskId, fecha: new Date().toISOString() });
     localStorage.setItem("ayax_sync_queue", JSON.stringify(queue));
-    alert("📴 Servicio finalizado offline. Se guardó localmente y se enviará la notificación al recuperar señal.");
+    alert("Servicio finalizado offline. Se guardó localmente y se enviará la notificación al recuperar señal.");
   } else {
-    alert("🚀 ¡Servicio finalizado con éxito! Abriendo WhatsApp para notificar a logística...");
-    window.open(urlWhatsApp, '_blank');
+    alert("¡Servicio finalizado con éxito! Abriendo WhatsApp para notificar a logística...");
   }
 
+  window.open(urlWhatsApp, '_blank');
   showReportView(currentActiveTaskId);
 }
 
@@ -637,9 +646,8 @@ function showReportView(id) {
   document.getElementById("secSignatures").classList.add("hidden");
   const secReporte = document.getElementById("secReporte");
   secReporte.classList.remove("hidden");
-  
   document.getElementById("repTaskId").innerText = id;
-  
+
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   const task = savedTasks.find(t => t.id === id);
 
@@ -666,7 +674,6 @@ function descargarReportePDF() {
   }
 
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
-  
   let filteredTasks = savedTasks.filter(t => {
     if (t.estado !== "finalizada") return false;
     const taskDateStr = new Date(t.fechaFinalizacion || t.fechaCreacion || Date.now()).toISOString().split('T')[0];
@@ -706,11 +713,10 @@ function descargarReportePDF() {
   `;
 
   let totalGeneralHoras = 0;
-
   filteredTasks.forEach(task => {
     let fecha = new Date(task.fechaFinalizacion || task.fechaCreacion || Date.now()).toLocaleDateString();
     totalGeneralHoras += parseFloat(task.totalHoras || 0);
-
+    
     htmlContent += `
       <div class="task-box">
         <div class="header-info">
@@ -726,9 +732,10 @@ function descargarReportePDF() {
         htmlContent += `
           <div class="day-det">
             <p><strong>Día #${d.dayNum}:</strong> ${d.labor || 'Labor en campo'}</p>
-            <p>👷 <strong>Operador:</strong> ${d.operador} &nbsp;|&nbsp; 🦺 <strong>Aparejador:</strong> ${d.aparejador}</p>
-            <p>💧 <strong>Urea Inicial:</strong> ${d.ureaInicial || 0} Gal &nbsp;|&nbsp; 💧 <strong>Urea Final:</strong> ${d.ureaFinal || 0} Gal</p>
-            <p style="color: #27ae60; font-weight: bold;">⏱️ Horas empleadas: ${d.horasTrabajadas} Horas</p>
+            <p><strong>Operador:</strong> ${d.operador} &nbsp;|&nbsp; <strong>Aparejador:</strong> ${d.aparejador}</p>
+            <p><strong>Combustible:</strong> Ini ${d.combustibleInicial || 'N/A'} Gal | Fin ${d.combustibleFinal || 'N/A'} Gal</p>
+            <p><strong>Urea:</strong> Ini ${d.ureaInicial || 'N/A'} Gal | Fin ${d.ureaFinal || 'N/A'} Gal</p>
+            <p style="color: #27ae60; font-weight: bold;">Horas empleadas: ${d.horasTrabajadas} Horas</p>
           </div>
         `;
       });
@@ -776,7 +783,7 @@ function switchTab(tab) {
 }
 
 function syncWithOdoo() {
-  alert("☁️ Conectando con la API de Odoo... Datos transmitidos y validados exitosamente en la nube de Ayax.");
+  alert("Conectando con la API de Odoo... Datos transmitidos y validados exitosamente en la nube de Ayax.");
   closeWizard();
   renderTasks();
 }
@@ -793,46 +800,38 @@ function compressImage(file, maxWidth = 1024, quality = 0.7) {
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-
         if (width > maxWidth) {
           height = Math.round((height * maxWidth) / width);
           width = maxWidth;
         }
-
         canvas.width = width;
         canvas.height = height;
-
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-
         const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
         resolve(compressedBase64);
       };
       img.onerror = (err) => reject(err);
     };
+    reader.onerror = (err) => reject(err);
   });
 }
 
-// Borra del celular las tareas finalizadas que ya fueron enviadas con éxito
 function purgeSyncedTasks() {
   let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || [];
-  
   const retentionDays = 7;
   const now = new Date();
-
+  
   const cleanedTasks = savedTasks.filter(task => {
     if (task.estado === "pendiente") return true;
-    
     if (task.estado === "finalizada" && task.sincronizadoOdoo) {
       const finishDate = new Date(task.fechaFinalizacion);
       const diffTime = Math.abs(now - finishDate);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
       return diffDays <= retentionDays;
     }
     return true;
   });
 
   localStorage.setItem("ayax_tasks_db", JSON.stringify(cleanedTasks));
-  console.log("🧹 Limpieza automática ejecutada: Almacenamiento optimizado.");
 }
