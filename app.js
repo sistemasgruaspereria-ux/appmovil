@@ -356,18 +356,25 @@ function addNewDay() {
       <textarea id="obs-day-${totalDaysCreated}" rows="2" placeholder="Describa cualquier novedad ocurrida..."></textarea>
     </div>
 
-    <!-- CAMPO DE FOTO OBLIGATORIO CON VISTA PREVIA Y CANVAS -->
+    <!-- CAMPO DE FOTO OBLIGATORIO CON VISTA PREVIA Y BOTÓN DE ELIMINAR -->
     <div class="form-group" style="background: #f0fdf4; padding: 12px; border-radius: 6px; border: 2px dashed #27ae60; margin-bottom: 12px;">
       <label style="color: #27ae60; font-weight: bold; display: block; margin-bottom: 4px;">
         📸 Evidencia Fotográfica del Día * (Obligatorio)
       </label>
-      <p style="font-size: 0.75rem; color: #555; margin-bottom: 6px;">Tome o suba la foto. Se estampará automáticamente con el pie de página corporativo.</p>
+      <p style="font-size: 0.75rem; color: #555; margin-bottom: 6px;">Tome o suba la foto. Se estampará automáticamente con los datos del cliente, grúa y tarea.</p>
       
-      <input type="file" id="foto-day-${totalDaysCreated}" accept="image/*" capture="environment" class="form-control" style="font-size: 0.85rem; padding: 6px; width: 100%;" onchange="previewImageWithWatermark(event, ${totalDaysCreated})">
+      <div id="input-container-foto-${totalDaysCreated}">
+        <input type="file" id="foto-day-${totalDaysCreated}" accept="image/*" capture="environment" class="form-control" style="font-size: 0.85rem; padding: 6px; width: 100%;" onchange="previewImageWithWatermark(event, ${totalDaysCreated})">
+      </div>
       
       <div id="preview-container-${totalDaysCreated}" style="margin-top: 10px; display: none; text-align: center;">
         <p style="font-size: 0.75rem; font-weight: bold; color: #040B5D; margin-bottom: 4px;">Vista previa con sello corporativo:</p>
-        <canvas id="canvas-preview-${totalDaysCreated}" style="max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px;"></canvas>
+        <canvas id="canvas-preview-${totalDaysCreated}" style="max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 8px;"></canvas>
+        <div>
+          <button type="button" onclick="eliminarYRepetirFoto(${totalDaysCreated})" style="background: #dc2626; color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.8rem;">
+            🗑️ Eliminar y tomar otra foto
+          </button>
+        </div>
       </div>
     </div>
 
@@ -379,7 +386,7 @@ function addNewDay() {
 }
 
 // ==========================================
-// VISTA PREVIA CON SELLO CORPORATIVO
+// VISTA PREVIA CON SELLO CORPORATIVO COMPLETO
 // ==========================================
 function previewImageWithWatermark(event, dayNum) {
   const file = event.target.files[0];
@@ -392,38 +399,57 @@ function previewImageWithWatermark(event, dayNum) {
       const canvas = document.getElementById(`canvas-preview-${dayNum}`);
       const ctx = canvas.getContext('2d');
 
+      // Espacio inferior de 180px para acomodar todos los datos completos
       canvas.width = img.width;
-      canvas.height = img.height + 140; // Espacio extra abajo para el pie de página
+      canvas.height = img.height + 180;
 
       // 1. Dibujar la foto original
       ctx.drawImage(img, 0, 0);
 
       // 2. Fondo del pie de página (Color corporativo Navy #040B5D)
       ctx.fillStyle = "#040B5D";
-      ctx.fillRect(0, img.height, canvas.width, 140);
+      ctx.fillRect(0, img.height, canvas.width, 180);
 
       // 3. Línea dorada superior del footer (#BF956E)
       ctx.fillStyle = "#BF956E";
       ctx.fillRect(0, img.height, canvas.width, 8);
 
-      // 4. Textos corporativos en el pie de página
+      // 4. Obtener datos completos de la tarea y formulario
+      const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
+      const currentTask = savedTasks.find(t => t.id === currentActiveTaskId) || {};
+      
+      const clienteNombre = currentTask.cliente || "CLIENTE GENERAL";
+      const numTarea = currentActiveTaskId || "S/N";
+      const grua = document.getElementById(`grua-day-${dayNum}`).value || "Grúa General";
+      const dirInput = document.getElementById(`dir-day-${dayNum}`).value;
+      const direccion = dirInput || currentTask.direccion || "Sin dirección";
+      const fechaActual = new Date().toLocaleDateString();
+
+      // 5. Escribir textos corporativos completos
       ctx.fillStyle = "#FFFFFF";
       ctx.font = `bold ${Math.max(16, canvas.width * 0.025)}px sans-serif`;
-      ctx.fillText("AYAX - GRÚAS PEREIRA | REPORTE DE CAMPO", 30, img.height + 40);
+      ctx.fillText(`AYAX - GRÚAS PEREIRA | TAREA #${numTarea}`, 30, img.height + 38);
 
       ctx.font = `${Math.max(14, canvas.width * 0.02)}px sans-serif`;
-      const grua = document.getElementById(`grua-day-${dayNum}`).value || "Grúa General";
-      const dir = document.getElementById(`dir-day-${dayNum}`).value || "Sin dirección";
-      
-      ctx.fillText(`Grúa: ${grua} | Ubicación: ${dir}`, 30, img.height + 75);
-      ctx.fillText(`Fecha: ${new Date().toLocaleDateString()} | Estado: Verificado`, 30, img.height + 110);
+      ctx.fillText(`Cliente: ${clienteNombre}`, 30, img.height + 72);
+      ctx.fillText(`Dirección: ${direccion}`, 30, img.height + 106);
+      ctx.fillText(`Grúa: ${grua} | Fecha: ${fechaActual}`, 30, img.height + 140);
 
-      // Mostrar contenedor de vista previa
+      // Ocultar selector y mostrar vista previa con botón de eliminar
+      document.getElementById(`input-container-foto-${dayNum}`).style.display = "none";
       document.getElementById(`preview-container-${dayNum}`).style.display = "block";
     };
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
+}
+
+function eliminarYRepetirFoto(dayNum) {
+  const inputFile = document.getElementById(`foto-day-${dayNum}`);
+  if (inputFile) inputFile.value = "";
+
+  document.getElementById(`preview-container-${dayNum}`).style.display = "none";
+  document.getElementById(`input-container-foto-${dayNum}`).style.display = "block";
 }
 
 function setNow(fieldId) {
