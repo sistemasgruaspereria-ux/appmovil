@@ -27,7 +27,7 @@ let authorizedOperators = [
   { phone: "3115653390", pin: "8950", name: "Milton Andrés Pérez Neva", role: "operario" },
   { phone: "3027507045", pin: "9760", name: "Santiago Rivera Marin", role: "operario" },
   { phone: "3148643257", pin: "3268", name: "Uriel González Ocampo", role: "operario" },
-  { phone: "319200041", pin: "7780", name: "Víctor Fernando Ocampo Amaya", role: "operario" },
+  { phone: "319200041",  pin: "7780", name: "Víctor Fernando Ocampo Amaya", role: "operario" },
   { phone: "3228241425", pin: "1520", name: "Wilfer Alberto Sepulveda Restrepo", role: "operario" },
   { phone: "3206311945", pin: "1764", name: "Willer Alexis Quintero Hurtado", role: "operario" },
   { phone: "3105385889", pin: "7841", name: "Wilmar Diovany Muñoz Giraldo", role: "operario" },
@@ -100,7 +100,7 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-
+  
   window.addEventListener('click', (e) => {
     const dropdown = document.getElementById('userDropdownMenu');
     const badge = document.getElementById('userBadge');
@@ -148,6 +148,7 @@ function verificarModoMantenimiento() {
   const pantallaMantenimiento = document.getElementById('maintenance-screen');
   const appContainer = document.getElementById('app');
   const loginScreen = document.getElementById('loginScreen');
+
   if (enMantenimiento && pantallaMantenimiento) {
     pantallaMantenimiento.style.display = 'flex';
     if (appContainer) appContainer.classList.add('hidden');
@@ -222,37 +223,46 @@ function renderPanelRedesParaDanilo() {
   const containerFinalizadas = document.getElementById("listFinalizadas");
   if (!containerFinalizadas) return;
   containerFinalizadas.innerHTML = "";
-
+  
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
-  const tareasFinalizadas = savedTasks.filter(t => t.estado === "finalizada");
-
+  
   const headerNotice = document.createElement("div");
   headerNotice.style.cssText = "background: #e0f2fe; color: #0369a1; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; border: 1px solid #bae6fd;";
-  headerNotice.innerHTML = `📥 Panel de Redes (Danilo): Visualice las tareas finalizadas y descargue el paquete ZIP con todas las evidencias fotográficas selladas.`;
+  headerNotice.innerHTML = `📥 Panel de Redes (Danilo): Visualice tareas finalizadas o avances de tareas activas para descargas periódicas de evidencias fotográficas selladas.`;
   containerFinalizadas.appendChild(headerNotice);
 
-  if (tareasFinalizadas.length === 0) {
+  if (savedTasks.length === 0) {
     const emptyMsg = document.createElement("p");
     emptyMsg.className = "empty-msg";
     emptyMsg.style.textAlign = "center";
-    emptyMsg.innerText = "No hay tareas finalizadas con evidencias disponibles aún.";
+    emptyMsg.innerText = "No hay tareas registradas con evidencias aún.";
     containerFinalizadas.appendChild(emptyMsg);
     return;
   }
 
-  tareasFinalizadas.forEach(task => {
+  savedTasks.forEach(task => {
+    let cantFotosTotal = 0;
+    if (task.diasDetalle && task.diasDetalle.length > 0) {
+      cantFotosTotal = task.diasDetalle.reduce((acc, d) => acc + (d.fotosLista ? d.fotosLista.length : 0), 0);
+    }
+
+    const isFinalizada = task.estado === "finalizada";
     const card = document.createElement("div");
     card.className = "task-card";
-    card.style.cssText = "background: white; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #27ae60;";
+    card.style.cssText = `background: white; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid ${isFinalizada ? '#27ae60' : '#BF956E'};`;
+    
     card.innerHTML = `
       <div class="task-header">
-        <span class="task-code" style="color: #27ae60; font-weight: bold;">Tarea #${task.id} (Finalizada)</span>
-        <small style="color: #64748b;">${new Date(task.fechaFinalizacion || Date.now()).toLocaleDateString()}</small>
+        <span class="task-code" style="color: ${isFinalizada ? '#27ae60' : '#040B5D'}; font-weight: bold;">
+          Tarea #${task.id} (${isFinalizada ? 'Finalizada' : 'En Progreso / Activa'})
+        </span>
+        <small style="color: #64748b;">${new Date(task.fechaFinalizacion || task.fechaActualizacion || Date.now()).toLocaleDateString()}</small>
       </div>
       <p class="task-client"><strong>Cliente:</strong> ${task.cliente}</p>
-      <p class="task-client"><strong>Total Días / Horas:</strong> ${task.totalDias || 1} días (${task.totalHoras || 0.0} hrs)</p>
+      <p class="task-client"><strong>Días Registrados / Horas:</strong> ${task.diasDetalle ? task.diasDetalle.length : (task.totalDias || 0)} días (${task.totalHoras || 0.0} hrs)</p>
+      <p class="task-client" style="color: #0369a1; font-weight: 600;">📷 Fotos disponibles: ${cantFotosTotal}</p>
       <div style="margin-top: 12px; display: flex; gap: 8px;">
-        <button onclick="descargarEvidenciasTarea('${task.id}')" style="background: #040B5D; color: white; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; font-size: 0.85rem;">
+        <button onclick="descargarEvidenciasTarea('${task.id}')" style="background: ${isFinalizada ? '#040B5D' : '#BF956E'}; color: white; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; font-size: 0.85rem;">
           📦 Descargar Paquete de Evidencias (ZIP)
         </button>
       </div>
@@ -274,23 +284,30 @@ async function descargarEvidenciasTarea(taskId) {
   }
 
   if (typeof JSZip === 'undefined') {
-    alert("La librería JSZip no está cargada.");
+    alert("La librería JSZip no está cargada en la aplicación.");
     return;
   }
 
   const zip = new JSZip();
   const folderName = `Tarea_${task.id}_${task.cliente.replace(/[^a-zA-Z0-9]/g, '_')}`;
   const taskFolder = zip.folder(folderName);
-
   let fotosAgregadas = 0;
 
   task.diasDetalle.forEach((day) => {
     if (day.fotosLista && day.fotosLista.length > 0) {
-      day.fotosLista.forEach((fotoBase64, index) => {
-        const base64Data = fotoBase64.split(',')[1];
-        const fileName = `Dia_${day.dayNum}_Evidencia_${index + 1}.jpg`;
-        taskFolder.file(fileName, base64Data, { base64: true });
-        fotosAgregadas++;
+      day.fotosLista.forEach((fotoObj, index) => {
+        let base64Data = "";
+        if (typeof fotoObj === "string") {
+          base64Data = fotoObj.split(',')[1];
+        } else if (fotoObj && fotoObj.data) {
+          base64Data = fotoObj.data.split(',')[1];
+        }
+
+        if (base64Data) {
+          const fileName = `Dia_${day.dayNum}_Evidencia_${index + 1}.jpg`;
+          taskFolder.file(fileName, base64Data, { base64: true });
+          fotosAgregadas++;
+        }
       });
     }
   });
@@ -301,7 +318,6 @@ async function descargarEvidenciasTarea(taskId) {
   }
 
   alert("Generando paquete ZIP... La descarga comenzará en breve.");
-
   try {
     const content = await zip.generateAsync({ type: "blob" });
     const link = document.createElement('a');
@@ -401,7 +417,18 @@ function openTask(id) {
   if (daysListContainer) daysListContainer.innerHTML = "";
   
   totalDaysCreated = 0;
-  currentDaysData = [];
+  
+  // Cargar días guardados previamente en esta tarea si existen
+  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
+  const task = savedTasks.find(t => t.id === id);
+  if (task && task.diasDetalle && task.diasDetalle.length > 0) {
+    currentDaysData = [...task.diasDetalle];
+    totalDaysCreated = currentDaysData.length;
+    renderDaysAccordion();
+  } else {
+    currentDaysData = [];
+  }
+
   addNewDay();
 }
 
@@ -420,7 +447,6 @@ function closeWizard() {
 function addNewDay() {
   totalDaysCreated++;
   fotosDiaTemporal = [];
-
   const container = document.getElementById("daysContainer");
   const dayCard = document.createElement("div");
   dayCard.className = "day-card";
@@ -454,6 +480,9 @@ function addNewDay() {
         <label>Operador *</label>
         <select id="op-day-${totalDaysCreated}" class="form-control">
           <option value="">-- Operador --</option>
+          <option value="Brandon Tapasco">Brandon Tapasco</option>
+          <option value="Cristian Rodas">Cristian Rodas</option>
+          <option value="Giovanni Ocampo">Giovanni Ocampo</option>
           <option value="Carlos Operario">Carlos Operario</option>
           <option value="Mario Restrepo">Mario Restrepo</option>
         </select>
@@ -530,10 +559,8 @@ function addNewDay() {
       <button type="button" onclick="document.getElementById('input-foto-multi-${totalDaysCreated}').click()" style="background: #27ae60; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 0.9rem;">
         📸 Tomar o Seleccionar Foto
       </button>
-
       <div id="galeria-fotos-${totalDaysCreated}" style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;"></div>
     </div>
-
     <button type="button" id="btnSaveDay-${totalDaysCreated}" class="btn-save-day" onclick="saveDayRecord(${totalDaysCreated})" style="background-color: #040B5D; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 5px;">
       Guardar Día #${totalDaysCreated}
     </button>
@@ -543,6 +570,9 @@ function addNewDay() {
 
 // ==========================================
 // PROCESAR MÚLTIPLES FOTOS CON SELLO CORPORATIVO
+// ==========================================
+// ==========================================
+// PROCESAR MÚLTIPLES FOTOS CON SELLO EN DOS COLUMNAS
 // ==========================================
 function procesarFotoMulti(event, dayNum) {
   const file = event.target.files[0];
@@ -555,38 +585,66 @@ function procesarFotoMulti(event, dayNum) {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
+      // Mantenemos la franja inferior de 180px para el sello corporativo
       canvas.width = img.width;
       canvas.height = img.height + 180;
 
+      // Dibujar la fotografía capturada
       ctx.drawImage(img, 0, 0);
 
+      // Fondo azul corporativo (#040B5D)
       ctx.fillStyle = "#040B5D";
       ctx.fillRect(0, img.height, canvas.width, 180);
 
+      // Línea dorada superior decorativa (#BF956E)
       ctx.fillStyle = "#BF956E";
       ctx.fillRect(0, img.height, canvas.width, 8);
 
+      // Obtener datos de la tarea actual
       const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
       const currentTask = savedTasks.find(t => t.id === currentActiveTaskId) || {};
       
       const clienteNombre = currentTask.cliente || "CLIENTE GENERAL";
       const numTarea = currentActiveTaskId || "S/N";
-      const grua = document.getElementById(`grua-day-${dayNum}`).value || "Grúa General";
+      const gruaElem = document.getElementById(`grua-day-${dayNum}`);
+      const grua = (gruaElem && gruaElem.value) ? gruaElem.value : "Grúa General";
       const dirInput = document.getElementById(`dir-day-${dayNum}`).value;
       const direccion = dirInput || currentTask.direccion || "Sin dirección";
-      const fechaActual = new Date().toLocaleDateString();
+      
+      const ahora = new Date();
+      const fechaActual = ahora.toLocaleDateString();
+      const horaActual = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // Configuración de columnas (Izquierda y Derecha)
+      const colIzquierdaX = 30;
+      const colDerechaX = Math.floor(canvas.width * 0.52);
+      const fontSizeNormal = Math.max(14, canvas.width * 0.02);
+      const fontSizeBold = Math.max(16, canvas.width * 0.024);
 
       ctx.fillStyle = "#FFFFFF";
-      ctx.font = `bold ${Math.max(16, canvas.width * 0.025)}px sans-serif`;
-      ctx.fillText(`AYAX - GRÚAS PEREIRA | TAREA #${numTarea}`, 30, img.height + 38);
 
-      ctx.font = `${Math.max(14, canvas.width * 0.02)}px sans-serif`;
-      ctx.fillText(`Cliente: ${clienteNombre}`, 30, img.height + 72);
-      ctx.fillText(`Dirección: ${direccion}`, 30, img.height + 106);
-      ctx.fillText(`Grúa: ${grua} | Fecha: ${fechaActual}`, 30, img.height + 140);
+      // --- COLUMNA IZQUIERDA ---
+      ctx.font = `bold ${fontSizeBold}px sans-serif`;
+      ctx.fillText(`AYAX | TAREA #${numTarea}`, colIzquierdaX, img.height + 45);
+
+      ctx.font = `${fontSizeNormal}px sans-serif`;
+      ctx.fillText(`Cliente: ${clienteNombre}`, colIzquierdaX, img.height + 85);
+      ctx.fillText(`Dirección: ${direccion}`, colIzquierdaX, img.height + 125);
+
+      // --- COLUMNA DERECHA ---
+      ctx.font = `bold ${fontSizeBold}px sans-serif`;
+      ctx.fillText(`Vehículo: ${grua}`, colDerechaX, img.height + 45);
+
+      ctx.font = `${fontSizeNormal}px sans-serif`;
+      ctx.fillText(`Fecha: ${fechaActual}`, colDerechaX, img.height + 85);
+      ctx.fillText(`Hora: ${horaActual}`, colDerechaX, img.height + 125);
 
       const fotoSelladaBase64 = canvas.toDataURL('image/jpeg', 0.9);
-      fotosDiaTemporal.push(fotoSelladaBase64);
+      fotosDiaTemporal.push({
+        data: fotoSelladaBase64,
+        enviadoRedes: false,
+        fechaCaptura: ahora.toISOString()
+      });
 
       renderGaleriaMiniaturas(dayNum);
       event.target.value = "";
@@ -604,13 +662,13 @@ function renderGaleriaMiniaturas(dayNum) {
   if (!galeria) return;
   galeria.innerHTML = "";
 
-  fotosDiaTemporal.forEach((foto, index) => {
+  fotosDiaTemporal.forEach((fotoObj, index) => {
+    const fotoSrc = typeof fotoObj === "string" ? fotoObj : fotoObj.data;
     const contenedorMini = document.createElement("div");
     contenedorMini.style.cssText = "position: relative; width: 75px; height: 75px; border-radius: 6px; overflow: hidden; border: 2px solid #BF956E; cursor: pointer; background: #000;";
     
-    // Al hacer clic en la miniatura se abre la vista previa en grande
     contenedorMini.innerHTML = `
-      <img src="${foto}" onclick="verFotoGrande('${foto}')" style="width: 100%; height: 100%; object-fit: cover;" title="Tocar para ampliar">
+      <img src="${fotoSrc}" onclick="verFotoGrande('${fotoSrc}')" style="width: 100%; height: 100%; object-fit: cover;" title="Tocar para ampliar">
       <button type="button" onclick="event.stopPropagation(); eliminarFotoTemporal(${dayNum}, ${index})" style="position: absolute; top: 2px; right: 2px; background: rgba(220,38,38,0.9); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 11px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center;" title="Eliminar foto">✕</button>
     `;
     galeria.appendChild(contenedorMini);
@@ -621,7 +679,6 @@ function renderGaleriaMiniaturas(dayNum) {
 // MODAL DE VISTA PREVIA EN GRANDE
 // ==========================================
 function verFotoGrande(base64Url) {
-  // Crear modal flotante dinámico para ver la foto con el sello en detalle
   let modal = document.getElementById("modalVistaPreviaFoto");
   if (!modal) {
     modal = document.createElement("div");
@@ -664,6 +721,7 @@ function calculateHours(dayNum) {
   const hfin = document.getElementById(`hfin-day-${dayNum}`).value;
   const display = document.getElementById(`hours-display-${dayNum}`);
   let hours = 0.0;
+
   if (hini && hfin) {
     const [h1, m1] = hini.split(':').map(Number);
     const [h2, m2] = hfin.split(':').map(Number);
@@ -671,12 +729,16 @@ function calculateHours(dayNum) {
     if (diff < 0) diff += 24 * 60;
     hours = (diff / 60).toFixed(1);
   }
+
   if (display) {
     display.dataset.hours = hours;
     display.innerText = `${hours} Horas`;
   }
 }
 
+// ==========================================
+// GUARDADO DE DÍA Y SINCRONIZACIÓN EN SEGUNDO PLANO
+// ==========================================
 function saveDayRecord(dayNum) {
   const dir = document.getElementById(`dir-day-${dayNum}`).value;
   const desc = document.getElementById(`desc-day-${dayNum}`).value;
@@ -718,10 +780,35 @@ function saveDayRecord(dayNum) {
   };
   
   currentDaysData.push(dayData);
+
+  // Sincronización silenciosa en segundo plano en la BD local de tareas
+  sincronizarAvanceEnSegundoPlano();
+
   renderDaysAccordion();
   document.getElementById("daysContainer").innerHTML = "";
   alert(`Día #${dayNum} guardado correctamente con ${fotosDiaTemporal.length} foto(s) de evidencia.`);
   fotosDiaTemporal = [];
+}
+
+// Sincroniza silenciosamente el día registrado en la base de datos local para que Danilo lo vea de inmediato en tareas activas
+function sincronizarAvanceEnSegundoPlano() {
+  let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
+  let totalHoursSum = currentDaysData.reduce((acc, day) => acc + (day.horasTrabajadas || 0), 0);
+
+  savedTasks = savedTasks.map(t => {
+    if (t.id === currentActiveTaskId) {
+      return {
+        ...t,
+        totalDias: currentDaysData.length,
+        totalHoras: totalHoursSum.toFixed(1),
+        diasDetalle: currentDaysData,
+        fechaActualizacion: new Date().toISOString()
+      };
+    }
+    return t;
+  });
+
+  localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
 }
 
 function renderDaysAccordion() {
@@ -827,7 +914,7 @@ function clearCanvas(canvasId) {
 }
 
 // ==========================================
-// FINALIZAR TAREA (SIN CORREO, DIRECTO A REDES)
+// FINALIZAR TAREA (DISPONIBLE PARA REDES Y ODOO)
 // ==========================================
 function finalizeTask() {
   let totalHoursSum = currentDaysData.reduce((acc, day) => acc + (day.horasTrabajadas || 0), 0);
@@ -852,8 +939,7 @@ function finalizeTask() {
   });
   
   localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
-
-  alert("¡Tarea finalizada con éxito!");
+  alert("¡Tarea finalizada con éxito! Todas las evidencias fotográficas selladas han quedado disponibles en el panel de Redes para Danilo.");
   showReportView(currentActiveTaskId);
 }
 
@@ -866,6 +952,7 @@ function showReportView(id) {
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   const task = savedTasks.find(t => t.id === id);
   let htmlDetails = "";
+
   if (task) {
     htmlDetails = `
       <p><strong>Cliente:</strong> ${task.cliente}</p>
@@ -885,20 +972,24 @@ function showReportView(id) {
 function descargarReportePDF() {
   const startDate = document.getElementById("pdfStartDate").value;
   const endDate = document.getElementById("pdfEndDate").value;
+
   if (!startDate || !endDate) {
     alert("Por favor seleccione una fecha de inicio y una fecha final para el reporte.");
     return;
   }
+
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   let filteredTasks = savedTasks.filter(t => {
     if (t.estado !== "finalizada") return false;
     const taskDateStr = new Date(t.fechaFinalizacion || t.fechaCreacion || Date.now()).toISOString().split('T')[0];
     return taskDateStr >= startDate && taskDateStr <= endDate;
   });
+
   if (filteredTasks.length === 0) {
     alert(`No hay tareas finalizadas en el rango del ${startDate} al ${endDate}.`);
     return;
   }
+
   let printWindow = window.open('', '_blank');
   let htmlContent = `
     <html>
@@ -920,6 +1011,7 @@ function descargarReportePDF() {
     <div class="subtitle">Reporte Consolidado de Operaciones | Desde: ${startDate} Hasta: ${endDate}</div>
     <hr style="border: 0; border-top: 2px solid #BF956E; margin: 15px 0;">
   `;
+
   let totalGeneralHoras = 0;
   filteredTasks.forEach(task => {
     let fecha = new Date(task.fechaFinalizacion || task.fechaCreacion || Date.now()).toLocaleDateString();
@@ -933,6 +1025,7 @@ function descargarReportePDF() {
         <p><strong>Dirección:</strong> ${task.direccion || 'N/A'}</p>
         <p><strong>Total Días:</strong> ${task.totalDias || 1}</p>
     `;
+
     if (task.diasDetalle && task.diasDetalle.length > 0) {
       task.diasDetalle.forEach(d => {
         htmlContent += `
@@ -944,11 +1037,13 @@ function descargarReportePDF() {
         `;
       });
     }
+
     htmlContent += `
         <p style="text-align: right; font-weight: bold; color: #040B5D; margin-top: 8px;">Total Tarea: ${task.totalHoras || 0} Horas</p>
       </div>
     `;
   });
+
   htmlContent += `
     <div class="total-general">
       Total Horas Acumuladas en el Periodo: ${totalGeneralHoras.toFixed(1)} Horas
