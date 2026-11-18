@@ -16,7 +16,6 @@
         <h2 style="color: #f59e0b; font-size: 24px; margin-bottom: 10px;">¡Estamos mejorando para ti!</h2>
         <p style="color: #94a3b8; font-size: 16px; max-width: 400px;">La plataforma se encuentra temporalmente en actualización.</p>
     </div>
-
     <!-- LOGIN PRINCIPAL -->
     <div id="loginScreen" class="login-screen">
         <div class="login-card">
@@ -34,7 +33,6 @@
             <button class="btn-primary" onclick="handleLogin()">Ingresar al Sistema</button>
         </div>
     </div>
-
     <!-- CONTENEDOR PRINCIPAL DE LA APP -->
     <div id="app" class="app-container hidden">
         <!-- ENCABEZADO -->
@@ -53,7 +51,6 @@
                 </div>
             </div>
         </header>
-
         <!-- NAVEGACIÓN PRINCIPAL -->
         <nav class="nav-tabs" id="mainNavTabs">
             <button id="btnTabPendientes" class="tab-btn active" onclick="switchTab('pendientes')">
@@ -63,12 +60,10 @@
                 Finalizadas (<span id="countFinalizadas">0</span>)
             </button>
         </nav>
-
         <!-- VISTA 1: PENDIENTES -->
         <section id="secPendientes" class="tab-content active">
             <div class="cards-list" id="listPendientes"></div>
         </section>
-
         <!-- VISTA 2: FINALIZADAS / PANEL DE REDES -->
         <section id="secFinalizadas" class="tab-content hidden">
             <div class="search-box" style="display: flex; gap: 8px; margin-bottom: 10px;">
@@ -87,7 +82,6 @@
                 <button class="btn-primary" onclick="descargarReportePDF()" style="background-color: #040B5D; padding: 12px; width: 100%; border-radius: 6px; color: white; border: none; cursor: pointer; font-weight: bold;">Descargar Reporte PDF</button>
             </div>
         </section>
-
         <!-- VISTA 3: ASISTENTE MULTI-DÍA (WIZARD) -->
         <section id="secWizard" class="tab-content hidden">
             <div class="wizard-header-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -105,15 +99,12 @@
                         <option value="LNV">LNV - Lanzado de vigas</option>
                     </select>
                 </div>
-
                 <div id="daysListContainer" class="days-list-container" style="margin-bottom: 15px;"></div>
                 <div id="daysContainer"></div>
-
                 <button type="button" id="btnAddDay" class="btn-visible-add" onclick="addNewDay()" style="margin-top: 15px; width: 100%; padding: 12px; background: #BF956E; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">+ Crear Día Adicional</button>
                 <button type="button" id="btnNextToSign" class="btn-primary" onclick="goToSignSection()" style="margin-top: 20px; background-color: #040B5D; padding: 14px; width: 100%; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: bold;">Siguiente: Firmas y Cierre</button>
             </div>
         </section>
-
         <!-- VISTA 4: FIRMAS Y FINALIZACIÓN -->
         <section id="secSignatures" class="tab-content hidden">
             <div class="wizard-header-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -124,23 +115,19 @@
                 <div id="fotosResumenBadge" style="background: #e0f2fe; color: #0369a1; padding: 10px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; margin-bottom: 15px; border: 1px solid #bae6fd;">
                     📷 Fotos oficiales de redes preparadas: <span id="cantFotosAcumuladas">0</span>
                 </div>
-
                 <div class="form-section-title" style="font-weight: 700; color: #040B5D; margin-bottom: 5px;">Firma del Operador</div>
                 <div class="signature-box-container" style="border: 1px solid #DDC9B8; background: white; padding: 10px; border-radius: 6px; text-align: center;">
                     <canvas id="canvasOperador" class="sig-canvas" width="350" height="150" style="border: 1px dashed #ccc; touch-action: none; background: #fff;"></canvas><br>
                     <button type="button" onclick="clearCanvas('canvasOperador')" style="margin-top: 8px; padding: 6px 12px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Limpiar Firma</button>
                 </div>
-
                 <div class="form-section-title" style="font-weight: 700; color: #040B5D; margin-top: 20px; margin-bottom: 5px;">Firma del Cliente</div>
                 <div class="signature-box-container" style="border: 1px solid #DDC9B8; background: white; padding: 10px; border-radius: 6px; text-align: center;">
                     <canvas id="canvasCliente" class="sig-canvas" width="350" height="150" style="border: 1px dashed #ccc; touch-action: none; background: #fff;"></canvas><br>
                     <button type="button" onclick="clearCanvas('canvasCliente')" style="margin-top: 8px; padding: 6px 12px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Limpiar Firma</button>
                 </div>
-
                 <button class="btn-primary" onclick="finalizeTask()" style="margin-top: 25px; background-color: #27ae60; width: 100%; padding: 14px; border: none; border-radius: 6px; color: white; font-weight: bold; font-size: 1rem; cursor: pointer;">Finalizar Servicio y Enviar a Redes</button>
             </div>
         </section>
-
         <!-- VISTA 5: REPORTE POST-CIERRE -->
         <section id="secReporte" class="tab-content hidden">
             <div class="wizard-header-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -157,7 +144,17 @@
             </div>
         </section>
     </div>
-
     <script src="app.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            registration.unregister().then(function(boolean) {
+              console.log("Service Worker desregistrado con éxito:", boolean);
+            });
+          }
+        });
+      }
+    </script>
 </body>
 </html>
