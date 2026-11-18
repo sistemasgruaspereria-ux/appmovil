@@ -55,25 +55,21 @@ let defaultMockTasks = [
     estado: "pendiente"
   }
 ];
-
 let totalDaysCreated = 0;
 let currentActiveTaskId = null;
 let currentDaysData = [];
 let fotosDiaTemporal = [];
-let fotosAcumuladasSesion = [];
 
 // ==========================================
 // CONTROL DE CONECTIVIDAD Y EVENTOS
 // ==========================================
 window.addEventListener('online', handleNetworkChange);
 window.addEventListener('offline', handleNetworkChange);
-
 function handleNetworkChange() {
   if (navigator.onLine) {
     processOfflineQueue();
   }
 }
-
 function processOfflineQueue() {
   let pendingSync = JSON.parse(localStorage.getItem("ayax_sync_queue")) || [];
   if (pendingSync.length > 0) {
@@ -113,7 +109,7 @@ window.addEventListener("DOMContentLoaded", () => {
   if (!savedTasks || savedTasks.length === 0) {
     localStorage.setItem("ayax_tasks_db", JSON.stringify(defaultMockTasks));
   }
-
+  
   const today = new Date();
   const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
   const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
@@ -126,15 +122,10 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("loginScreen").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
     const userBadgeSpan = document.querySelector("#userBadge span");
-    if (userBadgeSpan) userBadgeSpan.textContent = operadorEncontradoFormateado(usuarioActivo.name);
-    
+    if (userBadgeSpan) userBadgeSpan.textContent = usuarioActivo.name;
     configurarVistaPorRol(usuarioActivo);
   }
 });
-
-function operadorEncontradoFormateado(nombre) {
-  return nombre;
-}
 
 function toggleUserMenu() {
   const dropdown = document.getElementById('userDropdownMenu');
@@ -148,7 +139,6 @@ function verificarModoMantenimiento() {
   const pantallaMantenimiento = document.getElementById('maintenance-screen');
   const appContainer = document.getElementById('app');
   const loginScreen = document.getElementById('loginScreen');
-
   if (enMantenimiento && pantallaMantenimiento) {
     pantallaMantenimiento.style.display = 'flex';
     if (appContainer) appContainer.classList.add('hidden');
@@ -162,7 +152,6 @@ function configurarVistaPorRol(operador) {
   const navTabs = document.getElementById("mainNavTabs");
   const secPendientes = document.getElementById("secPendientes");
   const secFinalizadas = document.getElementById("secFinalizadas");
-
   if (operador.role === "redes") {
     if (navTabs) navTabs.style.display = "none";
     if (secPendientes) secPendientes.classList.add("hidden");
@@ -185,7 +174,6 @@ function renderTasks() {
     renderPanelRedesParaDanilo();
     return;
   }
-
   const containerPendientes = document.getElementById("listPendientes");
   if (!containerPendientes) return;
   containerPendientes.innerHTML = "";
@@ -217,8 +205,10 @@ function renderTasks() {
 }
 
 // ==========================================
-// PANEL EXCLUSIVO DE REDES (DANILO)
+// PANEL EXCLUSIVO DE REDES (DANILO) CON PESTAÑAS DE CONTROL
 // ==========================================
+let tabRedesActiva = 'pendientes'; // 'pendientes' o 'historial'
+
 function renderPanelRedesParaDanilo() {
   const containerFinalizadas = document.getElementById("listFinalizadas");
   if (!containerFinalizadas) return;
@@ -227,43 +217,70 @@ function renderPanelRedesParaDanilo() {
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   
   const headerNotice = document.createElement("div");
-  headerNotice.style.cssText = "background: #e0f2fe; color: #0369a1; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; border: 1px solid #bae6fd;";
-  headerNotice.innerHTML = `📥 Panel de Redes (Danilo): Visualice tareas finalizadas o avances de tareas activas para descargas periódicas de evidencias fotográficas selladas.`;
+  headerNotice.style.cssText = "background: #e0f2fe; color: #0369a1; padding: 12px; border-radius: 6px; margin-bottom: 12px; font-weight: bold; border: 1px solid #bae6fd; font-size: 0.85rem;";
+  headerNotice.innerHTML = `📥 Panel de Redes (Danilo): Al descargar el ZIP de una tarea, esta se moverá automáticamente al historial de descargadas.`;
   containerFinalizadas.appendChild(headerNotice);
 
-  if (savedTasks.length === 0) {
-    const emptyMsg = document.createElement("p");
-    emptyMsg.className = "empty-msg";
-    emptyMsg.style.textAlign = "center";
-    emptyMsg.innerText = "No hay tareas registradas con evidencias aún.";
-    containerFinalizadas.appendChild(emptyMsg);
-    return;
-  }
+  const tabsContainer = document.createElement("div");
+  tabsContainer.style.cssText = "display: flex; gap: 8px; margin-bottom: 15px;";
+  tabsContainer.innerHTML = `
+    <button type="button" onclick="cambiarTabRedes('pendientes')" style="flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; background: ${tabRedesActiva === 'pendientes' ? '#040B5D' : '#e2e8f0'}; color: ${tabRedesActiva === 'pendientes' ? '#ffffff' : '#334155'};">
+      📥 Pendientes por Descargar
+    </button>
+    <button type="button" onclick="cambiarTabRedes('historial')" style="flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; background: ${tabRedesActiva === 'historial' ? '#040B5D' : '#e2e8f0'}; color: ${tabRedesActiva === 'historial' ? '#ffffff' : '#334155'};">
+      📁 Historial Descargadas
+    </button>
+  `;
+  containerFinalizadas.appendChild(tabsContainer);
 
-  savedTasks.forEach(task => {
+  const tareasFiltradas = savedTasks.filter(task => {
     let cantFotosTotal = 0;
     if (task.diasDetalle && task.diasDetalle.length > 0) {
       cantFotosTotal = task.diasDetalle.reduce((acc, d) => acc + (d.fotosLista ? d.fotosLista.length : 0), 0);
     }
+    if (cantFotosTotal === 0) return false;
 
+    if (tabRedesActiva === 'pendientes') {
+      return !task.descargadoRedes;
+    } else {
+      return task.descargadoRedes === true;
+    }
+  });
+
+  if (tareasFiltradas.length === 0) {
+    const emptyMsg = document.createElement("p");
+    emptyMsg.className = "empty-msg";
+    emptyMsg.style.textAlign = "center";
+    emptyMsg.style.padding = "20px";
+    emptyMsg.innerText = tabRedesActiva === 'pendientes' 
+      ? "¡Excelente! No hay tareas pendientes por descargar en este momento." 
+      : "No hay registros en el historial de descargas aún.";
+    containerFinalizadas.appendChild(emptyMsg);
+    return;
+  }
+
+  tareasFiltradas.forEach(task => {
+    let cantFotosTotal = task.diasDetalle.reduce((acc, d) => acc + (d.fotosLista ? d.fotosLista.length : 0), 0);
     const isFinalizada = task.estado === "finalizada";
+    
     const card = document.createElement("div");
     card.className = "task-card";
-    card.style.cssText = `background: white; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid ${isFinalizada ? '#27ae60' : '#BF956E'};`;
+    card.style.cssText = `background: white; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid ${tabRedesActiva === 'pendientes' ? '#BF956E' : '#cbd5e1'};`;
     
     card.innerHTML = `
       <div class="task-header">
         <span class="task-code" style="color: ${isFinalizada ? '#27ae60' : '#040B5D'}; font-weight: bold;">
           Tarea #${task.id} (${isFinalizada ? 'Finalizada' : 'En Progreso / Activa'})
         </span>
-        <small style="color: #64748b;">${new Date(task.fechaFinalizacion || task.fechaActualizacion || Date.now()).toLocaleDateString()}</small>
+        <small style="color: #64748b;">${new Date(task.fechaActualizacion || task.fechaCreacion || Date.now()).toLocaleDateString()}</small>
       </div>
       <p class="task-client"><strong>Cliente:</strong> ${task.cliente}</p>
-      <p class="task-client"><strong>Días Registrados / Horas:</strong> ${task.diasDetalle ? task.diasDetalle.length : (task.totalDias || 0)} días (${task.totalHoras || 0.0} hrs)</p>
-      <p class="task-client" style="color: #0369a1; font-weight: 600;">📷 Fotos disponibles: ${cantFotosTotal}</p>
+      <p class="task-client"><strong>Días Registrados / Horas:</strong> ${task.diasDetalle ? task.diasDetalle.length : 1} días (${task.totalHoras || 0.0} hrs)</p>
+      <p class="task-client" style="color: #0369a1; font-weight: 600;">📷 Fotos disponibles en paquete: ${cantFotosTotal}</p>
+      ${task.descargadoRedes ? `<p style="font-size: 0.75rem; color: #16a34a; margin-top: 4px; font-weight: bold;">✔ Descargado el: ${new Date(task.fechaDescargaRedes).toLocaleString()}</p>` : ''}
       <div style="margin-top: 12px; display: flex; gap: 8px;">
-        <button onclick="descargarEvidenciasTarea('${task.id}')" style="background: ${isFinalizada ? '#040B5D' : '#BF956E'}; color: white; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; font-size: 0.85rem;">
-          📦 Descargar Paquete de Evidencias (ZIP)
+        <button onclick="descargarEvidenciasTarea('${task.id}')" style="background: ${tabRedesActiva === 'pendientes' ? '#040B5D' : '#475569'}; color: white; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; font-size: 0.85rem;">
+          ${tabRedesActiva === 'pendientes' ? '📦 Descargar Paquete de Evidencias (ZIP)' : '🔄 Volver a Descargar ZIP'}
         </button>
       </div>
     `;
@@ -271,12 +288,17 @@ function renderPanelRedesParaDanilo() {
   });
 }
 
+function cambiarTabRedes(tab) {
+  tabRedesActiva = tab;
+  renderPanelRedesParaDanilo();
+}
+
 // ==========================================
-// DESCARGA DE EVIDENCIAS EN ZIP
+// DESCARGA DE EVIDENCIAS Y PASE INMEDIATO AL HISTORIAL
 // ==========================================
 async function descargarEvidenciasTarea(taskId) {
-  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
-  const task = savedTasks.find(t => t.id === taskId);
+  let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
+  const task = savedTasks.find(t => String(t.id) === String(taskId));
   
   if (!task || !task.diasDetalle || task.diasDetalle.length === 0) {
     alert("No hay evidencias fotográficas registradas para esta tarea.");
@@ -288,6 +310,23 @@ async function descargarEvidenciasTarea(taskId) {
     return;
   }
 
+  // 1. Marcar inmediatamente como descargado en el almacenamiento local y mover al historial
+  savedTasks = savedTasks.map(t => {
+    if (String(t.id) === String(taskId)) {
+      return {
+        ...t,
+        descargadoRedes: true,
+        fechaDescargaRedes: new Date().toISOString()
+      };
+    }
+    return t;
+  });
+  localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
+
+  // 2. Actualizar la vista de Danilo al instante
+  renderPanelRedesParaDanilo();
+
+  // 3. Generar y descargar el archivo ZIP en segundo plano de manera silenciosa
   const zip = new JSZip();
   const folderName = `Tarea_${task.id}_${task.cliente.replace(/[^a-zA-Z0-9]/g, '_')}`;
   const taskFolder = zip.folder(folderName);
@@ -317,7 +356,6 @@ async function descargarEvidenciasTarea(taskId) {
     return;
   }
 
-  alert("Generando paquete ZIP... La descarga comenzará en breve.");
   try {
     const content = await zip.generateAsync({ type: "blob" });
     const link = document.createElement('a');
@@ -328,7 +366,6 @@ async function descargarEvidenciasTarea(taskId) {
     document.body.removeChild(link);
   } catch (err) {
     console.error("Error al generar el ZIP:", err);
-    alert("Ocurrió un error al generar el archivo ZIP.");
   }
 }
 
@@ -341,7 +378,6 @@ function filterFinalized() {
     renderPanelRedesParaDanilo();
     return;
   }
-
   const textQuery = document.getElementById("searchInput") ? document.getElementById("searchInput").value.toLowerCase().trim() : "";
   const dateQuery = document.getElementById("searchDate") ? document.getElementById("searchDate").value : "";
   const containerFinalizadas = document.getElementById("listFinalizadas");
@@ -418,7 +454,6 @@ function openTask(id) {
   
   totalDaysCreated = 0;
   
-  // Cargar días guardados previamente en esta tarea si existen
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   const task = savedTasks.find(t => t.id === id);
   if (task && task.diasDetalle && task.diasDetalle.length > 0) {
@@ -428,7 +463,6 @@ function openTask(id) {
   } else {
     currentDaysData = [];
   }
-
   addNewDay();
 }
 
@@ -546,8 +580,7 @@ function addNewDay() {
       <label>Observaciones / Novedades en Sitio (Rayones, Varadas, etc.)</label>
       <textarea id="obs-day-${totalDaysCreated}" rows="2" placeholder="Describa cualquier novedad ocurrida..."></textarea>
     </div>
-
-    <!-- SECCIÓN DE FOTOS MÚLTIPLES CON BOTÓN PERSONALIZADO -->
+    <!-- SECCIÓN DE FOTOS MÚLTIPLES CON SELLO CORPORATIVO -->
     <div class="form-group" style="background: #f0fdf4; padding: 14px; border-radius: 8px; border: 2px dashed #27ae60; margin-bottom: 15px;">
       <label style="color: #27ae60; font-weight: bold; display: block; margin-bottom: 6px;">
         📸 Evidencias Fotográficas del Día * (Puede tomar varias)
@@ -571,38 +604,27 @@ function addNewDay() {
 // ==========================================
 // PROCESAR MÚLTIPLES FOTOS CON SELLO CORPORATIVO
 // ==========================================
-
 function procesarFotoMulti(event, dayNum) {
   const file = event.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = function(e) {
     const img = new Image();
     img.onload = function() {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-
       canvas.width = img.width;
-      // Franja inferior optimizada de 125px (ideal para 3 líneas compactas sin espacios vacíos)
       const footerHeight = 125;
-
       canvas.height = img.height + footerHeight;
-
-      // Dibujar la fotografía capturada
+      
       ctx.drawImage(img, 0, 0);
-
-      // Fondo azul corporativo (#040B5D)
       ctx.fillStyle = "#040B5D";
       ctx.fillRect(0, img.height, canvas.width, footerHeight);
-
-      // Línea dorada superior decorativa (#BF956E)
       ctx.fillStyle = "#BF956E";
       ctx.fillRect(0, img.height, canvas.width, 6);
-
-      // Obtener datos de la tarea y del campo de dirección de este día
+      
       const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
-      const currentTask = savedTasks.find(t => t.id === currentActiveTaskId) || {};
+      const currentTask = savedTasks.find(t => String(t.id) === String(currentActiveTaskId)) || {};
       
       const clienteNombre = currentTask.cliente || "CLIENTE GENERAL";
       const numTarea = currentActiveTaskId || "S/N";
@@ -611,50 +633,41 @@ function procesarFotoMulti(event, dayNum) {
       
       const inputDirElement = document.getElementById(`dir-day-${dayNum}`);
       const dirInput = (inputDirElement && inputDirElement.value.trim()) ? inputDirElement.value.trim() : (currentTask.direccion || "Pereira");
-
-      // --- REGLA DE LA COMA (Municipio, Dirección) ---
+      
       let ciudadTexto = "Pereira";
       if (dirInput.includes(",")) {
         const partes = dirInput.split(",");
-        ciudadTexto = partes[0].trim(); // Solo se usa la ciudad para el sello
+        ciudadTexto = partes[0].trim();
       } else {
         ciudadTexto = dirInput;
       }
-      // ----------------------------------------------
-
+      
       const ahora = new Date();
       const fechaActual = ahora.toLocaleDateString();
       const horaActual = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      // Coordenadas de columnas y espaciado compacto de 3 líneas
+      
       const colIzquierdaX = Math.max(15, Math.floor(canvas.width * 0.025));
       const colDerechaX = Math.floor(canvas.width * 0.52);
-
       const fontSize = Math.max(12, Math.floor(canvas.width * 0.021));
-
+      
       ctx.fillStyle = "#FFFFFF";
-
-      // Línea 1 (Y: +32)
       ctx.font = `bold ${fontSize + 2}px sans-serif`;
       ctx.fillText(`AYAX | TAREA #${numTarea}`, colIzquierdaX, img.height + 32);
       ctx.fillText(`Vehículo: ${grua}`, colDerechaX, img.height + 32);
-
-      // Línea 2 (Y: +64)
+      
       ctx.font = `${fontSize}px sans-serif`;
       ctx.fillText(`Cliente: ${clienteNombre}`, colIzquierdaX, img.height + 64);
       ctx.fillText(`Fecha: ${fechaActual}`, colDerechaX, img.height + 64);
-
-      // Línea 3 (Y: +96)
+      
       ctx.fillText(`Ciudad: ${ciudadTexto}`, colIzquierdaX, img.height + 96);
       ctx.fillText(`Hora: ${horaActual}`, colDerechaX, img.height + 96);
-
+      
       const fotoSelladaBase64 = canvas.toDataURL('image/jpeg', 0.9);
       fotosDiaTemporal.push({
         data: fotoSelladaBase64,
         enviadoRedes: false,
         fechaCaptura: ahora.toISOString()
       });
-
       renderGaleriaMiniaturas(dayNum);
       event.target.value = "";
     };
@@ -670,7 +683,6 @@ function renderGaleriaMiniaturas(dayNum) {
   const galeria = document.getElementById(`galeria-fotos-${dayNum}`);
   if (!galeria) return;
   galeria.innerHTML = "";
-
   fotosDiaTemporal.forEach((fotoObj, index) => {
     const fotoSrc = typeof fotoObj === "string" ? fotoObj : fotoObj.data;
     const contenedorMini = document.createElement("div");
@@ -684,9 +696,6 @@ function renderGaleriaMiniaturas(dayNum) {
   });
 }
 
-// ==========================================
-// MODAL DE VISTA PREVIA EN GRANDE
-// ==========================================
 function verFotoGrande(base64Url) {
   let modal = document.getElementById("modalVistaPreviaFoto");
   if (!modal) {
@@ -695,7 +704,6 @@ function verFotoGrande(base64Url) {
     modal.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; padding: 15px;";
     document.body.appendChild(modal);
   }
-
   modal.innerHTML = `
     <div style="position: relative; max-width: 95%; max-height: 85%; text-align: center;">
       <img src="${base64Url}" style="max-width: 100%; max-height: 80vh; border-radius: 8px; border: 2px solid #BF956E; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
@@ -730,7 +738,6 @@ function calculateHours(dayNum) {
   const hfin = document.getElementById(`hfin-day-${dayNum}`).value;
   const display = document.getElementById(`hours-display-${dayNum}`);
   let hours = 0.0;
-
   if (hini && hfin) {
     const [h1, m1] = hini.split(':').map(Number);
     const [h2, m2] = hfin.split(':').map(Number);
@@ -738,7 +745,6 @@ function calculateHours(dayNum) {
     if (diff < 0) diff += 24 * 60;
     hours = (diff / 60).toFixed(1);
   }
-
   if (display) {
     display.dataset.hours = hours;
     display.innerText = `${hours} Horas`;
@@ -746,7 +752,7 @@ function calculateHours(dayNum) {
 }
 
 // ==========================================
-// GUARDADO DE DÍA Y SINCRONIZACIÓN EN SEGUNDO PLANO
+// GUARDADO DE DÍA Y SINCRONIZACIÓN
 // ==========================================
 function saveDayRecord(dayNum) {
   const dir = document.getElementById(`dir-day-${dayNum}`).value;
@@ -759,12 +765,11 @@ function saveDayRecord(dayNum) {
   const kmini = document.getElementById(`kmini-day-${dayNum}`).value;
   const kmfin = document.getElementById(`kmfin-day-${dayNum}`).value;
   const observaciones = document.getElementById(`obs-day-${dayNum}`).value || "Sin novedades";
-
+  
   if (!dir || !desc || !grua || !op || !ap || !hini || !hfin || !kmini || !kmfin) {
     alert("Por favor complete todos los campos obligatorios (*)");
     return;
   }
-
   if (fotosDiaTemporal.length === 0) {
     alert("⚠️ ¡Atención! Debe tomar o adjuntar al menos una foto de evidencia para este día.");
     return;
@@ -789,23 +794,18 @@ function saveDayRecord(dayNum) {
   };
   
   currentDaysData.push(dayData);
-
-  // Sincronización silenciosa en segundo plano en la BD local de tareas
   sincronizarAvanceEnSegundoPlano();
-
   renderDaysAccordion();
   document.getElementById("daysContainer").innerHTML = "";
   alert(`Día #${dayNum} guardado correctamente con ${fotosDiaTemporal.length} foto(s) de evidencia.`);
   fotosDiaTemporal = [];
 }
 
-// Sincroniza silenciosamente el día registrado en la base de datos local para que Danilo lo vea de inmediato en tareas activas
 function sincronizarAvanceEnSegundoPlano() {
   let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   let totalHoursSum = currentDaysData.reduce((acc, day) => acc + (day.horasTrabajadas || 0), 0);
-
   savedTasks = savedTasks.map(t => {
-    if (t.id === currentActiveTaskId) {
+    if (String(t.id) === String(currentActiveTaskId)) {
       return {
         ...t,
         totalDias: currentDaysData.length,
@@ -816,7 +816,6 @@ function sincronizarAvanceEnSegundoPlano() {
     }
     return t;
   });
-
   localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
 }
 
@@ -859,13 +858,11 @@ async function goToSignSection() {
     return;
   }
   
-  // Calcular el total de fotos acumuladas en todos los días de la tarea
   let totalFotosTotal = currentDaysData.reduce((acc, day) => acc + (day.fotosLista ? day.fotosLista.length : 0), 0);
   const badgeFotos = document.getElementById('cantFotosAcumuladas');
   if (badgeFotos) {
     badgeFotos.textContent = totalFotosTotal;
   }
-
   document.getElementById("secWizard").classList.add("hidden");
   document.getElementById("secSignatures").classList.remove("hidden");
   initSignCanvas('canvasOperador');
@@ -882,17 +879,14 @@ function initSignCanvas(canvasId) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   let painting = false;
-
   function startPosition(e) {
     painting = true;
     draw(e);
   }
-
   function endPosition() {
     painting = false;
     ctx.beginPath();
   }
-
   function draw(e) {
     if (!painting) return;
     ctx.lineWidth = 2;
@@ -906,7 +900,6 @@ function initSignCanvas(canvasId) {
     ctx.beginPath();
     ctx.moveTo(x, y);
   }
-
   canvas.onmousedown = startPosition;
   canvas.onmouseup = endPosition;
   canvas.onmousemove = draw;
@@ -923,7 +916,7 @@ function clearCanvas(canvasId) {
 }
 
 // ==========================================
-// FINALIZAR TAREA (DISPONIBLE PARA REDES Y ODOO)
+// FINALIZAR TAREA
 // ==========================================
 function finalizeTask() {
   let totalHoursSum = currentDaysData.reduce((acc, day) => acc + (day.horasTrabajadas || 0), 0);
@@ -933,7 +926,7 @@ function finalizeTask() {
   let currentTaskData = null;
   
   savedTasks = savedTasks.map(t => {
-    if (t.id === currentActiveTaskId) {
+    if (String(t.id) === String(currentActiveTaskId)) {
       currentTaskData = t;
       return {
         ...t,
@@ -959,9 +952,8 @@ function showReportView(id) {
   document.getElementById("repTaskId").innerText = id;
   
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
-  const task = savedTasks.find(t => t.id === id);
+  const task = savedTasks.find(t => String(t.id) === String(id));
   let htmlDetails = "";
-
   if (task) {
     htmlDetails = `
       <p><strong>Cliente:</strong> ${task.cliente}</p>
@@ -981,24 +973,20 @@ function showReportView(id) {
 function descargarReportePDF() {
   const startDate = document.getElementById("pdfStartDate").value;
   const endDate = document.getElementById("pdfEndDate").value;
-
   if (!startDate || !endDate) {
     alert("Por favor seleccione una fecha de inicio y una fecha final para el reporte.");
     return;
   }
-
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   let filteredTasks = savedTasks.filter(t => {
     if (t.estado !== "finalizada") return false;
     const taskDateStr = new Date(t.fechaFinalizacion || t.fechaCreacion || Date.now()).toISOString().split('T')[0];
     return taskDateStr >= startDate && taskDateStr <= endDate;
   });
-
   if (filteredTasks.length === 0) {
     alert(`No hay tareas finalizadas en el rango del ${startDate} al ${endDate}.`);
     return;
   }
-
   let printWindow = window.open('', '_blank');
   let htmlContent = `
     <html>
@@ -1020,7 +1008,6 @@ function descargarReportePDF() {
     <div class="subtitle">Reporte Consolidado de Operaciones | Desde: ${startDate} Hasta: ${endDate}</div>
     <hr style="border: 0; border-top: 2px solid #BF956E; margin: 15px 0;">
   `;
-
   let totalGeneralHoras = 0;
   filteredTasks.forEach(task => {
     let fecha = new Date(task.fechaFinalizacion || task.fechaCreacion || Date.now()).toLocaleDateString();
@@ -1034,7 +1021,6 @@ function descargarReportePDF() {
         <p><strong>Dirección:</strong> ${task.direccion || 'N/A'}</p>
         <p><strong>Total Días:</strong> ${task.totalDias || 1}</p>
     `;
-
     if (task.diasDetalle && task.diasDetalle.length > 0) {
       task.diasDetalle.forEach(d => {
         htmlContent += `
@@ -1046,13 +1032,11 @@ function descargarReportePDF() {
         `;
       });
     }
-
     htmlContent += `
         <p style="text-align: right; font-weight: bold; color: #040B5D; margin-top: 8px;">Total Tarea: ${task.totalHoras || 0} Horas</p>
       </div>
     `;
   });
-
   htmlContent += `
     <div class="total-general">
       Total Horas Acumuladas en el Periodo: ${totalGeneralHoras.toFixed(1)} Horas
@@ -1061,7 +1045,6 @@ function descargarReportePDF() {
     </body>
     </html>
   `;
-  
   printWindow.document.write(htmlContent);
   printWindow.document.close();
 }
@@ -1124,7 +1107,6 @@ function handleLogin() {
     if (userBadgeSpan) {
       userBadgeSpan.textContent = operadorEncontrado.name;
     }
-    
     configurarVistaPorRol(operadorEncontrado);
   } else {
     alert("Número de teléfono o PIN incorrecto. Por favor verifique.");
