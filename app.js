@@ -3,7 +3,7 @@
 // ==========================================
 let authorizedOperators = [
   { phone: "3217293985", pin: "1834", name: "Carolina Valencia", role: "admin" },
-  { phone: "3218468761", pin: "1118", name: "Danilo", role: "redes" }, // Panel de Redes
+  { phone: "3218468761", pin: "1118", name: "Danilo", role: "redes" },
   { phone: "3156642481", pin: "9372", name: "Brandon Estiven Tapasco Piñeros", role: "operario" },
   { phone: "3215617856", pin: "1824", name: "Cristian Camilo Rodas Grajales", role: "operario" },
   { phone: "3224032093", pin: "8752", name: "Daniel Antonio Rodas Jaramillo", role: "operario" },
@@ -55,11 +55,16 @@ let defaultMockTasks = [
     estado: "pendiente"
   }
 ];
+
 let totalDaysCreated = 0;
 let currentActiveTaskId = null;
 let currentDaysData = [];
+let fotosDiaTemporal = [];
 let fotosAcumuladasSesion = [];
 
+// ==========================================
+// CONTROL DE CONECTIVIDAD Y EVENTOS
+// ==========================================
 window.addEventListener('online', handleNetworkChange);
 window.addEventListener('offline', handleNetworkChange);
 
@@ -78,6 +83,9 @@ function processOfflineQueue() {
   }
 }
 
+// ==========================================
+// INICIALIZACIÓN DE LA APLICACIÓN
+// ==========================================
 window.addEventListener("DOMContentLoaded", () => {
   verificarModoMantenimiento();
   purgeSyncedTasks();
@@ -118,11 +126,15 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("loginScreen").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
     const userBadgeSpan = document.querySelector("#userBadge span");
-    if (userBadgeSpan) userBadgeSpan.textContent = usuarioActivo.name;
+    if (userBadgeSpan) userBadgeSpan.textContent = operadorEncontradoFormateado(usuarioActivo.name);
     
     configurarVistaPorRol(usuarioActivo);
   }
 });
+
+function operadorEncontradoFormateado(nombre) {
+  return nombre;
+}
 
 function toggleUserMenu() {
   const dropdown = document.getElementById('userDropdownMenu');
@@ -163,6 +175,9 @@ function configurarVistaPorRol(operador) {
   }
 }
 
+// ==========================================
+// RENDERIZADO DE TAREAS PENDIENTES
+// ==========================================
 function renderTasks() {
   const usuarioActivo = JSON.parse(localStorage.getItem("usuario_activo"));
   if (usuarioActivo && usuarioActivo.role === "redes") {
@@ -200,7 +215,9 @@ function renderTasks() {
   filterFinalized();
 }
 
-// Panel exclusivo para Danilo (Redes)
+// ==========================================
+// PANEL EXCLUSIVO DE REDES (DANILO)
+// ==========================================
 function renderPanelRedesParaDanilo() {
   const containerFinalizadas = document.getElementById("listFinalizadas");
   if (!containerFinalizadas) return;
@@ -211,7 +228,7 @@ function renderPanelRedesParaDanilo() {
 
   const headerNotice = document.createElement("div");
   headerNotice.style.cssText = "background: #e0f2fe; color: #0369a1; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; border: 1px solid #bae6fd;";
-  headerNotice.innerHTML = `📥 Panel de Redes (Danilo): Visualice las tareas finalizadas y descargue el paquete ZIP con las evidencias fotográficas selladas.`;
+  headerNotice.innerHTML = `📥 Panel de Redes (Danilo): Visualice las tareas finalizadas y descargue el paquete ZIP con todas las evidencias fotográficas selladas.`;
   containerFinalizadas.appendChild(headerNotice);
 
   if (tareasFinalizadas.length === 0) {
@@ -244,7 +261,9 @@ function renderPanelRedesParaDanilo() {
   });
 }
 
-// Generar y descargar archivo ZIP real con JSZip
+// ==========================================
+// DESCARGA DE EVIDENCIAS EN ZIP
+// ==========================================
 async function descargarEvidenciasTarea(taskId) {
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   const task = savedTasks.find(t => t.id === taskId);
@@ -255,7 +274,7 @@ async function descargarEvidenciasTarea(taskId) {
   }
 
   if (typeof JSZip === 'undefined') {
-    alert("La librería JSZip no está cargada. Por favor verifique su conexión o el archivo index.html.");
+    alert("La librería JSZip no está cargada.");
     return;
   }
 
@@ -266,20 +285,22 @@ async function descargarEvidenciasTarea(taskId) {
   let fotosAgregadas = 0;
 
   task.diasDetalle.forEach((day) => {
-    if (day.fotoConSello) {
-      const base64Data = day.fotoConSello.split(',')[1];
-      const fileName = `Dia_${day.dayNum}_Grua_${(day.grua || 'General').replace(/[^a-zA-Z0-9]/g, '_')}.jpg`;
-      taskFolder.file(fileName, base64Data, { base64: true });
-      fotosAgregadas++;
+    if (day.fotosLista && day.fotosLista.length > 0) {
+      day.fotosLista.forEach((fotoBase64, index) => {
+        const base64Data = fotoBase64.split(',')[1];
+        const fileName = `Dia_${day.dayNum}_Evidencia_${index + 1}.jpg`;
+        taskFolder.file(fileName, base64Data, { base64: true });
+        fotosAgregadas++;
+      });
     }
   });
 
   if (fotosAgregadas === 0) {
-    alert("No se encontraron archivos de imagen adjuntos en el detalle de esta tarea.");
+    alert("No se encontraron archivos de imagen adjuntos en esta tarea.");
     return;
   }
 
-  alert("Generando paquete ZIP con las evidencias corporativas. La descarga comenzará en unos segundos...");
+  alert("Generando paquete ZIP... La descarga comenzará en breve.");
 
   try {
     const content = await zip.generateAsync({ type: "blob" });
@@ -295,6 +316,9 @@ async function descargarEvidenciasTarea(taskId) {
   }
 }
 
+// ==========================================
+// FILTRADO DE TAREAS FINALIZADAS
+// ==========================================
 function filterFinalized() {
   const usuarioActivo = JSON.parse(localStorage.getItem("usuario_activo"));
   if (usuarioActivo && usuarioActivo.role === "redes") {
@@ -359,6 +383,9 @@ function filterFinalized() {
   }
 }
 
+// ==========================================
+// CONTROL DEL WIZARD DE TAREAS
+// ==========================================
 function openTask(id) {
   currentActiveTaskId = id;
   document.getElementById("mainNavTabs").classList.add("hidden");
@@ -375,7 +402,6 @@ function openTask(id) {
   
   totalDaysCreated = 0;
   currentDaysData = [];
-  fotosAcumuladasSesion = [];
   addNewDay();
 }
 
@@ -389,10 +415,12 @@ function closeWizard() {
 }
 
 // ==========================================
-// NUEVO DÍA CON FOTO OBLIGATORIA Y VISTA PREVIA
+// GESTIÓN DE DÍAS Y MÚLTIPLES FOTOS
 // ==========================================
 function addNewDay() {
   totalDaysCreated++;
+  fotosDiaTemporal = [];
+
   const container = document.getElementById("daysContainer");
   const dayCard = document.createElement("div");
   dayCard.className = "day-card";
@@ -490,26 +518,20 @@ function addNewDay() {
       <textarea id="obs-day-${totalDaysCreated}" rows="2" placeholder="Describa cualquier novedad ocurrida..."></textarea>
     </div>
 
-    <!-- CAMPO DE FOTO OBLIGATORIO CON VISTA PREVIA Y BOTÓN DE ELIMINAR -->
-    <div class="form-group" style="background: #f0fdf4; padding: 12px; border-radius: 6px; border: 2px dashed #27ae60; margin-bottom: 12px;">
-      <label style="color: #27ae60; font-weight: bold; display: block; margin-bottom: 4px;">
-        📸 Evidencia Fotográfica del Día * (Obligatorio)
+    <!-- SECCIÓN DE FOTOS MÚLTIPLES CON BOTÓN PERSONALIZADO -->
+    <div class="form-group" style="background: #f0fdf4; padding: 14px; border-radius: 8px; border: 2px dashed #27ae60; margin-bottom: 15px;">
+      <label style="color: #27ae60; font-weight: bold; display: block; margin-bottom: 6px;">
+        📸 Evidencias Fotográficas del Día * (Puede tomar varias)
       </label>
-      <p style="font-size: 0.75rem; color: #555; margin-bottom: 6px;">Tome o suba la foto. Se estampará automáticamente con los datos del cliente, grúa y tarea.</p>
+      <p style="font-size: 0.75rem; color: #555; margin-bottom: 10px;">Tome o seleccione cuántas fotos necesite. Todas se estamparán automáticamente con los datos corporativos.</p>
       
-      <div id="input-container-foto-${totalDaysCreated}">
-        <input type="file" id="foto-day-${totalDaysCreated}" accept="image/*" capture="environment" class="form-control" style="font-size: 0.85rem; padding: 6px; width: 100%;" onchange="previewImageWithWatermark(event, ${totalDaysCreated})">
-      </div>
+      <input type="file" id="input-foto-multi-${totalDaysCreated}" accept="image/*" capture="environment" style="display: none;" onchange="procesarFotoMulti(event, ${totalDaysCreated})">
       
-      <div id="preview-container-${totalDaysCreated}" style="margin-top: 10px; display: none; text-align: center;">
-        <p style="font-size: 0.75rem; font-weight: bold; color: #040B5D; margin-bottom: 4px;">Vista previa con sello corporativo:</p>
-        <canvas id="canvas-preview-${totalDaysCreated}" style="max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 8px;"></canvas>
-        <div>
-          <button type="button" onclick="eliminarYRepetirFoto(${totalDaysCreated})" style="background: #dc2626; color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.8rem;">
-            🗑️ Eliminar y tomar otra foto
-          </button>
-        </div>
-      </div>
+      <button type="button" onclick="document.getElementById('input-foto-multi-${totalDaysCreated}').click()" style="background: #27ae60; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 0.9rem;">
+        📸 Tomar o Seleccionar Foto
+      </button>
+
+      <div id="galeria-fotos-${totalDaysCreated}" style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;"></div>
     </div>
 
     <button type="button" id="btnSaveDay-${totalDaysCreated}" class="btn-save-day" onclick="saveDayRecord(${totalDaysCreated})" style="background-color: #040B5D; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 5px;">
@@ -520,9 +542,9 @@ function addNewDay() {
 }
 
 // ==========================================
-// VISTA PREVIA CON SELLO CORPORATIVO COMPLETO
+// PROCESAR MÚLTIPLES FOTOS CON SELLO CORPORATIVO
 // ==========================================
-function previewImageWithWatermark(event, dayNum) {
+function procesarFotoMulti(event, dayNum) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -530,7 +552,7 @@ function previewImageWithWatermark(event, dayNum) {
   reader.onload = function(e) {
     const img = new Image();
     img.onload = function() {
-      const canvas = document.getElementById(`canvas-preview-${dayNum}`);
+      const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
       canvas.width = img.width;
@@ -563,20 +585,36 @@ function previewImageWithWatermark(event, dayNum) {
       ctx.fillText(`Dirección: ${direccion}`, 30, img.height + 106);
       ctx.fillText(`Grúa: ${grua} | Fecha: ${fechaActual}`, 30, img.height + 140);
 
-      document.getElementById(`input-container-foto-${dayNum}`).style.display = "none";
-      document.getElementById(`preview-container-${dayNum}`).style.display = "block";
+      const fotoSelladaBase64 = canvas.toDataURL('image/jpeg', 0.9);
+      fotosDiaTemporal.push(fotoSelladaBase64);
+
+      renderGaleriaMiniaturas(dayNum);
+      event.target.value = "";
     };
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
 
-function eliminarYRepetirFoto(dayNum) {
-  const inputFile = document.getElementById(`foto-day-${dayNum}`);
-  if (inputFile) inputFile.value = "";
+function renderGaleriaMiniaturas(dayNum) {
+  const galeria = document.getElementById(`galeria-fotos-${dayNum}`);
+  if (!galeria) return;
+  galeria.innerHTML = "";
 
-  document.getElementById(`preview-container-${dayNum}`).style.display = "none";
-  document.getElementById(`input-container-foto-${dayNum}`).style.display = "block";
+  fotosDiaTemporal.forEach((foto, index) => {
+    const contenedorMini = document.createElement("div");
+    contenedorMini.style.cssText = "position: relative; width: 70px; height: 70px; border-radius: 4px; overflow: hidden; border: 1px solid #ccc;";
+    contenedorMini.innerHTML = `
+      <img src="${foto}" style="width: 100%; height: 100%; object-fit: cover;">
+      <button type="button" onclick="eliminarFotoTemporal(${dayNum}, ${index})" style="position: absolute; top: 2px; right: 2px; background: rgba(220,38,38,0.8); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; cursor: pointer; font-weight: bold;">✕</button>
+    `;
+    galeria.appendChild(contenedorMini);
+  });
+}
+
+function eliminarFotoTemporal(dayNum, index) {
+  fotosDiaTemporal.splice(index, 1);
+  renderGaleriaMiniaturas(dayNum);
 }
 
 function setNow(fieldId) {
@@ -622,23 +660,14 @@ function saveDayRecord(dayNum) {
   const kmini = document.getElementById(`kmini-day-${dayNum}`).value;
   const kmfin = document.getElementById(`kmfin-day-${dayNum}`).value;
   const observaciones = document.getElementById(`obs-day-${dayNum}`).value || "Sin novedades";
-  
-  const inputFoto = document.getElementById(`foto-day-${dayNum}`);
-  const tieneFoto = inputFoto && inputFoto.files && inputFoto.files[0];
-
-  const canvasPreview = document.getElementById(`canvas-preview-${dayNum}`);
-  let fotoBase64 = null;
-  if (canvasPreview) {
-    fotoBase64 = canvasPreview.toDataURL('image/jpeg', 0.9);
-  }
 
   if (!dir || !desc || !grua || !op || !ap || !hini || !hfin || !kmini || !kmfin) {
     alert("Por favor complete todos los campos obligatorios (*)");
     return;
   }
 
-  if (!tieneFoto && !fotoBase64) {
-    alert("⚠️ ¡Atención! Es obligatorio adjuntar o tomar la foto de evidencia del día para poder continuar.");
+  if (fotosDiaTemporal.length === 0) {
+    alert("⚠️ ¡Atención! Debe tomar o adjuntar al menos una foto de evidencia para este día.");
     return;
   }
   
@@ -657,13 +686,14 @@ function saveDayRecord(dayNum) {
     horasTrabajadas: hoursWorked,
     observaciones,
     tieneEvidenciaFotografica: true,
-    fotoConSello: fotoBase64 // <--- Guardamos la foto con el sello en el registro para Danilo
+    fotosLista: [...fotosDiaTemporal]
   };
   
   currentDaysData.push(dayData);
   renderDaysAccordion();
   document.getElementById("daysContainer").innerHTML = "";
-  alert(`Día #${dayNum} guardado correctamente con su foto obligatoria.`);
+  alert(`Día #${dayNum} guardado correctamente con ${fotosDiaTemporal.length} foto(s) de evidencia.`);
+  fotosDiaTemporal = [];
 }
 
 function renderDaysAccordion() {
@@ -687,9 +717,7 @@ function renderDaysAccordion() {
       <p><strong>Ubicación:</strong> ${day.direccion}</p>
       <p><strong>Operador:</strong> ${day.operador} | <strong>Aparejador:</strong> ${day.aparejador}</p>
       <p><strong>Horario:</strong> ${day.horaInicio} - ${day.horaFin} (${day.horasTrabajadas} Horas)</p>
-      <p><strong>Combustible:</strong> Inicial ${day.combustibleInicial || 'N/A'} Gal | Final ${day.combustibleFinal || 'N/A'} Gal</p>
-      <p><strong>Urea:</strong> Inicial ${day.ureaInicial || 'N/A'} Gal | Final ${day.ureaFinal || 'N/A'} Gal</p>
-      <p style="color: #27ae60; font-weight: bold; margin-top: 5px;">📷 Evidencia Fotográfica Sellada Registrada</p>
+      <p style="color: #27ae60; font-weight: bold; margin-top: 5px;">📷 ${day.fotosLista ? day.fotosLista.length : 0} Evidencia(s) Fotográfica(s) Registrada(s)</p>
     `;
     
     details.appendChild(summary);
@@ -699,85 +727,13 @@ function renderDaysAccordion() {
 }
 
 // ==========================================
-// PROCESAMIENTO Y CORREO REDES
+// SECCIÓN DE FIRMAS Y CIERRE
 // ==========================================
-async function procesarYAcumularFotoDia(datosServicioContexto) {
-    const inputCamara = document.getElementById('input_foto_novedad');
-    if (!inputCamara || !inputCamara.files || !inputCamara.files[0]) {
-        return;
-    }
-    const archivoOriginal = inputCamara.files[0];
-    const imagen = new Image();
-    imagen.src = URL.createObjectURL(archivoOriginal);
-    await new Promise((resolve) => (imagen.onload = resolve));
-    const MAX_ANCHO = 2048;
-    const escala = imagen.width > MAX_ANCHO ? MAX_ANCHO / imagen.width : 1;
-    const canvas = document.createElement('canvas');
-    canvas.width = imagen.width * escala;
-    canvas.height = imagen.height * escala;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(imagen, 0, 0, canvas.width, canvas.height);
-    const padding = canvas.width * 0.02;
-    const tamanoFuente = Math.round(canvas.width * 0.022);
-    ctx.font = `bold ${tamanoFuente}px Arial, sans-serif`;
-    const lineas = [
-        `CLIENTE: ${datosServicioContexto.cliente}`,
-        `DIRECCIÓN: ${datosServicioContexto.direccion}`,
-        `GRÚA: ${datosServicioContexto.maquinaria}`,
-        `SERVICIO: ${datosServicioContexto.servicioCodigo}`,
-        `FECHA: ${datosServicioContexto.fecha}`
-    ];
-    const anchoCaja = canvas.width * 0.55;
-    const altoCaja = (lineas.length * tamanoFuente * 1.35) + (padding * 2);
-    const posYCaja = canvas.height - altoCaja - padding;
-    ctx.fillStyle = "rgba(0, 0, 0, 0.78)";
-    ctx.fillRect(padding, posYCaja, anchoCaja, altoCaja);
-    ctx.fillStyle = "#FFFFFF";
-    let textoY = posYCaja + padding + tamanoFuente;
-    lineas.forEach((linea) => {
-        ctx.fillText(linea, padding * 1.5, textoY);
-        textoY += tamanoFuente * 1.35;
-    });
-    const consecutivoNum = String(fotosAcumuladasSesion.length + 1).padStart(3, '0');
-    const nombreArchivo = `${datosServicioContexto.anioMes}_${datosServicioContexto.ciudad}_${datosServicioContexto.clienteLimpio}_${datosServicioContexto.servicioCodigo}_${datosServicioContexto.maquinaria}_${consecutivoNum}.jpg`;
-    return new Promise((resolve) => {
-        canvas.toBlob((blob) => {
-            fotosAcumuladasSesion.push({
-                filename: nombreArchivo,
-                blob: blob,
-                url: URL.createObjectURL(blob)
-            });
-            
-            const contadorBadge = document.getElementById('cantFotosAcumuladas');
-            if (contadorBadge) {
-                contadorBadge.textContent = fotosAcumuladasSesion.length;
-            }
-            inputCamara.value = '';
-            resolve();
-        }, 'image/jpeg', 0.92);
-    });
-}
-
 async function goToSignSection() {
   if (currentDaysData.length === 0) {
     alert("Por favor guarde al menos un día de trabajo antes de continuar a firmas.");
     return;
   }
-  const selectServicio = document.getElementById('selectCodigoServicio');
-  const codigoServicioOficial = selectServicio ? selectServicio.value : 'IZM';
-  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
-  const currentTask = savedTasks.find(t => t.id === currentActiveTaskId) || {};
-  const datosContexto = {
-      anioMes: new Date().toISOString().slice(0, 7),
-      ciudad: currentTask.ciudad || 'PEREIRA',
-      cliente: currentTask.cliente || 'CLIENTE',
-      clienteLimpio: (currentTask.cliente || 'CLIENTE').replace(/[^a-zA-Z0-9]/g, '-'),
-      servicioCodigo: codigoServicioOficial,
-      maquinaria: currentTask.maquinaria || 'AY23',
-      direccion: currentTask.direccion || 'Varios puntos',
-      fecha: new Date().toISOString().split('T')[0]
-  };
-  await procesarYAcumularFotoDia(datosContexto);
   document.getElementById("secWizard").classList.add("hidden");
   document.getElementById("secSignatures").classList.remove("hidden");
   initSignCanvas('canvasOperador');
@@ -834,6 +790,9 @@ function clearCanvas(canvasId) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
+// ==========================================
+// FINALIZAR TAREA (SIN CORREO, DIRECTO A REDES)
+// ==========================================
 function finalizeTask() {
   let totalHoursSum = currentDaysData.reduce((acc, day) => acc + (day.horasTrabajadas || 0), 0);
   if (totalHoursSum === 0) totalHoursSum = 16.5;
@@ -858,18 +817,7 @@ function finalizeTask() {
   
   localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
 
-  const correoDestino = "sistemasgruaspereira@gmail.com";
-  const clienteNombre = currentTaskData ? currentTaskData.cliente : "Cliente";
-  const asunto = encodeURIComponent(`Evidencias Fotográficas - Tarea #${currentActiveTaskId} - ${clienteNombre}`);
-  
-  let cuerpoMensaje = `Hola,%0D%0A%0D%0A`;
-  cuerpoMensaje += `Se ha finalizado la tarea #${currentActiveTaskId} (${clienteNombre}).%0D%0A`;
-  cuerpoMensaje += `- Total de fotos procesadas para redes: ${fotosAcumuladasSesion.length}%0D%0A%0D%0A`;
-  cuerpoMensaje += `Las imágenes ya cuentan con el sello y la nomenclatura oficial listos para descargar y subir a Odoo / SharePoint.%0D%0A`;
-  const enlaceMailto = `mailto:${correoDestino}?subject=${asunto}&body=${cuerpoMensaje}`;
-  
-  fotosAcumuladasSesion = [];
-  window.location.href = enlaceMailto;
+  alert("¡Tarea finalizada con éxito! Las evidencias fotográficas selladas han quedado disponibles en el panel de Redes para su descarga.");
   showReportView(currentActiveTaskId);
 }
 
@@ -889,12 +837,15 @@ function showReportView(id) {
       <p><strong>Total Días Registrados:</strong> ${task.totalDias || 1}</p>
       <p><strong>Total Horas Acumuladas:</strong> ${task.totalHoras || 0.0} Horas</p>
       <hr style="margin: 10px 0; border: 0; border-top: 1px solid #DDC9B8;">
-      <p style="font-size: 0.8rem; color: #27ae60; font-weight: 700;">Estado: Finalizado y Correo de Redes Preparado</p>
+      <p style="font-size: 0.8rem; color: #27ae60; font-weight: 700;">Estado: Finalizado y Sincronizado para Redes</p>
     `;
   }
   document.getElementById("reportContent").innerHTML = htmlDetails;
 }
 
+// ==========================================
+// REPORTE MENSUAL EN PDF
+// ==========================================
 function descargarReportePDF() {
   const startDate = document.getElementById("pdfStartDate").value;
   const endDate = document.getElementById("pdfEndDate").value;
@@ -919,7 +870,6 @@ function descargarReportePDF() {
     <title>Reporte Consolidado - Ayax Grúas Pereira</title>
     <style>
       body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
-      .logo-header { text-align: center; margin-bottom: 5px; }
       h2 { color: #040B5D; text-align: center; margin: 5px 0; }
       p { font-size: 0.9rem; margin: 4px 0; }
       .subtitle { text-align: center; color: #666; font-size: 0.85rem; margin-bottom: 15px; }
@@ -953,8 +903,6 @@ function descargarReportePDF() {
           <div class="day-det">
             <p><strong>Día #${d.dayNum}:</strong> ${d.labor || 'Labor en campo'}</p>
             <p><strong>Operador:</strong> ${d.operador} &nbsp;|&nbsp; <strong>Aparejador:</strong> ${d.aparejador}</p>
-            <p><strong>Combustible:</strong> Ini ${d.combustibleInicial || 'N/A'} Gal | Fin ${d.combustibleFinal || 'N/A'} Gal</p>
-            <p><strong>Urea:</strong> Ini ${d.ureaInicial || 'N/A'} Gal | Fin ${d.ureaFinal || 'N/A'} Gal</p>
             <p style="color: #27ae60; font-weight: bold;">Horas empleadas: ${d.horasTrabajadas} Horas</p>
           </div>
         `;
@@ -998,34 +946,9 @@ function switchTab(tab) {
   filterFinalized();
 }
 
-function compressImage(file, maxWidth = 1024, quality = 0.7) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target.result;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
-        resolve(compressedBase64);
-      };
-      img.onerror = (err) => reject(err);
-    };
-    reader.onerror = (err) => reject(err);
-  });
-}
-
+// ==========================================
+// PURGA DE TAREAS ANTIGUAS Y LOGIN
+// ==========================================
 function purgeSyncedTasks() {
   let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || [];
   const retentionDays = 7;
