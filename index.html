@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Librería JSZip para empaquetar y descargar evidencias fotográficas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
     <!-- MODO MANTENIMIENTO -->
@@ -67,7 +69,7 @@
             <div class="cards-list" id="listPendientes"></div>
         </section>
 
-        <!-- VISTA 2: FINALIZADAS -->
+        <!-- VISTA 2: FINALIZADAS / PANEL DE REDES -->
         <section id="secFinalizadas" class="tab-content hidden">
             <div class="search-box" style="display: flex; gap: 8px; margin-bottom: 10px;">
                 <input type="text" id="searchInput" placeholder="Buscar por código..." onkeyup="filterFinalized()" style="flex: 2; padding: 10px; border: 1px solid #DDC9B8; border-radius: 6px;">
