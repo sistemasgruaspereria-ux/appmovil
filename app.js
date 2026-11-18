@@ -762,6 +762,14 @@ async function goToSignSection() {
     alert("Por favor guarde al menos un día de trabajo antes de continuar a firmas.");
     return;
   }
+  
+  // Calcular el total de fotos acumuladas en todos los días de la tarea
+  let totalFotosTotal = currentDaysData.reduce((acc, day) => acc + (day.fotosLista ? day.fotosLista.length : 0), 0);
+  const badgeFotos = document.getElementById('cantFotosAcumuladas');
+  if (badgeFotos) {
+    badgeFotos.textContent = totalFotosTotal;
+  }
+
   document.getElementById("secWizard").classList.add("hidden");
   document.getElementById("secSignatures").classList.remove("hidden");
   initSignCanvas('canvasOperador');
