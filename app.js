@@ -54,7 +54,6 @@ let defaultMockTasks = [
     estado: "pendiente"
   }
 ];
-
 let totalDaysCreated = 0;
 let currentActiveTaskId = null;
 let currentDaysData = [];
@@ -255,6 +254,9 @@ function closeWizard() {
   renderTasks();
 }
 
+// ==========================================
+// NUEVO DÍA CON FOTO OBLIGATORIA Y VISTA PREVIA
+// ==========================================
 function addNewDay() {
   totalDaysCreated++;
   const container = document.getElementById("daysContainer");
@@ -354,13 +356,19 @@ function addNewDay() {
       <textarea id="obs-day-${totalDaysCreated}" rows="2" placeholder="Describa cualquier novedad ocurrida..."></textarea>
     </div>
 
-    <!-- ÚNICO CAMPO DE FOTO OBLIGATORIO PARA EL DÍA -->
+    <!-- CAMPO DE FOTO OBLIGATORIO CON VISTA PREVIA Y CANVAS -->
     <div class="form-group" style="background: #f0fdf4; padding: 12px; border-radius: 6px; border: 2px dashed #27ae60; margin-bottom: 12px;">
       <label style="color: #27ae60; font-weight: bold; display: block; margin-bottom: 4px;">
         📸 Evidencia Fotográfica del Día * (Obligatorio)
       </label>
-      <p style="font-size: 0.75rem; color: #555; margin-bottom: 6px;">Tome o suba la foto de la labor o novedad. Se estampará automáticamente con los datos para redes y Odoo.</p>
-      <input type="file" id="foto-day-${totalDaysCreated}" accept="image/*" capture="environment" class="form-control" style="font-size: 0.85rem; padding: 6px;">
+      <p style="font-size: 0.75rem; color: #555; margin-bottom: 6px;">Tome o suba la foto. Se estampará automáticamente con el pie de página corporativo.</p>
+      
+      <input type="file" id="foto-day-${totalDaysCreated}" accept="image/*" capture="environment" class="form-control" style="font-size: 0.85rem; padding: 6px; width: 100%;" onchange="previewImageWithWatermark(event, ${totalDaysCreated})">
+      
+      <div id="preview-container-${totalDaysCreated}" style="margin-top: 10px; display: none; text-align: center;">
+        <p style="font-size: 0.75rem; font-weight: bold; color: #040B5D; margin-bottom: 4px;">Vista previa con sello corporativo:</p>
+        <canvas id="canvas-preview-${totalDaysCreated}" style="max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px;"></canvas>
+      </div>
     </div>
 
     <button type="button" id="btnSaveDay-${totalDaysCreated}" class="btn-save-day" onclick="saveDayRecord(${totalDaysCreated})" style="background-color: #040B5D; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 5px;">
@@ -368,6 +376,54 @@ function addNewDay() {
     </button>
   `;
   container.appendChild(dayCard);
+}
+
+// ==========================================
+// VISTA PREVIA CON SELLO CORPORATIVO
+// ==========================================
+function previewImageWithWatermark(event, dayNum) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.getElementById(`canvas-preview-${dayNum}`);
+      const ctx = canvas.getContext('2d');
+
+      canvas.width = img.width;
+      canvas.height = img.height + 140; // Espacio extra abajo para el pie de página
+
+      // 1. Dibujar la foto original
+      ctx.drawImage(img, 0, 0);
+
+      // 2. Fondo del pie de página (Color corporativo Navy #040B5D)
+      ctx.fillStyle = "#040B5D";
+      ctx.fillRect(0, img.height, canvas.width, 140);
+
+      // 3. Línea dorada superior del footer (#BF956E)
+      ctx.fillStyle = "#BF956E";
+      ctx.fillRect(0, img.height, canvas.width, 8);
+
+      // 4. Textos corporativos en el pie de página
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = `bold ${Math.max(16, canvas.width * 0.025)}px sans-serif`;
+      ctx.fillText("AYAX - GRÚAS PEREIRA | REPORTE DE CAMPO", 30, img.height + 40);
+
+      ctx.font = `${Math.max(14, canvas.width * 0.02)}px sans-serif`;
+      const grua = document.getElementById(`grua-day-${dayNum}`).value || "Grúa General";
+      const dir = document.getElementById(`dir-day-${dayNum}`).value || "Sin dirección";
+      
+      ctx.fillText(`Grúa: ${grua} | Ubicación: ${dir}`, 30, img.height + 75);
+      ctx.fillText(`Fecha: ${new Date().toLocaleDateString()} | Estado: Verificado`, 30, img.height + 110);
+
+      // Mostrar contenedor de vista previa
+      document.getElementById(`preview-container-${dayNum}`).style.display = "block";
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 function setNow(fieldId) {
@@ -422,7 +478,7 @@ function saveDayRecord(dayNum) {
     return;
   }
 
-  // VALIDACIÓN OBLIGATORIA DE LA FOTO ÚNICA
+  // VALIDACIÓN OBLIGATORIA DE LA FOTO
   if (!tieneFoto) {
     alert("⚠️ ¡Atención! Es obligatorio adjuntar o tomar la foto de evidencia del día para poder continuar.");
     return;
@@ -474,6 +530,7 @@ function renderDaysAccordion() {
       <p><strong>Horario:</strong> ${day.horaInicio} - ${day.horaFin} (${day.horasTrabajadas} Horas)</p>
       <p><strong>Combustible:</strong> Inicial ${day.combustibleInicial || 'N/A'} Gal | Final ${day.combustibleFinal || 'N/A'} Gal</p>
       <p><strong>Urea:</strong> Inicial ${day.ureaInicial || 'N/A'} Gal | Final ${day.ureaFinal || 'N/A'} Gal</p>
+      <p style="color: #27ae60; font-weight: bold; margin-top: 5px;">📷 Evidencia Fotográfica Registrada</p>
     `;
     
     details.appendChild(summary);
@@ -490,25 +547,20 @@ async function procesarYAcumularFotoDia(datosServicioContexto) {
     if (!inputCamara || !inputCamara.files || !inputCamara.files[0]) {
         return;
     }
-
     const archivoOriginal = inputCamara.files[0];
     const imagen = new Image();
     imagen.src = URL.createObjectURL(archivoOriginal);
     await new Promise((resolve) => (imagen.onload = resolve));
-
     const MAX_ANCHO = 2048;
     const escala = imagen.width > MAX_ANCHO ? MAX_ANCHO / imagen.width : 1;
     const canvas = document.createElement('canvas');
     canvas.width = imagen.width * escala;
     canvas.height = imagen.height * escala;
-
     const ctx = canvas.getContext('2d');
     ctx.drawImage(imagen, 0, 0, canvas.width, canvas.height);
-
     const padding = canvas.width * 0.02;
     const tamanoFuente = Math.round(canvas.width * 0.022);
     ctx.font = `bold ${tamanoFuente}px Arial, sans-serif`;
-
     const lineas = [
         `CLIENTE: ${datosServicioContexto.cliente}`,
         `DIRECCIÓN: ${datosServicioContexto.direccion}`,
@@ -516,24 +568,19 @@ async function procesarYAcumularFotoDia(datosServicioContexto) {
         `SERVICIO: ${datosServicioContexto.servicioCodigo}`,
         `FECHA: ${datosServicioContexto.fecha}`
     ];
-
     const anchoCaja = canvas.width * 0.55;
     const altoCaja = (lineas.length * tamanoFuente * 1.35) + (padding * 2);
     const posYCaja = canvas.height - altoCaja - padding;
-
     ctx.fillStyle = "rgba(0, 0, 0, 0.78)";
     ctx.fillRect(padding, posYCaja, anchoCaja, altoCaja);
-
     ctx.fillStyle = "#FFFFFF";
     let textoY = posYCaja + padding + tamanoFuente;
     lineas.forEach((linea) => {
         ctx.fillText(linea, padding * 1.5, textoY);
         textoY += tamanoFuente * 1.35;
     });
-
     const consecutivoNum = String(fotosAcumuladasSesion.length + 1).padStart(3, '0');
     const nombreArchivo = `${datosServicioContexto.anioMes}_${datosServicioContexto.ciudad}_${datosServicioContexto.clienteLimpio}_${datosServicioContexto.servicioCodigo}_${datosServicioContexto.maquinaria}_${consecutivoNum}.jpg`;
-
     return new Promise((resolve) => {
         canvas.toBlob((blob) => {
             fotosAcumuladasSesion.push({
@@ -557,12 +604,10 @@ async function goToSignSection() {
     alert("Por favor guarde al menos un día de trabajo antes de continuar a firmas.");
     return;
   }
-
   const selectServicio = document.getElementById('selectCodigoServicio');
   const codigoServicioOficial = selectServicio ? selectServicio.value : 'IZM';
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   const currentTask = savedTasks.find(t => t.id === currentActiveTaskId) || {};
-
   const datosContexto = {
       anioMes: new Date().toISOString().slice(0, 7),
       ciudad: currentTask.ciudad || 'PEREIRA',
@@ -573,9 +618,7 @@ async function goToSignSection() {
       direccion: currentTask.direccion || 'Varios puntos',
       fecha: new Date().toISOString().split('T')[0]
   };
-
   await procesarYAcumularFotoDia(datosContexto);
-
   document.getElementById("secWizard").classList.add("hidden");
   document.getElementById("secSignatures").classList.remove("hidden");
   initSignCanvas('canvasOperador');
@@ -597,10 +640,12 @@ function initSignCanvas(canvasId) {
     painting = true;
     draw(e);
   }
+
   function endPosition() {
     painting = false;
     ctx.beginPath();
   }
+
   function draw(e) {
     if (!painting) return;
     ctx.lineWidth = 2;
@@ -662,11 +707,10 @@ function finalizeTask() {
   let cuerpoMensaje = `Hola,%0D%0A%0D%0A`;
   cuerpoMensaje += `Se ha finalizado la tarea #${currentActiveTaskId} (${clienteNombre}).%0D%0A`;
   cuerpoMensaje += `- Total de fotos procesadas para redes: ${fotosAcumuladasSesion.length}%0D%0A%0D%0A`;
-  cuerpoMensaje += `Las imágenes ya cuentan con el sello y la nomenclatura oficial listos para descargar y subir a SharePoint.%0D%0A`;
-
+  cuerpoMensaje += `Las imágenes ya cuentan con el sello y la nomenclatura oficial listos para descargar y subir a Odoo / SharePoint.%0D%0A`;
   const enlaceMailto = `mailto:${correoDestino}?subject=${asunto}&body=${cuerpoMensaje}`;
+  
   fotosAcumuladasSesion = [];
-
   window.location.href = enlaceMailto;
   showReportView(currentActiveTaskId);
 }
@@ -706,12 +750,10 @@ function descargarReportePDF() {
     const taskDateStr = new Date(t.fechaFinalizacion || t.fechaCreacion || Date.now()).toISOString().split('T')[0];
     return taskDateStr >= startDate && taskDateStr <= endDate;
   });
-
   if (filteredTasks.length === 0) {
     alert(`No hay tareas finalizadas en el rango del ${startDate} al ${endDate}.`);
     return;
   }
-
   let printWindow = window.open('', '_blank');
   let htmlContent = `
     <html>
@@ -734,7 +776,6 @@ function descargarReportePDF() {
     <div class="subtitle">Reporte Consolidado de Operaciones | Desde: ${startDate} Hasta: ${endDate}</div>
     <hr style="border: 0; border-top: 2px solid #BF956E; margin: 15px 0;">
   `;
-
   let totalGeneralHoras = 0;
   filteredTasks.forEach(task => {
     let fecha = new Date(task.fechaFinalizacion || task.fechaCreacion || Date.now()).toLocaleDateString();
@@ -766,7 +807,6 @@ function descargarReportePDF() {
       </div>
     `;
   });
-
   htmlContent += `
     <div class="total-general">
       Total Horas Acumuladas en el Periodo: ${totalGeneralHoras.toFixed(1)} Horas
