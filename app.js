@@ -853,7 +853,7 @@ function finalizeTask() {
   
   localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
 
-  alert("¡Tarea finalizada con éxito! Las evidencias fotográficas selladas han quedado disponibles en el panel de Redes para su descarga.");
+  alert("¡Tarea finalizada con éxito!");
   showReportView(currentActiveTaskId);
 }
 
@@ -873,7 +873,7 @@ function showReportView(id) {
       <p><strong>Total Días Registrados:</strong> ${task.totalDias || 1}</p>
       <p><strong>Total Horas Acumuladas:</strong> ${task.totalHoras || 0.0} Horas</p>
       <hr style="margin: 10px 0; border: 0; border-top: 1px solid #DDC9B8;">
-      <p style="font-size: 0.8rem; color: #27ae60; font-weight: 700;">Estado: Finalizado y Sincronizado para Redes</p>
+      <p style="font-size: 0.8rem; color: #27ae60; font-weight: 700;">Estado: Finalizado</p>
     `;
   }
   document.getElementById("reportContent").innerHTML = htmlDetails;
