@@ -574,6 +574,9 @@ function addNewDay() {
 // ==========================================
 // PROCESAR MÚLTIPLES FOTOS CON SELLO EN DOS COLUMNAS
 // ==========================================
+// ==========================================
+// PROCESAR FOTOS CON REGLA DE COMA (MUNICIPIO, DIRECCIÓN) Y 2 COLUMNAS
+// ==========================================
 function procesarFotoMulti(event, dayNum) {
   const file = event.target.files[0];
   if (!file) return;
@@ -585,22 +588,24 @@ function procesarFotoMulti(event, dayNum) {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
-      // Mantenemos la franja inferior de 180px para el sello corporativo
       canvas.width = img.width;
-      canvas.height = img.height + 180;
+      // Altura del pie de página adaptativa según la orientación (más espacio si es vertical)
+      const footerHeight = canvas.width < canvas.height ? 210 : 180;
+
+      canvas.height = img.height + footerHeight;
 
       // Dibujar la fotografía capturada
       ctx.drawImage(img, 0, 0);
 
       // Fondo azul corporativo (#040B5D)
       ctx.fillStyle = "#040B5D";
-      ctx.fillRect(0, img.height, canvas.width, 180);
+      ctx.fillRect(0, img.height, canvas.width, footerHeight);
 
       // Línea dorada superior decorativa (#BF956E)
       ctx.fillStyle = "#BF956E";
       ctx.fillRect(0, img.height, canvas.width, 8);
 
-      // Obtener datos de la tarea actual
+      // Obtener datos de la tarea
       const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
       const currentTask = savedTasks.find(t => t.id === currentActiveTaskId) || {};
       
@@ -608,36 +613,55 @@ function procesarFotoMulti(event, dayNum) {
       const numTarea = currentActiveTaskId || "S/N";
       const gruaElem = document.getElementById(`grua-day-${dayNum}`);
       const grua = (gruaElem && gruaElem.value) ? gruaElem.value : "Grúa General";
-      const dirInput = document.getElementById(`dir-day-${dayNum}`).value;
-      const direccion = dirInput || currentTask.direccion || "Sin dirección";
       
+      const dirInput = document.getElementById(`dir-day-${dayNum}`).value || currentTask.direccion || "Pereira";
+
+      // --- REGLA DE LA COMA (Municipio, Dirección) ---
+      let ciudadTexto = "Pereira";
+      let direccionTexto = dirInput;
+
+      if (dirInput.includes(",")) {
+        const partes = dirInput.split(",");
+        ciudadTexto = partes[0].trim();
+        direccionTexto = partes.slice(1).join(",").trim();
+      }
+      // ----------------------------------------------
+
       const ahora = new Date();
       const fechaActual = ahora.toLocaleDateString();
       const horaActual = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      // Configuración de columnas (Izquierda y Derecha)
-      const colIzquierdaX = 30;
-      const colDerechaX = Math.floor(canvas.width * 0.52);
-      const fontSizeNormal = Math.max(14, canvas.width * 0.02);
-      const fontSizeBold = Math.max(16, canvas.width * 0.024);
+      // Configuración de columnas proporcional al ancho de la foto
+      const colIzquierdaX = Math.max(20, Math.floor(canvas.width * 0.03));
+      // Si la foto es vertical, ajustamos la columna derecha un poco más a la izquierda para que no se corten los textos largos
+      const esVertical = canvas.width < canvas.height;
+      const colDerechaX = esVertical ? Math.floor(canvas.width * 0.50) : Math.floor(canvas.width * 0.52);
+
+      const fontSizeNormal = Math.max(13, Math.floor(canvas.width * 0.022));
+      const fontSizeBold = Math.max(15, Math.floor(canvas.width * 0.026));
 
       ctx.fillStyle = "#FFFFFF";
 
-      // --- COLUMNA IZQUIERDA ---
+      // --- FILA 1: TÍTULO Y VEHÍCULO ---
       ctx.font = `bold ${fontSizeBold}px sans-serif`;
-      ctx.fillText(`AYAX | TAREA #${numTarea}`, colIzquierdaX, img.height + 45);
+      ctx.fillText(`AYAX | TAREA #${numTarea}`, colIzquierdaX, img.height + 42);
+      ctx.fillText(`Vehículo: ${grua}`, colDerechaX, img.height + 42);
 
+      // --- FILA 2: CLIENTE Y FECHA ---
       ctx.font = `${fontSizeNormal}px sans-serif`;
-      ctx.fillText(`Cliente: ${clienteNombre}`, colIzquierdaX, img.height + 85);
-      ctx.fillText(`Dirección: ${direccion}`, colIzquierdaX, img.height + 125);
+      ctx.fillText(`Cliente: ${clienteNombre}`, colIzquierdaX, img.height + 88);
+      ctx.fillText(`Fecha: ${fechaActual}`, colDerechaX, img.height + 88);
 
-      // --- COLUMNA DERECHA ---
-      ctx.font = `bold ${fontSizeBold}px sans-serif`;
-      ctx.fillText(`Vehículo: ${grua}`, colDerechaX, img.height + 45);
+      // --- FILA 3: CIUDAD/MUNICIPIO Y HORA ---
+      ctx.fillText(`Ciudad: ${ciudadTexto}`, colIzquierdaX, img.height + 130);
+      ctx.fillText(`Hora: ${horaActual}`, colDerechaX, img.height + 130);
 
-      ctx.font = `${fontSizeNormal}px sans-serif`;
-      ctx.fillText(`Fecha: ${fechaActual}`, colDerechaX, img.height + 85);
-      ctx.fillText(`Hora: ${horaActual}`, colDerechaX, img.height + 125);
+      // --- FILA 4 (Opcional si hay dirección detallada): DIRECCIÓN ---
+      if (direccionTexto && direccionTexto !== ciudadTexto) {
+        ctx.font = `${Math.max(11, fontSizeNormal - 2)}px sans-serif`;
+        ctx.fillStyle = "#DDC9B8"; // Color arena suave para la dirección exacta
+        ctx.fillText(`Dir: ${direccionTexto}`, colIzquierdaX, img.height + 170);
+      }
 
       const fotoSelladaBase64 = canvas.toDataURL('image/jpeg', 0.9);
       fotosDiaTemporal.push({
