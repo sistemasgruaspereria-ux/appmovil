@@ -596,6 +596,9 @@ function procesarFotoMulti(event, dayNum) {
   reader.readAsDataURL(file);
 }
 
+// ==========================================
+// RENDERIZAR MINIATURAS CON VISTA PREVIA
+// ==========================================
 function renderGaleriaMiniaturas(dayNum) {
   const galeria = document.getElementById(`galeria-fotos-${dayNum}`);
   if (!galeria) return;
@@ -603,13 +606,38 @@ function renderGaleriaMiniaturas(dayNum) {
 
   fotosDiaTemporal.forEach((foto, index) => {
     const contenedorMini = document.createElement("div");
-    contenedorMini.style.cssText = "position: relative; width: 70px; height: 70px; border-radius: 4px; overflow: hidden; border: 1px solid #ccc;";
+    contenedorMini.style.cssText = "position: relative; width: 75px; height: 75px; border-radius: 6px; overflow: hidden; border: 2px solid #BF956E; cursor: pointer; background: #000;";
+    
+    // Al hacer clic en la miniatura se abre la vista previa en grande
     contenedorMini.innerHTML = `
-      <img src="${foto}" style="width: 100%; height: 100%; object-fit: cover;">
-      <button type="button" onclick="eliminarFotoTemporal(${dayNum}, ${index})" style="position: absolute; top: 2px; right: 2px; background: rgba(220,38,38,0.8); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; cursor: pointer; font-weight: bold;">✕</button>
+      <img src="${foto}" onclick="verFotoGrande('${foto}')" style="width: 100%; height: 100%; object-fit: cover;" title="Tocar para ampliar">
+      <button type="button" onclick="event.stopPropagation(); eliminarFotoTemporal(${dayNum}, ${index})" style="position: absolute; top: 2px; right: 2px; background: rgba(220,38,38,0.9); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 11px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center;" title="Eliminar foto">✕</button>
     `;
     galeria.appendChild(contenedorMini);
   });
+}
+
+// ==========================================
+// MODAL DE VISTA PREVIA EN GRANDE
+// ==========================================
+function verFotoGrande(base64Url) {
+  // Crear modal flotante dinámico para ver la foto con el sello en detalle
+  let modal = document.getElementById("modalVistaPreviaFoto");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "modalVistaPreviaFoto";
+    modal.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; padding: 15px;";
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div style="position: relative; max-width: 95%; max-height: 85%; text-align: center;">
+      <img src="${base64Url}" style="max-width: 100%; max-height: 80vh; border-radius: 8px; border: 2px solid #BF956E; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+      <br>
+      <button type="button" onclick="document.getElementById('modalVistaPreviaFoto').style.display='none'" style="margin-top: 15px; background: #dc2626; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem;">Cerrar Vista Previa</button>
+    </div>
+  `;
+  modal.style.display = "flex";
 }
 
 function eliminarFotoTemporal(dayNum, index) {
