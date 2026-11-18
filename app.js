@@ -218,7 +218,7 @@ function renderPanelRedesParaDanilo() {
   
   const headerNotice = document.createElement("div");
   headerNotice.style.cssText = "background: #e0f2fe; color: #0369a1; padding: 12px; border-radius: 6px; margin-bottom: 12px; font-weight: bold; border: 1px solid #bae6fd; font-size: 0.85rem;";
-  headerNotice.innerHTML = `📥 Panel de Redes (Danilo): Al descargar el ZIP de una tarea, esta se moverá automáticamente al historial de descargadas.`;
+  headerNotice.innerHTML = `📥 Panel de Redes`;
   containerFinalizadas.appendChild(headerNotice);
 
   const tabsContainer = document.createElement("div");
