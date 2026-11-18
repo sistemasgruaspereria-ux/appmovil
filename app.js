@@ -354,22 +354,13 @@ function addNewDay() {
       <textarea id="obs-day-${totalDaysCreated}" rows="2" placeholder="Describa cualquier novedad ocurrida..."></textarea>
     </div>
 
-    <!-- 1. FOTO INTERNA DE NOVEDAD / DAÑOS -->
-    <div class="form-group" style="background: #fdf2f2; padding: 12px; border-radius: 6px; border: 1px dashed #e74c3c; margin-bottom: 10px;">
-      <label style="color: #c0392b; font-weight: bold; display: block; margin-bottom: 4px;">
-        🛠️ 1. Foto Interna de Novedad / Daño (Opcional):
-      </label>
-      <p style="font-size: 0.75rem; color: #666; margin-bottom: 6px;">Usa esta opción si la grúa sufrió un rayón, avería o daño en este día.</p>
-      <input type="file" id="foto-interno-day-${totalDaysCreated}" accept="image/*" capture="environment" class="form-control" style="font-size: 0.8rem; padding: 6px;">
-    </div>
-
-    <!-- 2. FOTO OFICIAL PARA REDES SOCIALES -->
-    <div class="form-group" style="background: #f0fdf4; padding: 12px; border-radius: 6px; border: 1px dashed #27ae60; margin-bottom: 12px;">
+    <!-- ÚNICO CAMPO DE FOTO OBLIGATORIO PARA EL DÍA -->
+    <div class="form-group" style="background: #f0fdf4; padding: 12px; border-radius: 6px; border: 2px dashed #27ae60; margin-bottom: 12px;">
       <label style="color: #27ae60; font-weight: bold; display: block; margin-bottom: 4px;">
-        📸 2. Foto Oficial para Redes Sociales (Opcional):
+        📸 Evidencia Fotográfica del Día * (Obligatorio)
       </label>
-      <p style="font-size: 0.75rem; color: #666; margin-bottom: 6px;">Se estampará automáticamente con los datos corporativos para el correo final de redes.</p>
-      <input type="file" id="foto-redes-day-${totalDaysCreated}" accept="image/*" capture="environment" class="form-control" style="font-size: 0.8rem; padding: 6px;">
+      <p style="font-size: 0.75rem; color: #555; margin-bottom: 6px;">Tome o suba la foto de la labor o novedad. Se estampará automáticamente con los datos para redes y Odoo.</p>
+      <input type="file" id="foto-day-${totalDaysCreated}" accept="image/*" capture="environment" class="form-control" style="font-size: 0.85rem; padding: 6px;">
     </div>
 
     <button type="button" id="btnSaveDay-${totalDaysCreated}" class="btn-save-day" onclick="saveDayRecord(${totalDaysCreated})" style="background-color: #040B5D; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 5px;">
@@ -421,19 +412,24 @@ function saveDayRecord(dayNum) {
   const hfin = document.getElementById(`hfin-day-${dayNum}`).value;
   const kmini = document.getElementById(`kmini-day-${dayNum}`).value;
   const kmfin = document.getElementById(`kmfin-day-${dayNum}`).value;
-  const combi = document.getElementById(`combi-day-${dayNum}`).value || null;
-  const combf = document.getElementById(`combf-day-${dayNum}`).value || null;
-  const ureai = document.getElementById(`ureai-day-${dayNum}`).value || null;
-  const ureaf = document.getElementById(`ureaf-day-${dayNum}`).value || null;
   const observaciones = document.getElementById(`obs-day-${dayNum}`).value || "Sin novedades";
   
-  const hoursDisplay = document.getElementById(`hours-display-${dayNum}`);
-  const hoursWorked = hoursDisplay && hoursDisplay.dataset.hours ? parseFloat(hoursDisplay.dataset.hours) : 0.0;
-  
+  const inputFoto = document.getElementById(`foto-day-${dayNum}`);
+  const tieneFoto = inputFoto && inputFoto.files && inputFoto.files[0];
+
   if (!dir || !desc || !grua || !op || !ap || !hini || !hfin || !kmini || !kmfin) {
     alert("Por favor complete todos los campos obligatorios (*)");
     return;
   }
+
+  // VALIDACIÓN OBLIGATORIA DE LA FOTO ÚNICA
+  if (!tieneFoto) {
+    alert("⚠️ ¡Atención! Es obligatorio adjuntar o tomar la foto de evidencia del día para poder continuar.");
+    return;
+  }
+  
+  const hoursDisplay = document.getElementById(`hours-display-${dayNum}`);
+  const hoursWorked = hoursDisplay && hoursDisplay.dataset.hours ? parseFloat(hoursDisplay.dataset.hours) : 0.0;
   
   const dayData = {
     dayNum,
@@ -445,17 +441,14 @@ function saveDayRecord(dayNum) {
     horaInicio: hini,
     horaFin: hfin,
     horasTrabajadas: hoursWorked,
-    combustibleInicial: combi,
-    combustibleFinal: combf,
-    ureaInicial: ureai,
-    ureaFinal: ureaf,
-    observaciones
+    observaciones,
+    tieneEvidenciaFotografica: true
   };
   
   currentDaysData.push(dayData);
   renderDaysAccordion();
   document.getElementById("daysContainer").innerHTML = "";
-  alert(`Día #${dayNum} guardado correctamente.`);
+  alert(`Día #${dayNum} guardado correctamente con su foto obligatoria.`);
 }
 
 function renderDaysAccordion() {
