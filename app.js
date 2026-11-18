@@ -3,7 +3,7 @@
 // ==========================================
 let authorizedOperators = [
   { phone: "3217293985", pin: "1834", name: "Carolina Valencia", role: "admin" },
-  { phone: "3218468761", pin: "1118", name: "Danilo", role: "redes" }, // <--- PERFIL DE REDES DE DANILO
+  { phone: "3218468761", pin: "1118", name: "Danilo", role: "redes" }, // Panel de Redes
   { phone: "3156642481", pin: "9372", name: "Brandon Estiven Tapasco Piñeros", role: "operario" },
   { phone: "3215617856", pin: "1824", name: "Cristian Camilo Rodas Grajales", role: "operario" },
   { phone: "3224032093", pin: "8752", name: "Daniel Antonio Rodas Jaramillo", role: "operario" },
@@ -113,7 +113,6 @@ window.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("pdfStartDate")) document.getElementById("pdfStartDate").value = firstDay;
   if (document.getElementById("pdfEndDate")) document.getElementById("pdfEndDate").value = lastDay;
   
-  // Verificar si hay sesión activa al recargar
   const usuarioActivo = JSON.parse(localStorage.getItem("usuario_activo"));
   if (usuarioActivo) {
     document.getElementById("loginScreen").classList.add("hidden");
@@ -146,14 +145,12 @@ function verificarModoMantenimiento() {
   }
 }
 
-// Configurar la interfaz según si es Operario o Redes (Danilo)
 function configurarVistaPorRol(operador) {
   const navTabs = document.getElementById("mainNavTabs");
   const secPendientes = document.getElementById("secPendientes");
   const secFinalizadas = document.getElementById("secFinalizadas");
 
   if (operador.role === "redes") {
-    // Si es Danilo (Redes), ocultamos pendientes y lo mandamos directo a finalizadas con panel de descargas
     if (navTabs) navTabs.style.display = "none";
     if (secPendientes) secPendientes.classList.add("hidden");
     if (secFinalizadas) {
@@ -203,7 +200,7 @@ function renderTasks() {
   filterFinalized();
 }
 
-// Panel exclusivo para Danilo (Redes) con opción de descargar archivos
+// Panel exclusivo para Danilo (Redes)
 function renderPanelRedesParaDanilo() {
   const containerFinalizadas = document.getElementById("listFinalizadas");
   if (!containerFinalizadas) return;
@@ -214,7 +211,7 @@ function renderPanelRedesParaDanilo() {
 
   const headerNotice = document.createElement("div");
   headerNotice.style.cssText = "background: #e0f2fe; color: #0369a1; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; border: 1px solid #bae6fd;";
-  headerNotice.innerHTML = `📥 Panel de Redes (Danilo): Aquí visualiza las tareas finalizadas y puede descargar las evidencias fotográficas de cada servicio.`;
+  headerNotice.innerHTML = `📥 Panel de Redes (Danilo): Visualice las tareas finalizadas y descargue el paquete ZIP con las evidencias fotográficas selladas.`;
   containerFinalizadas.appendChild(headerNotice);
 
   if (tareasFinalizadas.length === 0) {
@@ -239,7 +236,7 @@ function renderPanelRedesParaDanilo() {
       <p class="task-client"><strong>Total Días / Horas:</strong> ${task.totalDias || 1} días (${task.totalHoras || 0.0} hrs)</p>
       <div style="margin-top: 12px; display: flex; gap: 8px;">
         <button onclick="descargarEvidenciasTarea('${task.id}')" style="background: #040B5D; color: white; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; font-size: 0.85rem;">
-          📦 Descargar Paquete de Evidencias
+          📦 Descargar Paquete de Evidencias (ZIP)
         </button>
       </div>
     `;
@@ -247,12 +244,55 @@ function renderPanelRedesParaDanilo() {
   });
 }
 
-function descargarEvidenciasTarea(taskId) {
+// Generar y descargar archivo ZIP real con JSZip
+async function descargarEvidenciasTarea(taskId) {
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   const task = savedTasks.find(t => t.id === taskId);
-  if (!task) return;
+  
+  if (!task || !task.diasDetalle || task.diasDetalle.length === 0) {
+    alert("No hay evidencias fotográficas registradas para esta tarea.");
+    return;
+  }
 
-  alert(`Preparando paquete de descarga para la Tarea #${taskId} (${task.cliente}). Las evidencias con sello corporativo se están consolidando para su ordenador.`);
+  if (typeof JSZip === 'undefined') {
+    alert("La librería JSZip no está cargada. Por favor verifique su conexión o el archivo index.html.");
+    return;
+  }
+
+  const zip = new JSZip();
+  const folderName = `Tarea_${task.id}_${task.cliente.replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const taskFolder = zip.folder(folderName);
+
+  let fotosAgregadas = 0;
+
+  task.diasDetalle.forEach((day) => {
+    if (day.fotoConSello) {
+      const base64Data = day.fotoConSello.split(',')[1];
+      const fileName = `Dia_${day.dayNum}_Grua_${(day.grua || 'General').replace(/[^a-zA-Z0-9]/g, '_')}.jpg`;
+      taskFolder.file(fileName, base64Data, { base64: true });
+      fotosAgregadas++;
+    }
+  });
+
+  if (fotosAgregadas === 0) {
+    alert("No se encontraron archivos de imagen adjuntos en el detalle de esta tarea.");
+    return;
+  }
+
+  alert("Generando paquete ZIP con las evidencias corporativas. La descarga comenzará en unos segundos...");
+
+  try {
+    const content = await zip.generateAsync({ type: "blob" });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(content);
+    link.download = `${folderName}_Evidencias.zip`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (err) {
+    console.error("Error al generar el ZIP:", err);
+    alert("Ocurrió un error al generar el archivo ZIP.");
+  }
 }
 
 function filterFinalized() {
@@ -496,18 +536,14 @@ function previewImageWithWatermark(event, dayNum) {
       canvas.width = img.width;
       canvas.height = img.height + 180;
 
-      // 1. Dibujar foto original
       ctx.drawImage(img, 0, 0);
 
-      // 2. Fondo Navy (#040B5D)
       ctx.fillStyle = "#040B5D";
       ctx.fillRect(0, img.height, canvas.width, 180);
 
-      // 3. Línea dorada (#BF956E)
       ctx.fillStyle = "#BF956E";
       ctx.fillRect(0, img.height, canvas.width, 8);
 
-      // 4. Datos de tarea y formulario
       const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
       const currentTask = savedTasks.find(t => t.id === currentActiveTaskId) || {};
       
@@ -518,7 +554,6 @@ function previewImageWithWatermark(event, dayNum) {
       const direccion = dirInput || currentTask.direccion || "Sin dirección";
       const fechaActual = new Date().toLocaleDateString();
 
-      // 5. Textos corporativos
       ctx.fillStyle = "#FFFFFF";
       ctx.font = `bold ${Math.max(16, canvas.width * 0.025)}px sans-serif`;
       ctx.fillText(`AYAX - GRÚAS PEREIRA | TAREA #${numTarea}`, 30, img.height + 38);
@@ -591,12 +626,18 @@ function saveDayRecord(dayNum) {
   const inputFoto = document.getElementById(`foto-day-${dayNum}`);
   const tieneFoto = inputFoto && inputFoto.files && inputFoto.files[0];
 
+  const canvasPreview = document.getElementById(`canvas-preview-${dayNum}`);
+  let fotoBase64 = null;
+  if (canvasPreview) {
+    fotoBase64 = canvasPreview.toDataURL('image/jpeg', 0.9);
+  }
+
   if (!dir || !desc || !grua || !op || !ap || !hini || !hfin || !kmini || !kmfin) {
     alert("Por favor complete todos los campos obligatorios (*)");
     return;
   }
 
-  if (!tieneFoto) {
+  if (!tieneFoto && !fotoBase64) {
     alert("⚠️ ¡Atención! Es obligatorio adjuntar o tomar la foto de evidencia del día para poder continuar.");
     return;
   }
@@ -615,7 +656,8 @@ function saveDayRecord(dayNum) {
     horaFin: hfin,
     horasTrabajadas: hoursWorked,
     observaciones,
-    tieneEvidenciaFotografica: true
+    tieneEvidenciaFotografica: true,
+    fotoConSello: fotoBase64 // <--- Guardamos la foto con el sello en el registro para Danilo
   };
   
   currentDaysData.push(dayData);
@@ -647,7 +689,7 @@ function renderDaysAccordion() {
       <p><strong>Horario:</strong> ${day.horaInicio} - ${day.horaFin} (${day.horasTrabajadas} Horas)</p>
       <p><strong>Combustible:</strong> Inicial ${day.combustibleInicial || 'N/A'} Gal | Final ${day.combustibleFinal || 'N/A'} Gal</p>
       <p><strong>Urea:</strong> Inicial ${day.ureaInicial || 'N/A'} Gal | Final ${day.ureaFinal || 'N/A'} Gal</p>
-      <p style="color: #27ae60; font-weight: bold; margin-top: 5px;">📷 Evidencia Fotográfica Registrada</p>
+      <p style="color: #27ae60; font-weight: bold; margin-top: 5px;">📷 Evidencia Fotográfica Sellada Registrada</p>
     `;
     
     details.appendChild(summary);
@@ -657,7 +699,7 @@ function renderDaysAccordion() {
 }
 
 // ==========================================
-// PROCESAMIENTO DE FOTOGRAFÍAS Y CORREO REDES
+// PROCESAMIENTO Y CORREO REDES
 // ==========================================
 async function procesarYAcumularFotoDia(datosServicioContexto) {
     const inputCamara = document.getElementById('input_foto_novedad');
