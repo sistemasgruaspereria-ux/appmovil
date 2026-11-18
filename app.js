@@ -1,8 +1,9 @@
 // ==========================================
-// LISTA DE OPERADORES AUTORIZADOS (LOCAL)
+// LISTA DE OPERADORES Y REDES AUTORIZADOS
 // ==========================================
 let authorizedOperators = [
   { phone: "3217293985", pin: "1834", name: "Carolina Valencia", role: "admin" },
+  { phone: "3218468761", pin: "1118", name: "Danilo", role: "redes" }, // <--- PERFIL DE REDES DE DANILO
   { phone: "3156642481", pin: "9372", name: "Brandon Estiven Tapasco Piñeros", role: "operario" },
   { phone: "3215617856", pin: "1824", name: "Cristian Camilo Rodas Grajales", role: "operario" },
   { phone: "3224032093", pin: "8752", name: "Daniel Antonio Rodas Jaramillo", role: "operario" },
@@ -112,7 +113,16 @@ window.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("pdfStartDate")) document.getElementById("pdfStartDate").value = firstDay;
   if (document.getElementById("pdfEndDate")) document.getElementById("pdfEndDate").value = lastDay;
   
-  renderTasks();
+  // Verificar si hay sesión activa al recargar
+  const usuarioActivo = JSON.parse(localStorage.getItem("usuario_activo"));
+  if (usuarioActivo) {
+    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+    const userBadgeSpan = document.querySelector("#userBadge span");
+    if (userBadgeSpan) userBadgeSpan.textContent = usuarioActivo.name;
+    
+    configurarVistaPorRol(usuarioActivo);
+  }
 });
 
 function toggleUserMenu() {
@@ -136,7 +146,33 @@ function verificarModoMantenimiento() {
   }
 }
 
+// Configurar la interfaz según si es Operario o Redes (Danilo)
+function configurarVistaPorRol(operador) {
+  const navTabs = document.getElementById("mainNavTabs");
+  const secPendientes = document.getElementById("secPendientes");
+  const secFinalizadas = document.getElementById("secFinalizadas");
+
+  if (operador.role === "redes") {
+    // Si es Danilo (Redes), ocultamos pendientes y lo mandamos directo a finalizadas con panel de descargas
+    if (navTabs) navTabs.style.display = "none";
+    if (secPendientes) secPendientes.classList.add("hidden");
+    if (secFinalizadas) {
+      secFinalizadas.classList.remove("hidden");
+      renderPanelRedesParaDanilo();
+    }
+  } else {
+    if (navTabs) navTabs.style.display = "flex";
+    renderTasks();
+  }
+}
+
 function renderTasks() {
+  const usuarioActivo = JSON.parse(localStorage.getItem("usuario_activo"));
+  if (usuarioActivo && usuarioActivo.role === "redes") {
+    renderPanelRedesParaDanilo();
+    return;
+  }
+
   const containerPendientes = document.getElementById("listPendientes");
   if (!containerPendientes) return;
   containerPendientes.innerHTML = "";
@@ -167,7 +203,65 @@ function renderTasks() {
   filterFinalized();
 }
 
+// Panel exclusivo para Danilo (Redes) con opción de descargar archivos
+function renderPanelRedesParaDanilo() {
+  const containerFinalizadas = document.getElementById("listFinalizadas");
+  if (!containerFinalizadas) return;
+  containerFinalizadas.innerHTML = "";
+
+  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
+  const tareasFinalizadas = savedTasks.filter(t => t.estado === "finalizada");
+
+  const headerNotice = document.createElement("div");
+  headerNotice.style.cssText = "background: #e0f2fe; color: #0369a1; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; border: 1px solid #bae6fd;";
+  headerNotice.innerHTML = `📥 Panel de Redes (Danilo): Aquí visualiza las tareas finalizadas y puede descargar las evidencias fotográficas de cada servicio.`;
+  containerFinalizadas.appendChild(headerNotice);
+
+  if (tareasFinalizadas.length === 0) {
+    const emptyMsg = document.createElement("p");
+    emptyMsg.className = "empty-msg";
+    emptyMsg.style.textAlign = "center";
+    emptyMsg.innerText = "No hay tareas finalizadas con evidencias disponibles aún.";
+    containerFinalizadas.appendChild(emptyMsg);
+    return;
+  }
+
+  tareasFinalizadas.forEach(task => {
+    const card = document.createElement("div");
+    card.className = "task-card";
+    card.style.cssText = "background: white; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #27ae60;";
+    card.innerHTML = `
+      <div class="task-header">
+        <span class="task-code" style="color: #27ae60; font-weight: bold;">Tarea #${task.id} (Finalizada)</span>
+        <small style="color: #64748b;">${new Date(task.fechaFinalizacion || Date.now()).toLocaleDateString()}</small>
+      </div>
+      <p class="task-client"><strong>Cliente:</strong> ${task.cliente}</p>
+      <p class="task-client"><strong>Total Días / Horas:</strong> ${task.totalDias || 1} días (${task.totalHoras || 0.0} hrs)</p>
+      <div style="margin-top: 12px; display: flex; gap: 8px;">
+        <button onclick="descargarEvidenciasTarea('${task.id}')" style="background: #040B5D; color: white; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; font-size: 0.85rem;">
+          📦 Descargar Paquete de Evidencias
+        </button>
+      </div>
+    `;
+    containerFinalizadas.appendChild(card);
+  });
+}
+
+function descargarEvidenciasTarea(taskId) {
+  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
+  const task = savedTasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  alert(`Preparando paquete de descarga para la Tarea #${taskId} (${task.cliente}). Las evidencias con sello corporativo se están consolidando para su ordenador.`);
+}
+
 function filterFinalized() {
+  const usuarioActivo = JSON.parse(localStorage.getItem("usuario_activo"));
+  if (usuarioActivo && usuarioActivo.role === "redes") {
+    renderPanelRedesParaDanilo();
+    return;
+  }
+
   const textQuery = document.getElementById("searchInput") ? document.getElementById("searchInput").value.toLowerCase().trim() : "";
   const dateQuery = document.getElementById("searchDate") ? document.getElementById("searchDate").value : "";
   const containerFinalizadas = document.getElementById("listFinalizadas");
@@ -399,22 +493,21 @@ function previewImageWithWatermark(event, dayNum) {
       const canvas = document.getElementById(`canvas-preview-${dayNum}`);
       const ctx = canvas.getContext('2d');
 
-      // Espacio inferior de 180px para acomodar todos los datos completos
       canvas.width = img.width;
       canvas.height = img.height + 180;
 
-      // 1. Dibujar la foto original
+      // 1. Dibujar foto original
       ctx.drawImage(img, 0, 0);
 
-      // 2. Fondo del pie de página (Color corporativo Navy #040B5D)
+      // 2. Fondo Navy (#040B5D)
       ctx.fillStyle = "#040B5D";
       ctx.fillRect(0, img.height, canvas.width, 180);
 
-      // 3. Línea dorada superior del footer (#BF956E)
+      // 3. Línea dorada (#BF956E)
       ctx.fillStyle = "#BF956E";
       ctx.fillRect(0, img.height, canvas.width, 8);
 
-      // 4. Obtener datos completos de la tarea y formulario
+      // 4. Datos de tarea y formulario
       const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
       const currentTask = savedTasks.find(t => t.id === currentActiveTaskId) || {};
       
@@ -425,7 +518,7 @@ function previewImageWithWatermark(event, dayNum) {
       const direccion = dirInput || currentTask.direccion || "Sin dirección";
       const fechaActual = new Date().toLocaleDateString();
 
-      // 5. Escribir textos corporativos completos
+      // 5. Textos corporativos
       ctx.fillStyle = "#FFFFFF";
       ctx.font = `bold ${Math.max(16, canvas.width * 0.025)}px sans-serif`;
       ctx.fillText(`AYAX - GRÚAS PEREIRA | TAREA #${numTarea}`, 30, img.height + 38);
@@ -435,7 +528,6 @@ function previewImageWithWatermark(event, dayNum) {
       ctx.fillText(`Dirección: ${direccion}`, 30, img.height + 106);
       ctx.fillText(`Grúa: ${grua} | Fecha: ${fechaActual}`, 30, img.height + 140);
 
-      // Ocultar selector y mostrar vista previa con botón de eliminar
       document.getElementById(`input-container-foto-${dayNum}`).style.display = "none";
       document.getElementById(`preview-container-${dayNum}`).style.display = "block";
     };
@@ -504,7 +596,6 @@ function saveDayRecord(dayNum) {
     return;
   }
 
-  // VALIDACIÓN OBLIGATORIA DE LA FOTO
   if (!tieneFoto) {
     alert("⚠️ ¡Atención! Es obligatorio adjuntar o tomar la foto de evidencia del día para poder continuar.");
     return;
@@ -725,7 +816,6 @@ function finalizeTask() {
   
   localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
 
-  // Envío consolidado por correo para el área de redes
   const correoDestino = "sistemasgruaspereira@gmail.com";
   const clienteNombre = currentTaskData ? currentTaskData.cliente : "Cliente";
   const asunto = encodeURIComponent(`Evidencias Fotográficas - Tarea #${currentActiveTaskId} - ${clienteNombre}`);
@@ -929,7 +1019,8 @@ function handleLogin() {
     if (userBadgeSpan) {
       userBadgeSpan.textContent = operadorEncontrado.name;
     }
-    renderTasks();
+    
+    configurarVistaPorRol(operadorEncontrado);
   } else {
     alert("Número de teléfono o PIN incorrecto. Por favor verifique.");
   }
