@@ -577,6 +577,9 @@ function addNewDay() {
 // ==========================================
 // PROCESAR FOTOS CON REGLA DE COMA (MUNICIPIO, DIRECCIÓN) Y 2 COLUMNAS
 // ==========================================
+// ==========================================
+// PROCESAR FOTOS CON TEXTO COMPACTO Y DIRECCIÓN ESPECÍFICA DEL DÍA
+// ==========================================
 function procesarFotoMulti(event, dayNum) {
   const file = event.target.files[0];
   if (!file) return;
@@ -589,8 +592,8 @@ function procesarFotoMulti(event, dayNum) {
       const ctx = canvas.getContext('2d');
 
       canvas.width = img.width;
-      // Altura del pie de página adaptativa según la orientación (más espacio si es vertical)
-      const footerHeight = canvas.width < canvas.height ? 210 : 180;
+      // Franja inferior más compacta (150px) para que ocupe menos espacio en la foto
+      const footerHeight = 150;
 
       canvas.height = img.height + footerHeight;
 
@@ -603,9 +606,9 @@ function procesarFotoMulti(event, dayNum) {
 
       // Línea dorada superior decorativa (#BF956E)
       ctx.fillStyle = "#BF956E";
-      ctx.fillRect(0, img.height, canvas.width, 8);
+      ctx.fillRect(0, img.height, canvas.width, 6);
 
-      // Obtener datos de la tarea
+      // Obtener datos de la tarea y específicamente del campo de dirección de ESTE DÍA
       const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
       const currentTask = savedTasks.find(t => t.id === currentActiveTaskId) || {};
       
@@ -614,7 +617,9 @@ function procesarFotoMulti(event, dayNum) {
       const gruaElem = document.getElementById(`grua-day-${dayNum}`);
       const grua = (gruaElem && gruaElem.value) ? gruaElem.value : "Grúa General";
       
-      const dirInput = document.getElementById(`dir-day-${dayNum}`).value || currentTask.direccion || "Pereira";
+      // Captura estricta del campo de dirección del día correspondiente (con respaldo a tarea)
+      const inputDirElement = document.getElementById(`dir-day-${dayNum}`);
+      const dirInput = (inputDirElement && inputDirElement.value.trim()) ? inputDirElement.value.trim() : (currentTask.direccion || "Pereira");
 
       // --- REGLA DE LA COMA (Municipio, Dirección) ---
       let ciudadTexto = "Pereira";
@@ -624,6 +629,8 @@ function procesarFotoMulti(event, dayNum) {
         const partes = dirInput.split(",");
         ciudadTexto = partes[0].trim();
         direccionTexto = partes.slice(1).join(",").trim();
+      } else {
+        ciudadTexto = dirInput; // Si no ponen coma, muestra el texto ingresado
       }
       // ----------------------------------------------
 
@@ -631,36 +638,32 @@ function procesarFotoMulti(event, dayNum) {
       const fechaActual = ahora.toLocaleDateString();
       const horaActual = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      // Configuración de columnas proporcional al ancho de la foto
-      const colIzquierdaX = Math.max(20, Math.floor(canvas.width * 0.03));
-      // Si la foto es vertical, ajustamos la columna derecha un poco más a la izquierda para que no se corten los textos largos
-      const esVertical = canvas.width < canvas.height;
-      const colDerechaX = esVertical ? Math.floor(canvas.width * 0.50) : Math.floor(canvas.width * 0.52);
+      // Coordenadas de columnas y espaciado compacto (sin interlineado excesivo)
+      const colIzquierdaX = Math.max(15, Math.floor(canvas.width * 0.025));
+      const colDerechaX = Math.floor(canvas.width * 0.52);
 
-      const fontSizeNormal = Math.max(13, Math.floor(canvas.width * 0.022));
-      const fontSizeBold = Math.max(15, Math.floor(canvas.width * 0.026));
+      const fontSize = Math.max(12, Math.floor(canvas.width * 0.021));
 
       ctx.fillStyle = "#FFFFFF";
 
-      // --- FILA 1: TÍTULO Y VEHÍCULO ---
-      ctx.font = `bold ${fontSizeBold}px sans-serif`;
-      ctx.fillText(`AYAX | TAREA #${numTarea}`, colIzquierdaX, img.height + 42);
-      ctx.fillText(`Vehículo: ${grua}`, colDerechaX, img.height + 42);
+      // Línea 1 (Y: +32)
+      ctx.font = `bold ${fontSize + 2}px sans-serif`;
+      ctx.fillText(`AYAX | TAREA #${numTarea}`, colIzquierdaX, img.height + 32);
+      ctx.fillText(`Vehículo: ${grua}`, colDerechaX, img.height + 32);
 
-      // --- FILA 2: CLIENTE Y FECHA ---
-      ctx.font = `${fontSizeNormal}px sans-serif`;
-      ctx.fillText(`Cliente: ${clienteNombre}`, colIzquierdaX, img.height + 88);
-      ctx.fillText(`Fecha: ${fechaActual}`, colDerechaX, img.height + 88);
+      // Línea 2 (Y: +62)
+      ctx.font = `${fontSize}px sans-serif`;
+      ctx.fillText(`Cliente: ${clienteNombre}`, colIzquierdaX, img.height + 62);
+      ctx.fillText(`Fecha: ${fechaActual}`, colDerechaX, img.height + 62);
 
-      // --- FILA 3: CIUDAD/MUNICIPIO Y HORA ---
-      ctx.fillText(`Ciudad: ${ciudadTexto}`, colIzquierdaX, img.height + 130);
-      ctx.fillText(`Hora: ${horaActual}`, colDerechaX, img.height + 130);
+      // Línea 3 (Y: +92)
+      ctx.fillText(`Ciudad: ${ciudadTexto}`, colIzquierdaX, img.height + 92);
+      ctx.fillText(`Hora: ${horaActual}`, colDerechaX, img.height + 92);
 
-      // --- FILA 4 (Opcional si hay dirección detallada): DIRECCIÓN ---
+      // Línea 4 (Y: +122 - Dirección exacta del día)
       if (direccionTexto && direccionTexto !== ciudadTexto) {
-        ctx.font = `${Math.max(11, fontSizeNormal - 2)}px sans-serif`;
-        ctx.fillStyle = "#DDC9B8"; // Color arena suave para la dirección exacta
-        ctx.fillText(`Dir: ${direccionTexto}`, colIzquierdaX, img.height + 170);
+        ctx.fillStyle = "#DDC9B8"; // Color arena suave
+        ctx.fillText(`Dir: ${direccionTexto}`, colIzquierdaX, img.height + 122);
       }
 
       const fotoSelladaBase64 = canvas.toDataURL('image/jpeg', 0.9);
