@@ -7,8 +7,17 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- Librería JSZip para empaquetar y descargar evidencias fotográficas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        .preview-canvas {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin-top: 8px;
+            border-radius: 6px;
+        }
+    </style>
 </head>
 <body>
     <!-- MODO MANTENIMIENTO -->
@@ -16,112 +25,312 @@
         <h2 style="color: #f59e0b; font-size: 24px; margin-bottom: 10px;">¡Estamos mejorando para ti!</h2>
         <p style="color: #94a3b8; font-size: 16px; max-width: 400px;">La plataforma se encuentra temporalmente en actualización.</p>
     </div>
+
     <!-- LOGIN PRINCIPAL -->
     <div id="loginScreen" class="login-screen">
         <div class="login-card">
             <img src="logo.png" alt="Ayax" class="login-logo">
-            <h2>Portal de Operarios</h2>
+            <h2>Portal de Operarios y Nómina</h2>
             <p class="login-subtitle">Ingrese sus credenciales para continuar</p>
-            <div class="form-group">
-                <label>Número de Teléfono</label>
-                <input type="tel" id="loginPhone" placeholder="Ej: 3156642481" value="3156642481">
-            </div>
-            <div class="form-group">
-                <label>PIN de Acceso (4 dígitos)</label>
-                <input type="password" id="loginPin" maxlength="4" placeholder="...." value="9372">
-            </div>
-            <button class="btn-primary" onclick="handleLogin()">Ingresar al Sistema</button>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginPhone">Número de Teléfono</label>
+                    <input type="tel" id="loginPhone" placeholder="Ej: 3204618830" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPin">PIN de Acceso (4 dígitos)</label>
+                    <input type="password" id="loginPin" maxlength="4" placeholder="...." required>
+                </div>
+                <button type="submit" class="btn-primary">Ingresar al Sistema</button>
+            </form>
         </div>
     </div>
-    <!-- CONTENEDOR PRINCIPAL DE LA APP -->
+
+    <!-- CONTENEDOR PRINCIPAL DE LA APP MÓVIL -->
     <div id="app" class="app-container hidden">
         <!-- ENCABEZADO -->
-        <header class="main-header" style="display: flex; justify-content: space-between; align-items: center; position: relative; padding: 10px 15px; background: #040B5D;">
-            <div class="logo-zone" style="display: flex; align-items: center; gap: 10px;">
-                <img src="logo.png" alt="Ayax" class="real-logo" style="height: 35px; width: auto;">
+        <header class="main-header">
+            <div class="logo-zone">
+                <img src="logo.png" alt="Ayax" class="real-logo">
             </div>
             <div class="user-menu-container" style="position: relative;">
-                <button id="userBadge" onclick="toggleUserMenu()" class="user-badge" style="background: #040B5D; color: white; border: 1px solid #BF956E; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
-                    <span>Operario</span> ▾
+                <button type="button" id="userBadge" onclick="toggleUserMenu()" class="user-badge-btn">
+                    <span>Usuario</span> ▾
                 </button>
-                <div id="userDropdownMenu" class="hidden" style="position: absolute; right: 0; top: 40px; background: white; border: 1px solid #DDC9B8; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 160px; z-index: 1000; overflow: hidden;">
-                    <button id="btn-logout" style="width: 100%; text-align: left; background: none; border: none; padding: 12px 16px; color: #dc2626; font-weight: bold; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+                <div id="userDropdownMenu" class="dropdown-menu hidden">
+                    <button type="button" id="btn-logout" class="dropdown-item-danger" onclick="logoutUser()">
                         Cerrar Sesión
                     </button>
                 </div>
             </div>
         </header>
+
         <!-- NAVEGACIÓN PRINCIPAL -->
         <nav class="nav-tabs" id="mainNavTabs">
-            <button id="btnTabPendientes" class="tab-btn active" onclick="switchTab('pendientes')">
+            <button type="button" id="btnTabPendientes" class="tab-btn active" onclick="switchTab('pendientes')">
                 Pendientes (<span id="countPendientes">0</span>)
             </button>
-            <button id="btnTabFinalizadas" class="tab-btn" onclick="switchTab('finalizadas')">
+            <button type="button" id="btnTabHoras" class="tab-btn hidden" onclick="switchTab('horas')">
+                ⏱️ Mi Jornada
+            </button>
+            <button type="button" id="btnTabDiasRegistrados" class="tab-btn hidden" onclick="switchTab('diasRegistrados')">
+                📅 Días Registrados
+            </button>
+            <button type="button" id="btnTabHistorial" class="tab-btn hidden" onclick="switchTab('historial')">
+                📁 Historial
+            </button>
+            <button type="button" id="btnTabFinalizadas" class="tab-btn" onclick="switchTab('finalizadas')">
                 Finalizadas (<span id="countFinalizadas">0</span>)
             </button>
+            <button type="button" id="btnTabContabilidad" class="tab-btn hidden" onclick="switchTab('contabilidad')">
+                📊 Nómina
+            </button>
         </nav>
-        <!-- VISTA 1: PENDIENTES -->
+
+        <!-- VISTA 1: PENDIENTES DE SERVICIOS -->
         <section id="secPendientes" class="tab-content active">
             <div class="cards-list" id="listPendientes"></div>
         </section>
+
+        <!-- VISTA MÓVIL: REGISTRO DE JORNADA (OPERADOR) -->
+        <section id="secHoras" class="tab-content hidden">
+            <!-- 1. APERTURA DE JORNADA COLAPSABLE -->
+            <details id="acordeon-apertura-jornada" class="card" open>
+                <summary style="cursor: pointer; font-weight: 700; font-size: 1.02rem; color: #040B5D; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                    <span id="titulo-acordeon-dia">1. Abrir Jornada de Trabajo</span>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 0.95rem; color: #040B5D;">▾</span>
+                        <button type="button" id="btn-eliminar-apertura-activa" title="Eliminar registro" onclick="event.preventDefault(); event.stopPropagation(); eliminarJornadaActivaDesdeAcordeon();" style="background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 6px; padding: 2px 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">✕</button>
+                    </div>
+                </summary>
+                <form id="form-inicio-jornada" style="margin-top: 14px;">
+                    <div class="form-group">
+                        <label for="jornada-fecha">Fecha del Servicio *</label>
+                        <input type="date" id="jornada-fecha" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="jornada-cliente">Nombre del Cliente *</label>
+                        <input type="text" id="jornada-cliente" placeholder="Ej: Constructora del Café" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="jornada-direccion">Dirección / Ubicación de Inicio *</label>
+                        <div style="display: flex; gap: 6px;">
+                            <input type="text" id="jornada-direccion" placeholder="Dirección o GPS" required style="flex: 1;">
+                            <button type="button" class="btn-secondary-small" onclick="capturarGPSJornada('jornada-direccion')">GPS</button>
+                        </div>
+                    </div>
+                    <div class="form-group" style="background: #f0fdf4; padding: 12px; border-radius: 8px; border: 1px dashed #27ae60;">
+                        <label for="foto-inicio-file" style="color: #27ae60; font-weight: bold;">📷 Foto de Inicio de Día * (Hora automática)</label>
+                        <input type="file" id="foto-inicio-file" accept="image/*" capture="environment" required style="margin-top: 6px;">
+                        <input type="hidden" id="jornada-hora-inicio">
+                        <div id="hora-inicio-badge" style="font-size: 0.8rem; font-weight: bold; color: #040B5D; margin-top: 6px;"></div>
+                        <canvas id="canvas-inicio-preview" class="preview-canvas"></canvas>
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top: 10px;">Guardar Apertura de Día</button>
+                </form>
+            </details>
+
+            <!-- JORNADAS EN CURSO -->
+            <div class="card">
+                <h2>Jornadas en Curso (Pendientes de Cierre)</h2>
+                <div id="lista-jornadas-abiertas" class="stack"></div>
+            </div>
+
+            <!-- PANEL DE CIERRE DE DÍA -->
+            <div id="panel-cierre-jornada" class="card hidden">
+                <h2 style="color: #c2410c;">Completar y Cerrar Jornada</h2>
+                <p id="cierre-resumen-txt" class="muted" style="margin-bottom: 12px;"></p>
+                <form id="form-cierre-jornada">
+                    <input type="hidden" id="cierre-jornada-id">
+                    <div class="form-group" style="background: #fff7ed; padding: 12px; border-radius: 8px; border: 1px dashed #ea580c;">
+                        <label for="foto-fin-file" style="color: #ea580c; font-weight: bold;">📷 Foto de Finalización * (Hora automática)</label>
+                        <input type="file" id="foto-fin-file" accept="image/*" capture="environment" required style="margin-top: 6px;">
+                        <input type="hidden" id="jornada-hora-fin">
+                        <div id="hora-fin-badge" style="font-size: 0.8rem; font-weight: bold; color: #c2410c; margin-top: 6px;"></div>
+                        <canvas id="canvas-fin-preview" class="preview-canvas"></canvas>
+                    </div>
+                    <div class="form-group">
+                        <label for="jornada-almuerzo-min">Tiempo tomado para almuerzo / descanso (minutos) *</label>
+                        <input type="number" id="jornada-almuerzo-min" min="0" max="360" value="60" placeholder="Ej. 30, 60, 90" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="jornada-observaciones">Observaciones / Novedades (opcional)</label>
+                        <textarea id="jornada-observaciones" rows="2" placeholder="Describa imprevistos, varadas, demoras, etc..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Evidencia Fotográfica de Novedades (Opcional, Múltiple)</label>
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            <button type="button" id="btn-camara-nov" class="btn-secondary-small" style="flex:1;">📷 Tomar Foto</button>
+                            <button type="button" id="btn-galeria-nov" class="btn-secondary-small" style="flex:1;">🖼️ Galería</button>
+                        </div>
+                        <input type="file" id="input-camara-nov" accept="image/*" capture="environment" class="hidden">
+                        <input type="file" id="input-galeria-nov" accept="image/*" multiple class="hidden">
+                        <div id="galeria-novedades-thumbs" class="multi-thumbs"></div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" class="btn-back" onclick="cancelarCierreJornada()" style="flex:1;">Cancelar</button>
+                        <button type="submit" class="btn-primary" style="flex:2; background-color: #27ae60;">Cerrar Día y Calcular</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- PESTAÑA OPERADOR: DÍAS REGISTRADOS DEL MES ACTIVO -->
+        <section id="secDiasRegistrados" class="tab-content hidden">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                    <h2 id="titulo-pestana-dias" style="margin: 0;">Días Registrados</h2>
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="filtro-fecha-dias-registrados">Buscar por fecha (calendario):</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="date" id="filtro-fecha-dias-registrados" class="form-control" onchange="renderListaDiasRegistrados()" style="flex: 1;">
+                        <button type="button" class="btn-secondary-small" onclick="limpiarFiltroCalendario('filtro-fecha-dias-registrados', 'renderListaDiasRegistrados')">Ver Todos</button>
+                    </div>
+                </div>
+                <div id="lista-dias-registrados-mes" class="stack"></div>
+            </div>
+        </section>
+
+        <!-- PESTAÑA OPERADOR: HISTORIAL POR CARPETAS MENSUALES -->
+        <section id="secHistorial" class="tab-content hidden">
+            <div class="card">
+                <h2>Historial por Mes</h2>
+                <p class="muted" style="font-size: 0.8rem; margin-bottom: 12px;">
+                    A partir del día 1 de cada mes, los registros quedan agrupados en carpetas mensuales y puedes buscar por fecha.
+                </p>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="filtro-fecha-historial">Buscar por fecha (calendario):</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="date" id="filtro-fecha-historial" class="form-control" onchange="renderCarpetasHistorial()" style="flex: 1;">
+                        <button type="button" class="btn-secondary-small" onclick="limpiarFiltroCalendario('filtro-fecha-historial', 'renderCarpetasHistorial')">Ver Todas</button>
+                    </div>
+                </div>
+                <div id="carpetas-historial-meses" class="stack"></div>
+            </div>
+        </section>
+
         <!-- VISTA 2: FINALIZADAS / PANEL DE REDES -->
         <section id="secFinalizadas" class="tab-content hidden">
             <div class="search-box" style="display: flex; gap: 8px; margin-bottom: 10px;">
-                <input type="text" id="searchInput" placeholder="Buscar por código..." onkeyup="filterFinalized()" style="flex: 2; padding: 10px; border: 1px solid #DDC9B8; border-radius: 6px;">
-                <input type="date" id="searchDate" onchange="filterFinalized()" style="flex: 1.5; padding: 10px; border: 1px solid #DDC9B8; border-radius: 6px;">
+                <input type="text" id="searchInput" placeholder="Buscar por código..." onkeyup="filterFinalized()" style="flex: 2;">
+                <input type="date" id="searchDate" onchange="filterFinalized()" style="flex: 1.5;">
             </div>
             <div class="cards-list" id="listFinalizadas">
                 <p class="empty-msg">No hay tareas finalizadas.</p>
             </div>
-            <div id="pdfButtonContainer" style="margin-top: 35px; padding: 16px; background: #fdfbf7; border: 2px solid #BF956E; border-radius: 10px;">
+            <div id="pdfButtonContainer" style="margin-top: 25px; padding: 16px; background: #fdfbf7; border: 2px solid #BF956E; border-radius: 10px;">
                 <p style="font-size: 0.9rem; font-weight: 700; color: #040B5D; margin-bottom: 10px;">Generar Reporte Mensual en PDF</p>
                 <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                    <div style="flex: 1;"><input type="date" id="pdfStartDate" class="form-control" style="padding: 8px; width: 100%;"></div>
-                    <div style="flex: 1;"><input type="date" id="pdfEndDate" class="form-control" style="padding: 8px; width: 100%;"></div>
+                    <div style="flex: 1;"><input type="date" id="pdfStartDate" class="form-control"></div>
+                    <div style="flex: 1;"><input type="date" id="pdfEndDate" class="form-control"></div>
                 </div>
-                <button class="btn-primary" onclick="descargarReportePDF()" style="background-color: #040B5D; padding: 12px; width: 100%; border-radius: 6px; color: white; border: none; cursor: pointer; font-weight: bold;">Descargar Reporte PDF</button>
+                <button type="button" class="btn-primary" onclick="descargarReportePDF()" style="background-color: #040B5D;">Descargar Reporte PDF</button>
             </div>
         </section>
-        <!-- VISTA 3: ASISTENTE MULTI-DÍA (WIZARD) -->
+
+        <!-- VISTA EXCLUSIVA CONTABILIDAD (NÓMINA Y AUDITORÍA) -->
+        <section id="secContabilidad" class="tab-content hidden">
+            <div class="card">
+                <h2>Módulo de Contabilidad y Nómina</h2>
+                <div class="form-group">
+                    <label for="filtro-emp-conta">Filtrar por Empleado</label>
+                    <select id="filtro-emp-conta" class="form-control"></select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;">
+                        <label for="filtro-periodo-conta">Periodo</label>
+                        <select id="filtro-periodo-conta" class="form-control">
+                            <option value="todos">Todos los registros</option>
+                            <option value="dia">Día</option>
+                            <option value="semana">Semana</option>
+                            <option value="mes" selected>Mes</option>
+                            <option value="anio">Año</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label for="filtro-fecha-base-conta">Fecha Referencia</label>
+                        <input type="date" id="filtro-fecha-base-conta" class="form-control">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                    <button type="button" onclick="renderReporteContabilidad()" class="btn-primary" style="flex:1;">Aplicar Filtros</button>
+                    <button type="button" onclick="exportarExcelContabilidad()" class="btn-primary" style="flex:1; background-color: #27ae60;">Excel (.xls)</button>
+                </div>
+                <p id="txt-rango-activo" class="muted" style="margin-top: 10px; font-size: 0.8rem;"></p>
+            </div>
+            <div class="card">
+                <div class="table-wrap">
+                    <table id="tabla-contabilidad">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Empleado</th>
+                                <th>Cliente</th>
+                                <th>Dirección</th>
+                                <th>Inicio</th>
+                                <th>Fin</th>
+                                <th>Almuerzo</th>
+                                <th>Auditoría</th>
+                                <th>H.E.D (25%)</th>
+                                <th>H.E.N (75%)</th>
+                                <th>Rec.N (35%)</th>
+                                <th>Rec.Dom (90%)</th>
+                                <th>HED.Dom (115%)</th>
+                                <th>HEN.Dom (165%)</th>
+                                <th>Total Horas</th>
+                                <th>Valor a Pagar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-contabilidad"></tbody>
+                        <tfoot id="tfoot-contabilidad"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISTA 3: ASISTENTE MULTI-DÍA (WIZARD DE SERVICIOS) -->
         <section id="secWizard" class="tab-content hidden">
-            <div class="wizard-header-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <button type="button" class="btn-back" onclick="closeWizard()" style="padding: 6px 12px; background: #64748b; color: white; border: none; border-radius: 4px; cursor: pointer;">Volver</button>
+            <div class="wizard-header-top">
+                <button type="button" class="btn-back" onclick="closeWizard()">Volver</button>
                 <h3 id="wizardTitle" style="color: #040B5D; margin: 0;">Servicio</h3>
             </div>
             <div class="wizard-form">
                 <div id="daysListContainer" class="days-list-container" style="margin-bottom: 15px;"></div>
                 <div id="daysContainer"></div>
-                <button type="button" id="btnAddDay" class="btn-visible-add" onclick="addNewDay()" style="margin-top: 15px; width: 100%; padding: 12px; background: #BF956E; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">+ Crear Día Adicional</button>
-                <button type="button" id="btnNextToSign" class="btn-primary" onclick="goToSignSection()" style="margin-top: 20px; background-color: #040B5D; padding: 14px; width: 100%; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: bold;">Siguiente: Firmas y Cierre</button>
+                <button type="button" id="btnAddDay" class="btn-visible-add" onclick="addNewDay()">+ Crear Día Adicional</button>
+                <button type="button" id="btnNextToSign" class="btn-primary" onclick="goToSignSection()" style="margin-top: 20px;">Siguiente: Firmas y Cierre</button>
             </div>
         </section>
+
         <!-- VISTA 4: FIRMAS Y FINALIZACIÓN -->
         <section id="secSignatures" class="tab-content hidden">
-            <div class="wizard-header-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <button type="button" class="btn-back" onclick="backToWizardDays()" style="padding: 6px 12px; background: #64748b; color: white; border: none; border-radius: 4px; cursor: pointer;">Volver a Días</button>
+            <div class="wizard-header-top">
+                <button type="button" class="btn-back" onclick="backToWizardDays()">Volver a Días</button>
                 <h3 style="color: #040B5D; margin: 0;">Firmas y Finalización</h3>
             </div>
             <div class="wizard-form">
                 <div id="fotosResumenBadge" style="background: #e0f2fe; color: #0369a1; padding: 10px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; margin-bottom: 15px; border: 1px solid #bae6fd;">
-                    📷 Fotos oficiales de redes preparadas: <span id="cantFotosAcumuladas">0</span>
+                    📷 Fotos oficiales preparadas: <span id="cantFotosAcumuladas">0</span>
                 </div>
-                <div class="form-section-title" style="font-weight: 700; color: #040B5D; margin-bottom: 5px;">Firma del Operador</div>
-                <div class="signature-box-container" style="border: 1px solid #DDC9B8; background: white; padding: 10px; border-radius: 6px; text-align: center;">
-                    <canvas id="canvasOperador" class="sig-canvas" width="350" height="150" style="border: 1px dashed #ccc; touch-action: none; background: #fff;"></canvas><br>
-                    <button type="button" onclick="clearCanvas('canvasOperador')" style="margin-top: 8px; padding: 6px 12px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Limpiar Firma</button>
+                <div class="form-section-title">Firma del Operador</div>
+                <div class="signature-box-container">
+                    <canvas id="canvasOperador" class="sig-canvas" width="350" height="150"></canvas><br>
+                    <button type="button" onclick="clearCanvas('canvasOperador')" class="btn-danger-small">Limpiar Firma</button>
                 </div>
-                <div class="form-section-title" style="font-weight: 700; color: #040B5D; margin-top: 20px; margin-bottom: 5px;">Firma del Cliente</div>
-                <div class="signature-box-container" style="border: 1px solid #DDC9B8; background: white; padding: 10px; border-radius: 6px; text-align: center;">
-                    <canvas id="canvasCliente" class="sig-canvas" width="350" height="150" style="border: 1px dashed #ccc; touch-action: none; background: #fff;"></canvas><br>
-                    <button type="button" onclick="clearCanvas('canvasCliente')" style="margin-top: 8px; padding: 6px 12px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Limpiar Firma</button>
+                <div class="form-section-title" style="margin-top: 15px;">Firma del Cliente</div>
+                <div class="signature-box-container">
+                    <canvas id="canvasCliente" class="sig-canvas" width="350" height="150"></canvas><br>
+                    <button type="button" onclick="clearCanvas('canvasCliente')" class="btn-danger-small">Limpiar Firma</button>
                 </div>
-                <button class="btn-primary" onclick="finalizeTask()" style="margin-top: 25px; background-color: #27ae60; width: 100%; padding: 14px; border: none; border-radius: 6px; color: white; font-weight: bold; font-size: 1rem; cursor: pointer;">Finalizar Servicio y Enviar a Redes</button>
+                <button type="button" class="btn-primary" onclick="finalizeTask()" style="margin-top: 25px; background-color: #27ae60;">Finalizar Servicio y Enviar a Redes</button>
             </div>
         </section>
+
         <!-- VISTA 5: REPORTE POST-CIERRE -->
         <section id="secReporte" class="tab-content hidden">
-            <div class="wizard-header-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <button type="button" class="btn-back" onclick="closeWizard()" style="padding: 6px 12px; background: #64748b; color: white; border: none; border-radius: 4px; cursor: pointer;">Ir a Inicio</button>
+            <div class="wizard-header-top">
+                <button type="button" class="btn-back" onclick="closeWizard()">Ir a Inicio</button>
                 <h3 style="color: #040B5D; margin: 0;">Reporte de Servicio #<span id="repTaskId"></span></h3>
             </div>
             <div class="wizard-form" style="background: #fdfbf7; padding: 15px; border-radius: 8px; border: 1px solid #DDC9B8;">
@@ -130,19 +339,42 @@
                     <p style="font-size: 0.8rem; color: #666; margin: 0;">Reporte Oficial de Operación en Campo</p>
                 </div>
                 <div id="reportContent" style="font-size: 0.85rem; color: #333; margin-bottom: 15px;"></div>
-                <button class="btn-primary" onclick="window.print()" style="background-color: #BF956E; padding: 12px; width: 100%; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer;">Guardar / Imprimir Reporte</button>
+                <button type="button" class="btn-primary" onclick="window.print()" style="background-color: #BF956E;">Guardar / Imprimir Reporte</button>
             </div>
         </section>
     </div>
+
+    <!-- MODAL AUDITORÍA DE CONTABILIDAD -->
+    <div id="modalAuditoriaConta" class="modal hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="auditoria-titulo-txt" style="margin: 0; color: #040B5D;">Auditoría de Jornada</h3>
+                <button type="button" onclick="cerrarModalAuditoria()" class="btn-back">✕</button>
+            </div>
+            <div id="auditoria-body-content" class="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- MODAL VISOR DE FOTO AMPLIADA -->
+    <div id="modalVisorFoto" class="modal hidden" style="z-index: 3000;">
+        <div class="modal-box" style="max-width: 720px; background: #0f172a; color: #ffffff;">
+            <div class="modal-header" style="background: #0f172a; border-bottom: 1px solid #334155;">
+                <h3 id="visor-foto-titulo" style="margin: 0; color: #ffffff; font-size: 0.95rem;">Vista Ampliada</h3>
+                <button type="button" onclick="cerrarVisorFoto()" class="btn-back" style="background: #1e293b; color: #ffffff; border-color: #475569;">✕</button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 12px;">
+                <img id="visor-foto-img" src="" alt="Foto ampliada" style="width: 100%; max-width: 100%; max-height: 75vh; object-fit: contain; border-radius: 8px; display: block; margin: 0 auto;">
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
     <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          for(let registration of registrations) {
-            registration.unregister().then(function(boolean) {
-              console.log("Service Worker desregistrado con éxito:", boolean);
-            });
-          }
+      if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js').catch(err => {
+            console.error("Error registrando SW:", err);
+          });
         });
       }
     </script>
