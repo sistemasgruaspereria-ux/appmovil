@@ -121,6 +121,7 @@ function esUsuarioTatianaHoras(usuario) {
 function loginUser(phone, pin) {
   const cleanPhone = String(phone || "").trim();
   const cleanPin = String(pin || "").trim();
+
   const operador = authorizedOperators.find(
     (op) => String(op.phone).trim() === cleanPhone && String(op.pin).trim() === cleanPin
   );
@@ -131,6 +132,7 @@ function loginUser(phone, pin) {
   }
 
   localStorage.setItem("usuario_activo", JSON.stringify(operador));
+
   const loginScreen = document.getElementById("loginScreen");
   const appContainer = document.getElementById("app");
   const userBadgeSpan = document.querySelector("#userBadge span");
@@ -204,18 +206,15 @@ function configurarVistaPorRol(usuario) {
     switchTab("horas");
     return;
   }
-
   if (esConta) {
     switchTab("contabilidad");
     return;
   }
-
   if (esRedes) {
     switchTab("finalizadas");
     renderPanelRedesParaDanilo();
     return;
   }
-
   switchTab("pendientes");
 }
 
@@ -266,7 +265,8 @@ window.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("pdfStartDate")) document.getElementById("pdfStartDate").value = firstDay;
   if (document.getElementById("pdfEndDate")) document.getElementById("pdfEndDate").value = lastDay;
   if (document.getElementById("jornada-fecha")) document.getElementById("jornada-fecha").value = hoyStr;
-  if (document.getElementById("filtro-fecha-base-conta")) document.getElementById("filtro-fecha-base-conta").value = hoyStr;
+  if (document.getElementById("filtro-fecha-inicio-conta")) document.getElementById("filtro-fecha-inicio-conta").value = firstDay;
+  if (document.getElementById("filtro-fecha-fin-conta")) document.getElementById("filtro-fecha-fin-conta").value = lastDay;
 
   initEventListenersHoras();
 
@@ -294,6 +294,7 @@ function verificarModoMantenimiento() {
   const pantallaMantenimiento = document.getElementById("maintenance-screen");
   const appContainer = document.getElementById("app");
   const loginScreen = document.getElementById("loginScreen");
+
   if (enMantenimiento && pantallaMantenimiento) {
     pantallaMantenimiento.style.display = "flex";
     if (appContainer) appContainer.classList.add("hidden");
@@ -450,6 +451,7 @@ function actualizarTituloAcordeonDia() {
   const titulo = document.getElementById("titulo-acordeon-dia");
   const btnElim = document.getElementById("btn-eliminar-apertura-activa");
   if (!acordeon || !titulo) return;
+
   const abierta = obtenerUltimaJornadaAbiertaUsuario();
   titulo.innerText = "1. Abrir Jornada de Trabajo";
   if (btnElim) btnElim.style.display = abierta ? "inline-block" : "none";
@@ -507,24 +509,31 @@ function estamparFotoJornada(file, canvasId, lineasTexto, callback) {
       const scale = img.width > maxWidth ? maxWidth / img.width : 1;
       canvas.width = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
       const fontSize = Math.max(18, Math.round(canvas.width * 0.032));
       const lineHeight = Math.round(fontSize * 1.35);
       const paddingY = Math.max(12, Math.round(fontSize * 0.65));
       const paddingX = Math.max(14, Math.round(fontSize * 0.75));
       const altoBanner = paddingY * 2 + lineasTexto.length * lineHeight;
+
       ctx.fillStyle = "rgba(4, 11, 93, 0.92)";
       ctx.fillRect(0, canvas.height - altoBanner, canvas.width, altoBanner);
+
       ctx.fillStyle = "#BF956E";
       ctx.fillRect(0, canvas.height - altoBanner, canvas.width, Math.max(4, Math.round(fontSize * 0.22)));
+
       ctx.fillStyle = "#ffffff";
       ctx.font = `bold ${fontSize}px sans-serif`;
       ctx.textBaseline = "top";
+
       lineasTexto.forEach((linea, idx) => {
         const yPos = canvas.height - altoBanner + paddingY + idx * lineHeight;
         ctx.fillText(linea, paddingX, yPos, canvas.width - paddingX * 2);
       });
+
       callback(canvas.toDataURL("image/jpeg", 0.85));
     };
     img.src = e.target.result;
@@ -568,10 +577,12 @@ function guardarAperturaJornada() {
   const direccion = document.getElementById("jornada-direccion").value.trim();
   const horaInicio = document.getElementById("jornada-hora-inicio").value.trim() || horaActualHHMM();
   const fileInicio = document.getElementById("foto-inicio-file").files[0];
+
   if (!user || !fecha || !cliente || !direccion || !fileInicio) {
     alert("Por favor complete los campos obligatorios y adjunte la foto de inicio.");
     return;
   }
+
   const finalizarApertura = (imgDataUrl) => {
     const nuevaId = "jrn-" + Date.now();
     const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
@@ -610,6 +621,7 @@ function guardarAperturaJornada() {
     if (acordeon) acordeon.open = false;
     renderVistaJornada();
   };
+
   if (fotoInicioStamped) {
     finalizarApertura(fotoInicioStamped);
   } else {
@@ -636,12 +648,15 @@ function renderJornadasAbiertas() {
   const user = JSON.parse(localStorage.getItem("usuario_activo"));
   const cont = document.getElementById("lista-jornadas-abiertas");
   if (!cont || !user) return;
+
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const abiertas = dbJornadas.filter((j) => j.estado === "abierta" && j.empleadoId === user.phone);
+
   if (!abiertas.length) {
     cont.innerHTML = `<p class="empty-msg">No tienes jornadas abiertas pendientes de cierre.</p>`;
     return;
   }
+
   cont.innerHTML = abiertas.map((j) => `
     <div class="open-item-card">
       <div>
@@ -661,6 +676,7 @@ function abrirCierreJornada(id) {
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const j = dbJornadas.find((item) => item.id === id);
   if (!j) return;
+
   fotoFinStamped = "";
   fotosNovedadesStamped = [];
   document.getElementById("cierre-jornada-id").value = j.id;
@@ -677,6 +693,7 @@ function abrirCierreJornada(id) {
     canvas.width = 0;
     canvas.height = 0;
   }
+
   document.getElementById("panel-cierre-jornada").classList.remove("hidden");
   document.getElementById("panel-cierre-jornada").scrollIntoView({ behavior: "smooth" });
 }
@@ -691,6 +708,7 @@ function procesarArchivosNovedad(fileList) {
   const cliente = j ? j.cliente : "Novedad";
   const fecha = j ? formatearFechaDDMMAAAA(j.fecha) : formatearFechaDDMMAAAA(obtenerFechaLocalYYYYMMDD());
   const hora = horaActualHHMM();
+
   Array.from(fileList).forEach((file) => {
     estamparFotoJornada(file, "canvas-fin-preview", [`AYAX NOVEDAD · ${cliente}`, `Fecha: ${fecha} | Hora: ${hora}`], (url) => {
       fotosNovedadesStamped.push({ id: "nov-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6), url });
@@ -720,13 +738,16 @@ function guardarCierreJornada() {
   const horaFin = document.getElementById("jornada-hora-fin").value.trim() || horaActualHHMM();
   const almuerzoRaw = document.getElementById("jornada-almuerzo-min").value;
   const fileFin = document.getElementById("foto-fin-file").files[0];
+
   if (!id || almuerzoRaw === "" || !fileFin) {
     alert("Debes adjuntar la foto de finalización y colocar el tiempo de almuerzo.");
     return;
   }
+
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const idx = dbJornadas.findIndex((j) => j.id === id);
   if (idx === -1) return;
+
   const finalizarCierre = (imgFinUrl) => {
     const almuerzoMin = parseInt(almuerzoRaw, 10);
     const j = dbJornadas[idx];
@@ -738,11 +759,13 @@ function guardarCierreJornada() {
     j.mesClave = obtenerClaveMes(j.fecha);
     j.estado = "cerrada";
     j.calculo = calcularJornadaLaboral(j.fecha, j.horaInicio, horaFin, almuerzoMin, j.salario);
+
     dbJornadas[idx] = j;
     localStorage.setItem("ayax_jornadas_db", JSON.stringify(dbJornadas));
     if (ultimaJornadaAbiertaId === id) {
       ultimaJornadaAbiertaId = null;
     }
+
     document.getElementById("panel-cierre-jornada").classList.add("hidden");
     document.getElementById("form-cierre-jornada").reset();
     fotosNovedadesStamped = [];
@@ -750,6 +773,7 @@ function guardarCierreJornada() {
     renderVistaJornada();
     switchTab("diasRegistrados");
   };
+
   if (fotoFinStamped) {
     finalizarCierre(fotoFinStamped);
   } else {
@@ -777,6 +801,7 @@ function renderTarjetaDiaCerrado(j) {
       ${j.fotoFin ? `<div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; background: #fff;"><div style="font-size: 0.72rem; font-weight: 700; color: #c2410c; margin-bottom: 4px;">Foto Cierre</div><img src="${j.fotoFin}" alt="Cierre" style="width: 100%; height: auto; border-radius: 4px; display: block;"></div>` : ""}
     </div>
   `;
+
   return `
     <details class="card" style="margin-bottom: 8px; padding: 10px 12px; border-left: 4px solid #27ae60;">
       <summary style="cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
@@ -813,21 +838,26 @@ function renderListaDiasRegistrados() {
   const user = JSON.parse(localStorage.getItem("usuario_activo"));
   const cont = document.getElementById("lista-dias-registrados-mes");
   if (!cont || !user) return;
+
   const mesActual = obtenerClaveMes(obtenerFechaLocalYYYYMMDD());
   const titulo = document.getElementById("titulo-pestana-dias");
   if (titulo) {
     titulo.innerText = `Días Registrados (${formatearNombreMes(mesActual)})`;
   }
+
   const fechaFiltro = document.getElementById("filtro-fecha-dias-registrados")?.value || "";
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
+
   const diasMes = dbJornadas
     .filter((j) => j.estado === "cerrada" && j.empleadoId === user.phone && (j.mesClave || obtenerClaveMes(j.fecha)) === mesActual)
     .filter((j) => !fechaFiltro || j.fecha === fechaFiltro)
     .sort((a, b) => b.fecha.localeCompare(a.fecha));
+
   if (!diasMes.length) {
     cont.innerHTML = `<p class="empty-msg">${fechaFiltro ? "No hay registros para esa fecha." : "No hay días cerrados registrados en este mes."}</p>`;
     return;
   }
+
   cont.innerHTML = diasMes.map(renderTarjetaDiaCerrado).join("");
 }
 
@@ -835,28 +865,35 @@ function renderCarpetasHistorial() {
   const user = JSON.parse(localStorage.getItem("usuario_activo"));
   const cont = document.getElementById("carpetas-historial-meses");
   if (!cont || !user) return;
+
   const fechaFiltro = document.getElementById("filtro-fecha-historial")?.value || "";
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
+
   const cerradas = dbJornadas
     .filter((j) => j.estado === "cerrada" && j.empleadoId === user.phone)
     .filter((j) => !fechaFiltro || j.fecha === fechaFiltro)
     .sort((a, b) => b.fecha.localeCompare(a.fecha));
+
   if (!cerradas.length) {
     cont.innerHTML = `<p class="empty-msg">${fechaFiltro ? "No hay registros en el historial para esa fecha." : "Aún no hay carpetas mensuales en el historial."}</p>`;
     return;
   }
+
   const gruposPorMes = {};
   cerradas.forEach((j) => {
     const clave = j.mesClave || obtenerClaveMes(j.fecha);
     if (!gruposPorMes[clave]) gruposPorMes[clave] = [];
     gruposPorMes[clave].push(j);
   });
+
   const mesesOrdenados = Object.keys(gruposPorMes).sort((a, b) => b.localeCompare(a));
+
   cont.innerHTML = mesesOrdenados.map((clave) => {
     const lista = gruposPorMes[clave];
     const totalHoras = lista.reduce((acc, item) => acc + (item.calculo?.totalHorasConceptos || 0), 0);
     const totalValor = lista.reduce((acc, item) => acc + (item.calculo?.valorPagar || 0), 0);
     const debeAbrirCarpeta = Boolean(fechaFiltro);
+
     return `
       <details class="card" ${debeAbrirCarpeta ? "open" : ""} style="margin-bottom: 10px; border: 1px solid #cbd5e1;">
         <summary style="cursor: pointer; font-weight: 700; color: #040B5D; list-style: none; display: flex; justify-content: space-between; align-items: center;">
@@ -903,43 +940,71 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
   const [y, m, d] = fechaStr.split("-").map(Number);
   const [hI, minI] = horaInicioStr.split(":").map(Number);
   const [hF, minF] = horaFinStr.split(":").map(Number);
+
   const inicio = new Date(y, m - 1, d, hI, minI, 0);
   const fin = new Date(y, m - 1, d, hF, minF, 0);
   if (fin <= inicio) fin.setDate(fin.getDate() + 1);
+
   const diaSemana = inicio.getDay();
+  // Sábado (6) se trata como día normal; solo Domingo (0) o festivos aplican recargo dominical/festivo
   const esDomingoOFestivo = diaSemana === 0 || FESTIVOS_COLOMBIA.has(fechaStr);
-  const esViernes = diaSemana === 5;
-  const jornadaOrdinariaDia = esViernes ? 8 : 8.5;
-  const descansoHoras = Math.max(0, (Number(almuerzoMinutos) || 0) / 60);
+  // Jornada normal diaria de 8 horas
+  const jornadaOrdinariaDia = 8;
+
+  const descansoMinutos = Math.max(0, Number(almuerzoMinutos) || 0);
   const totalBrutoHoras = (fin - inicio) / (1000 * 60 * 60);
-  const horasNetas = Math.max(0, totalBrutoHoras - descansoHoras);
+  const horasNetas = Math.max(0, totalBrutoHoras - descansoMinutos / 60);
+
   let heDiurna = 0, heNocturna = 0, recNocturno = 0, recDominical = 0, hedDominical = 0, henDominical = 0;
-  const pasoHoras = 0.25;
+
+  const tramos = [];
+  const pasoMs = 15 * 60 * 1000;
   let cursor = new Date(inicio);
-  let minutosDescansoPendientes = Math.round(descansoHoras * 60);
-  let horasAcumuladasNetas = 0;
+
   while (cursor < fin) {
-    const siguiente = new Date(cursor.getTime() + pasoHoras * 3600000);
-    const tramoReal = Math.min(pasoHoras, (fin - cursor) / 3600000);
-    const minutosTramo = Math.round(tramoReal * 60);
+    const siguiente = new Date(Math.min(cursor.getTime() + pasoMs, fin.getTime()));
+    const minsTramo = (siguiente - cursor) / (1000 * 60);
     const horaDecimal = cursor.getHours() + cursor.getMinutes() / 60;
     const esFranjaNocturna = horaDecimal >= 19 || horaDecimal < 6;
     const esVentanaAlmuerzo = horaDecimal >= 12 && horaDecimal < 14.5;
-    if (minutosDescansoPendientes > 0 && esVentanaAlmuerzo) {
-      const descontado = Math.min(minutosDescansoPendientes, minutosTramo);
-      minutosDescansoPendientes -= descontado;
-      const restanteTramo = (minutosTramo - descontado) / 60;
-      if (restanteTramo > 0) {
-        horasAcumuladasNetas += restanteTramo;
-        acumularConcepto(restanteTramo, horasAcumuladasNetas > jornadaOrdinariaDia, esDomingoOFestivo, esFranjaNocturna);
-      }
-    } else {
-      horasAcumuladasNetas += tramoReal;
-      acumularConcepto(tramoReal, horasAcumuladasNetas > jornadaOrdinariaDia, esDomingoOFestivo, esFranjaNocturna);
-    }
+
+    tramos.push({
+      minsTramo,
+      minsTrabajados: minsTramo,
+      esFranjaNocturna,
+      esVentanaAlmuerzo
+    });
     cursor = siguiente;
   }
-  function acumularConcepto(horas, superaJornada, domFest, noct) {
+
+  // 1. Descontar minutos de descanso primero en ventana de almuerzo (12:00 - 14:30)
+  let descansoPendiente = descansoMinutos;
+  for (const t of tramos) {
+    if (descansoPendiente <= 0) break;
+    if (t.esVentanaAlmuerzo && t.minsTrabajados > 0) {
+      const descontado = Math.min(descansoPendiente, t.minsTrabajados);
+      t.minsTrabajados -= descontado;
+      descansoPendiente -= descontado;
+    }
+  }
+
+  // 2. Si queda descanso por descontar, descontarlo desde el final del turno
+  if (descansoPendiente > 0) {
+    for (let i = tramos.length - 1; i >= 0 && descansoPendiente > 0; i--) {
+      const t = tramos[i];
+      if (t.minsTrabajados > 0) {
+        const descontado = Math.min(descansoPendiente, t.minsTrabajados);
+        t.minsTrabajados -= descontado;
+        descansoPendiente -= descontado;
+      }
+    }
+  }
+
+  // 3. Clasificar horas ordinarias / recargos / extras respetando jornadaOrdinariaDia (8 horas)
+  let horasAcumuladas = 0;
+
+  function sumarTramo(horas, superaJornada, domFest, noct) {
+    if (horas <= 0) return;
     if (domFest) {
       if (!superaJornada) recDominical += horas;
       else if (noct) henDominical += horas;
@@ -951,15 +1016,36 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
       recNocturno += horas;
     }
   }
+
+  for (const t of tramos) {
+    if (t.minsTrabajados <= 0) continue;
+    const horas = t.minsTrabajados / 60;
+
+    if (horasAcumuladas < jornadaOrdinariaDia && horasAcumuladas + horas > jornadaOrdinariaDia) {
+      const hOrdinarias = jornadaOrdinariaDia - horasAcumuladas;
+      const hExtras = horas - hOrdinarias;
+      sumarTramo(hOrdinarias, false, esDomingoOFestivo, t.esFranjaNocturna);
+      sumarTramo(hExtras, true, esDomingoOFestivo, t.esFranjaNocturna);
+    } else {
+      const supera = horasAcumuladas + 1e-9 >= jornadaOrdinariaDia;
+      sumarTramo(horas, supera, esDomingoOFestivo, t.esFranjaNocturna);
+    }
+
+    horasAcumuladas += horas;
+  }
+
   const valorHoraOrd = salarioMensual / DIVISOR_MENSUAL;
+  // Liquidación enfocada en extras y recargos (recargo dominical 90% = 0.90)
   const valorPagar =
     heDiurna * valorHoraOrd * 1.25 +
     heNocturna * valorHoraOrd * 1.75 +
     recNocturno * valorHoraOrd * 0.35 +
-    recDominical * valorHoraOrd * 1.90 +
+    recDominical * valorHoraOrd * 0.90 +
     hedDominical * valorHoraOrd * 2.15 +
     henDominical * valorHoraOrd * 2.65;
+
   const totalHorasConceptos = heDiurna + heNocturna + recNocturno + recDominical + hedDominical + henDominical;
+
   return {
     esDomingoOFestivo,
     horasNetas: Number(horasNetas.toFixed(2)),
@@ -983,43 +1069,62 @@ function renderReporteContabilidad() {
     selEmp.innerHTML = `<option value="todos">Todos los empleados</option>` +
       authorizedOperators.filter((o) => o.role === "operario_horas").map((o) => `<option value="${o.phone}">${o.name}</option>`).join("");
   }
+
   const empFiltro = selEmp ? selEmp.value : "todos";
-  const periodo = document.getElementById("filtro-periodo-conta")?.value || "todos";
-  const fechaBase = document.getElementById("filtro-fecha-base-conta")?.value || "";
-  const rango = obtenerRangoPorPeriodo(periodo, fechaBase);
+  const fechaInicio = document.getElementById("filtro-fecha-inicio-conta")?.value || "";
+  const fechaFin = document.getElementById("filtro-fecha-fin-conta")?.value || "";
+
   const txtRango = document.getElementById("txt-rango-activo");
-  if (txtRango) txtRango.innerText = `Filtro activo: ${rango.etiqueta}`;
+  if (txtRango) {
+    if (fechaInicio && fechaFin) {
+      txtRango.innerText = `Filtro activo: Del ${formatearFechaDDMMAAAA(fechaInicio)} al ${formatearFechaDDMMAAAA(fechaFin)}`;
+    } else if (fechaInicio) {
+      txtRango.innerText = `Filtro activo: Desde el ${formatearFechaDDMMAAAA(fechaInicio)}`;
+    } else if (fechaFin) {
+      txtRango.innerText = `Filtro activo: Hasta el ${formatearFechaDDMMAAAA(fechaFin)}`;
+    } else {
+      txtRango.innerText = `Filtro activo: Todos los registros cerrados`;
+    }
+  }
+
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const filtradas = dbJornadas.filter((j) => {
     if (j.estado !== "cerrada" || !j.calculo) return false;
     if (empFiltro !== "todos" && j.empleadoId !== empFiltro) return false;
-    if (rango.desde && j.fecha < rango.desde) return false;
-    if (rango.hasta && j.fecha > rango.hasta) return false;
+    if (fechaInicio && j.fecha < fechaInicio) return false;
+    if (fechaFin && j.fecha > fechaFin) return false;
     return true;
   });
+
   const porEmpleado = {};
   filtradas.forEach((j) => {
     if (!porEmpleado[j.empleadoId]) porEmpleado[j.empleadoId] = { nombre: j.empleadoNombre, filas: [] };
     porEmpleado[j.empleadoId].filas.push(j);
   });
+
   const tbody = document.getElementById("tbody-contabilidad");
   const tfoot = document.getElementById("tfoot-contabilidad");
   if (!tbody || !tfoot) return;
+
   tbody.innerHTML = "";
   ultimoReporteFilasConta = [];
   let granHoras = 0, granValor = 0;
+
   Object.values(porEmpleado).forEach((grupo) => {
     let subHoras = 0, subValor = 0;
+
     grupo.filas.forEach((f) => {
       const c = f.calculo;
       subHoras += c.totalHorasConceptos;
       subValor += c.valorPagar;
+
       ultimoReporteFilasConta.push({
         tipo: "registro", fecha: f.fecha, empleado: f.empleadoNombre, cliente: f.cliente,
         direccion: f.direccion, horaInicio: f.horaInicio, horaFin: f.horaFin, almuerzoMin: f.almuerzoMin ?? 0,
         heDiurna: c.heDiurna, heNocturna: c.heNocturna, recNocturno: c.recNocturno, recDominical: c.recDominical,
         hedDominical: c.hedDominical, henDominical: c.henDominical, totalHoras: c.totalHorasConceptos, valorPagar: c.valorPagar
       });
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${f.fecha}</td>
@@ -1041,11 +1146,14 @@ function renderReporteContabilidad() {
       `;
       tbody.appendChild(tr);
     });
+
     granHoras += subHoras;
     granValor += subValor;
+
     ultimoReporteFilasConta.push({
       tipo: "subtotal", etiqueta: `Subtotal ${grupo.nombre}`, totalHoras: Number(subHoras.toFixed(2)), valorPagar: Math.round(subValor)
     });
+
     const trSub = document.createElement("tr");
     trSub.className = "subtotal-row";
     trSub.innerHTML = `
@@ -1055,6 +1163,7 @@ function renderReporteContabilidad() {
     `;
     tbody.appendChild(trSub);
   });
+
   ultimoReporteTotalesConta = { horas: Number(granHoras.toFixed(2)), valor: Math.round(granValor) };
   tfoot.innerHTML = `
     <tr class="gran-total-row">
@@ -1065,37 +1174,13 @@ function renderReporteContabilidad() {
   `;
 }
 
-function obtenerRangoPorPeriodo(periodo, fechaBaseStr) {
-  if (periodo === "todos" || !fechaBaseStr) return { desde: null, hasta: null, etiqueta: "Todos los registros cerrados" };
-  const [y, m, d] = fechaBaseStr.split("-").map(Number);
-  const base = new Date(y, m - 1, d);
-  const fmt = (dt) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
-  if (periodo === "dia") {
-    const f = fmt(base);
-    return { desde: f, hasta: f, etiqueta: `Día: ${f}` };
-  }
-  if (periodo === "semana") {
-    const diaSem = base.getDay();
-    const diffLunes = diaSem === 0 ? -6 : 1 - diaSem;
-    const lunes = new Date(base); lunes.setDate(base.getDate() + diffLunes);
-    const domingo = new Date(lunes); domingo.setDate(lunes.getDate() + 6);
-    return { desde: fmt(lunes), hasta: fmt(domingo), etiqueta: `Semana: ${fmt(lunes)} al ${fmt(domingo)}` };
-  }
-  if (periodo === "mes") {
-    return { desde: fmt(new Date(y, m - 1, 1)), hasta: fmt(new Date(y, m, 0)), etiqueta: `Mes actual` };
-  }
-  if (periodo === "anio") {
-    return { desde: `${y}-01-01`, hasta: `${y}-12-31`, etiqueta: `Año: ${y}` };
-  }
-  return { desde: null, hasta: null, etiqueta: "" };
-}
-
 function exportarExcelContabilidad() {
   const encabezados = [
     "Fecha", "Empleado", "Cliente", "Dirección", "Hora Inicio", "Hora Fin", "Almuerzo (min)",
     "H.E. Diurna (25%)", "H.E. Nocturna (75%)", "Rec. Nocturno (35%)", "Rec. Dominical (90%)",
     "H.E.D. Dom/Fest (115%)", "H.E.N. Dom/Fest (165%)", "Total Horas", "Valor a Pagar"
   ];
+
   let filasHtml = "";
   ultimoReporteFilasConta.forEach((item) => {
     if (item.tipo === "registro") {
@@ -1114,6 +1199,7 @@ function exportarExcelContabilidad() {
         </tr>`;
     }
   });
+
   const htmlExcel = `
     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
     <head><meta charset="UTF-8"></head>
@@ -1131,6 +1217,7 @@ function exportarExcelContabilidad() {
       </table>
     </body>
     </html>`;
+
   const blob = new Blob([htmlExcel], { type: "application/vnd.ms-excel;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -1147,7 +1234,9 @@ function abrirModalAuditoria(id) {
   const j = dbJornadas.find((item) => item.id === id);
   if (!j || !j.calculo) return;
   const c = j.calculo;
+
   document.getElementById("auditoria-titulo-txt").innerText = `Auditoría · ${j.empleadoNombre}`;
+
   const novHtml = j.fotosNovedades && j.fotosNovedades.length
     ? `<div class="audit-grid">${j.fotosNovedades.map((f, i) => `
         <div class="audit-photo-card">
@@ -1157,6 +1246,7 @@ function abrirModalAuditoria(id) {
         </div>
       `).join("")}</div>`
     : `<p class="muted">Sin fotos adicionales de novedad.</p>`;
+
   document.getElementById("auditoria-body-content").innerHTML = `
     <div class="audit-summary">
       <strong>Cliente:</strong> ${j.cliente}<br>
@@ -1181,6 +1271,7 @@ function abrirModalAuditoria(id) {
     <h4 style="margin-top: 15px; color: #040B5D;">Evidencias de Novedades</h4>
     ${novHtml}
   `;
+
   document.getElementById("modalAuditoriaConta").classList.remove("hidden");
 }
 
@@ -1214,6 +1305,7 @@ function renderTasks() {
     renderPanelRedesParaDanilo();
     return;
   }
+
   const containerPendientes = document.getElementById("listPendientes");
   if (!containerPendientes) return;
   containerPendientes.innerHTML = "";
@@ -1241,6 +1333,7 @@ function renderTasks() {
 
   const countPendElem = document.getElementById("countPendientes");
   if (countPendElem) countPendElem.innerText = countP;
+
   filterFinalized();
 }
 
@@ -1257,6 +1350,7 @@ function renderPanelRedesParaDanilo() {
   if (searchBox) searchBox.classList.add("hidden");
 
   containerFinalizadas.innerHTML = "";
+
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
 
   const headerNotice = document.createElement("div");
@@ -1304,7 +1398,6 @@ function renderPanelRedesParaDanilo() {
     const card = document.createElement("div");
     card.className = "task-card";
     card.style.cssText = `background: white; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid ${tabRedesActiva === "pendientes" ? "#BF956E" : "#cbd5e1"};`;
-
     card.innerHTML = `
       <div class="task-header">
         <span class="task-code" style="color: ${isFinalizada ? "#27ae60" : "#040B5D"}; font-weight: bold;">
@@ -1339,6 +1432,7 @@ async function descargarEvidenciasTarea(taskId) {
     alert("No hay evidencias fotográficas registradas para esta tarea.");
     return;
   }
+
   if (typeof JSZip === "undefined") {
     alert("La librería JSZip no está cargada en la aplicación.");
     return;
@@ -1415,8 +1509,8 @@ function filterFinalized() {
 
   const textQuery = document.getElementById("searchInput") ? document.getElementById("searchInput").value.toLowerCase().trim() : "";
   const dateQuery = document.getElementById("searchDate") ? document.getElementById("searchDate").value : "";
-  const containerFinalizadas = document.getElementById("listFinalizadas");
 
+  const containerFinalizadas = document.getElementById("listFinalizadas");
   if (!containerFinalizadas) return;
   containerFinalizadas.innerHTML = "";
 
@@ -1424,6 +1518,7 @@ function filterFinalized() {
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
+
   let matchCount = 0;
   let totalFinalizedCount = 0;
 
@@ -1482,15 +1577,15 @@ function openTask(id) {
   const secWizard = document.getElementById("secWizard");
   secWizard.classList.remove("hidden");
   document.getElementById("wizardTitle").innerText = `Servicio #${id} Operación`;
-  document.getElementById("daysContainer").innerHTML = "";
 
+  document.getElementById("daysContainer").innerHTML = "";
   const daysListContainer = document.getElementById("daysListContainer");
   if (daysListContainer) daysListContainer.innerHTML = "";
-
   totalDaysCreated = 0;
 
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   const task = savedTasks.find((t) => String(t.id) === String(id));
+
   if (task && task.diasDetalle && task.diasDetalle.length > 0) {
     currentDaysData = [...task.diasDetalle];
     totalDaysCreated = currentDaysData.length;
@@ -1498,6 +1593,7 @@ function openTask(id) {
   } else {
     currentDaysData = [];
   }
+
   addNewDay();
 }
 
@@ -1520,6 +1616,7 @@ function addNewDay() {
   const dayCard = document.createElement("div");
   dayCard.className = "day-card";
   dayCard.id = `dayCard-${totalDaysCreated}`;
+
   dayCard.innerHTML = `
     <div class="day-card-header">
       <span class="day-card-title">Día #${totalDaysCreated} (En curso)</span>
@@ -1615,6 +1712,7 @@ function addNewDay() {
       <label>Observaciones / Novedades en Sitio (Rayones, Varadas, etc.)</label>
       <textarea id="obs-day-${totalDaysCreated}" rows="2" placeholder="Describa cualquier novedad ocurrida..."></textarea>
     </div>
+
     <div class="form-group" style="background: #f0fdf4; padding: 14px; border-radius: 8px; border: 2px dashed #27ae60; margin-bottom: 15px;">
       <label style="color: #27ae60; font-weight: bold; display: block; margin-bottom: 6px;">
         📸 Evidencias Fotográficas del Día * (Puede tomar varias)
@@ -1626,40 +1724,44 @@ function addNewDay() {
       </button>
       <div id="galeria-fotos-${totalDaysCreated}" style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;"></div>
     </div>
+
     <button type="button" id="btnSaveDay-${totalDaysCreated}" class="btn-save-day" onclick="saveDayRecord(${totalDaysCreated})" style="background-color: #040B5D; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 5px;">
       Guardar Día #${totalDaysCreated}
     </button>
   `;
+
   container.appendChild(dayCard);
 }
 
 function procesarFotoMulti(event, dayNum) {
   const file = event.target.files[0];
   if (!file) return;
+
   const reader = new FileReader();
   reader.onload = function (e) {
     const img = new Image();
     img.onload = function () {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
+
       canvas.width = img.width;
       const footerHeight = 125;
       canvas.height = img.height + footerHeight;
 
       ctx.drawImage(img, 0, 0);
+
       ctx.fillStyle = "#040B5D";
       ctx.fillRect(0, img.height, canvas.width, footerHeight);
+
       ctx.fillStyle = "#BF956E";
       ctx.fillRect(0, img.height, canvas.width, 6);
 
       const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
       const currentTask = savedTasks.find((t) => String(t.id) === String(currentActiveTaskId)) || {};
-
       const clienteNombre = currentTask.cliente || "CLIENTE GENERAL";
       const numTarea = currentActiveTaskId || "S/N";
       const gruaElem = document.getElementById(`grua-day-${dayNum}`);
       const grua = (gruaElem && gruaElem.value) ? gruaElem.value : "Grúa General";
-
       const inputDirElement = document.getElementById(`dir-day-${dayNum}`);
       const dirInput = (inputDirElement && inputDirElement.value.trim()) ? inputDirElement.value.trim() : (currentTask.direccion || "Pereira");
       const ciudadTexto = dirInput.includes(",") ? dirInput.split(",")[0].trim() : dirInput;
@@ -1690,6 +1792,7 @@ function procesarFotoMulti(event, dayNum) {
         enviadoRedes: false,
         fechaCaptura: ahora.toISOString()
       });
+
       renderGaleriaMiniaturas(dayNum);
       event.target.value = "";
     };
@@ -1702,6 +1805,7 @@ function renderGaleriaMiniaturas(dayNum) {
   const galeria = document.getElementById(`galeria-fotos-${dayNum}`);
   if (!galeria) return;
   galeria.innerHTML = "";
+
   fotosDiaTemporal.forEach((fotoObj, index) => {
     const fotoSrc = typeof fotoObj === "string" ? fotoObj : fotoObj.data;
     const contenedorMini = document.createElement("div");
@@ -1789,6 +1893,7 @@ function saveDayRecord(dayNum) {
     alert("Por favor complete todos los campos obligatorios (*)");
     return;
   }
+
   if (fotosDiaTemporal.length === 0) {
     alert("⚠️ ¡Atención! Debe tomar o adjuntar al menos una foto de evidencia para este día.");
     return;
@@ -1829,6 +1934,7 @@ function saveDayRecord(dayNum) {
 function sincronizarAvanceEnSegundoPlano() {
   let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   const totalHoursSum = currentDaysData.reduce((acc, day) => acc + (day.horasTrabajadas || 0), 0);
+
   savedTasks = savedTasks.map((t) => {
     if (String(t.id) === String(currentActiveTaskId)) {
       return {
@@ -1841,6 +1947,7 @@ function sincronizarAvanceEnSegundoPlano() {
     }
     return t;
   });
+
   localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
 }
 
@@ -1888,6 +1995,7 @@ async function goToSignSection() {
   if (badgeFotos) {
     badgeFotos.textContent = totalFotosTotal;
   }
+
   document.getElementById("secWizard").classList.add("hidden");
   document.getElementById("secSignatures").classList.remove("hidden");
   initSignCanvas("canvasOperador");
@@ -1904,6 +2012,7 @@ function initSignCanvas(canvasId) {
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   let painting = false;
+
   function startPosition(e) {
     painting = true;
     draw(e);
@@ -1925,6 +2034,7 @@ function initSignCanvas(canvasId) {
     ctx.beginPath();
     ctx.moveTo(x, y);
   }
+
   canvas.onmousedown = startPosition;
   canvas.onmouseup = endPosition;
   canvas.onmousemove = draw;
@@ -1973,6 +2083,7 @@ function showReportView(id) {
 
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   const task = savedTasks.find((t) => String(t.id) === String(id));
+
   let htmlDetails = "";
   if (task) {
     htmlDetails = `
@@ -1990,20 +2101,24 @@ function showReportView(id) {
 function descargarReportePDF() {
   const startDate = document.getElementById("pdfStartDate").value;
   const endDate = document.getElementById("pdfEndDate").value;
+
   if (!startDate || !endDate) {
     alert("Por favor seleccione una fecha de inicio y una fecha final para el reporte.");
     return;
   }
+
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
   const filteredTasks = savedTasks.filter((t) => {
     if (t.estado !== "finalizada") return false;
     const taskDateStr = new Date(t.fechaFinalizacion || t.fechaCierre || t.fechaCreacion || Date.now()).toISOString().split("T")[0];
     return taskDateStr >= startDate && taskDateStr <= endDate;
   });
+
   if (filteredTasks.length === 0) {
     alert(`No hay tareas finalizadas en el rango del ${startDate} al ${endDate}.`);
     return;
   }
+
   const printWindow = window.open("", "_blank");
   let htmlContent = `
     <html>
@@ -2025,10 +2140,13 @@ function descargarReportePDF() {
     <div class="subtitle">Reporte Consolidado de Operaciones | Desde: ${startDate} Hasta: ${endDate}</div>
     <hr style="border: 0; border-top: 2px solid #BF956E; margin: 15px 0;">
   `;
+
   let totalGeneralHoras = 0;
+
   filteredTasks.forEach((task) => {
     const fecha = new Date(task.fechaFinalizacion || task.fechaCierre || task.fechaCreacion || Date.now()).toLocaleDateString();
     totalGeneralHoras += parseFloat(task.totalHoras || 0);
+
     htmlContent += `
       <div class="task-box">
         <div class="header-info">
@@ -2038,6 +2156,7 @@ function descargarReportePDF() {
         <p><strong>Dirección:</strong> ${task.direccion || "N/A"}</p>
         <p><strong>Total Días:</strong> ${task.totalDias || 1}</p>
     `;
+
     if (task.diasDetalle && task.diasDetalle.length > 0) {
       task.diasDetalle.forEach((d) => {
         htmlContent += `
@@ -2049,11 +2168,13 @@ function descargarReportePDF() {
         `;
       });
     }
+
     htmlContent += `
         <p style="text-align: right; font-weight: bold; color: #040B5D; margin-top: 8px;">Total Tarea: ${task.totalHoras || 0} Horas</p>
       </div>
     `;
   });
+
   htmlContent += `
     <div class="total-general">
       Total Horas Acumuladas en el Periodo: ${totalGeneralHoras.toFixed(1)} Horas
@@ -2062,6 +2183,7 @@ function descargarReportePDF() {
     </body>
     </html>
   `;
+
   printWindow.document.write(htmlContent);
   printWindow.document.close();
 }
