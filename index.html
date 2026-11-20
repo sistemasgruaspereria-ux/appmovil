@@ -8,16 +8,6 @@
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <style>
-        .preview-canvas {
-            width: 100%;
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin-top: 8px;
-            border-radius: 6px;
-        }
-    </style>
 </head>
 <body>
     <!-- MODO MANTENIMIENTO -->
@@ -190,7 +180,7 @@
                 <summary style="cursor: pointer; font-weight: 700; font-size: 1.02rem; color: #040B5D; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                     <span id="titulo-acordeon-dia">1. Abrir Jornada de Trabajo</span>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 0.95rem; color: #040B5D;">▾</span>
+                        <span class="flecha-acordeon" style="font-size: 0.95rem; color: #040B5D;">▾</span>
                         <button type="button" id="btn-eliminar-apertura-activa" title="Eliminar registro" onclick="event.preventDefault(); event.stopPropagation(); eliminarJornadaActivaDesdeAcordeon();" style="background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 6px; padding: 2px 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">✕</button>
                     </div>
                 </summary>
@@ -240,7 +230,7 @@
                     </div>
                     <div class="form-group">
                         <label for="jornada-almuerzo-min">Tiempo tomado para almuerzo / descanso (minutos) *</label>
-                        <input type="number" id="jornada-almuerzo-min" min="0" max="360" value="0" placeholder="Ej. 0, 60, 90" required>
+                        <input type="number" id="jornada-almuerzo-min" min="0" max="360" value="0" placeholder="Ej. 0 (Lun-Jue) o 60 (Vie)" required>
                     </div>
                     <div class="form-group">
                         <label for="jornada-observaciones">Observaciones / Novedades / Extensión de Jornada</label>
@@ -322,6 +312,9 @@
         <section id="secContabilidad" class="tab-content hidden">
             <div class="card">
                 <h2>Módulo de Contabilidad y Nómina</h2>
+                <p class="muted" style="font-size: 0.78rem; margin-bottom: 10px;">
+                    Esquema 42h/sem · Lun–Jue: 8.5h (sin almuerzo) · Vie: 8.0h (60 min almuerzo) · Divisor mensual: 210h
+                </p>
                 <div class="form-group">
                     <label for="filtro-emp-conta">Filtrar por Empleado</label>
                     <select id="filtro-emp-conta" class="form-control"></select>
@@ -341,6 +334,7 @@
                     <button type="button" onclick="exportarExcelContabilidad()" class="btn-primary" style="flex:1; background-color: #27ae60;">Excel (.xls)</button>
                 </div>
                 <p id="txt-rango-activo" class="muted" style="margin-top: 10px; font-size: 0.8rem;"></p>
+                <div id="resumen-extras-conta" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px;"></div>
             </div>
             <div class="card">
                 <div class="table-wrap">
@@ -355,13 +349,16 @@
                                 <th>Fin</th>
                                 <th>Almuerzo</th>
                                 <th>Auditoría</th>
+                                <th>Total H. Extras</th>
+                                <th>Total Recargos</th>
                                 <th>H.E.D (25%)</th>
                                 <th>H.E.N (75%)</th>
                                 <th>Rec.N (35%)</th>
                                 <th>Rec.Dom (90%)</th>
+                                <th>Rec.N.Dom (125%)</th>
                                 <th>HED.Dom (115%)</th>
                                 <th>HEN.Dom (165%)</th>
-                                <th>Total Horas</th>
+                                <th>Total Conceptos</th>
                                 <th>Valor a Pagar</th>
                             </tr>
                         </thead>
