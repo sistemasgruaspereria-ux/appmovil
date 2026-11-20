@@ -1,9 +1,8 @@
 // ==========================================
-// CONFIGURACIÓN, ROLES Y LEGISLACIÓN
+// CONFIGURACIÓN, ROLES Y LEGISLACIÓN COLOMBIA 2026
 // ==========================================
 const DIVISOR_MENSUAL = 210; // Divisor legal Colombia 2026 (42 horas semanales)
 
-// Festivos Oficiales Colombia (2026)
 const FESTIVOS_COLOMBIA = new Set([
   "2026-01-01", "2026-01-12", "2026-03-23", "2026-04-02", "2026-04-03",
   "2026-05-01", "2026-05-18", "2026-06-08", "2026-06-15", "2026-06-29",
@@ -11,12 +10,13 @@ const FESTIVOS_COLOMBIA = new Set([
   "2026-11-16", "2026-12-08", "2026-12-25"
 ]);
 
-// Personal Autorizado (Operarios, Redes, Contabilidad y Admin)
-let authorizedOperators = [
-  { phone: "3204618830", pin: "1934", name: "Tatiana Ruiz", role: "operario_horas", salary: 1750905 },
+// Usuarios y roles base (se pueden crear, editar y eliminar desde Admin)
+let defaultUsers = [
+  { phone: "3217293985", pin: "1834", name: "Carolina Valencia Motato", role: "admin", salary: 0 },
   { phone: "3000000000", pin: "2034", name: "Liliana Guzmán", role: "contabilidad", salary: 0 },
-  { phone: "3217293985", pin: "1834", name: "Carolina Valencia", role: "admin", salary: 2500000 },
   { phone: "3218468761", pin: "1118", name: "Danilo", role: "redes", salary: 0 },
+  { phone: "3100000000", pin: "1234", name: "Coordinación Proyectos", role: "proyectos", salary: 0 },
+  { phone: "3204618830", pin: "1934", name: "Tatiana Ruiz", role: "operario_horas", salary: 1750905 },
   { phone: "3215617856", pin: "1824", name: "Cristian Camilo Rodas Grajales", role: "operario", salary: 1750905 },
   { phone: "3224032093", pin: "8752", name: "Daniel Antonio Rodas Jaramillo", role: "operario", salary: 1750905 },
   { phone: "3153722857", pin: "7629", name: "Diógenes Marín Franco", role: "operario", salary: 1750905 },
@@ -39,32 +39,83 @@ let authorizedOperators = [
   { phone: "3115653390", pin: "8950", name: "Milton Andrés Pérez Neva", role: "operario", salary: 1750905 },
   { phone: "3027507045", pin: "9760", name: "Santiago Rivera Marin", role: "operario", salary: 1750905 },
   { phone: "3148643257", pin: "3268", name: "Uriel González Ocampo", role: "operario", salary: 1750905 },
-  { phone: "319200041",  pin: "7780", name: "Víctor Fernando Ocampo Amaya", role: "operario", salary: 1750905 },
+  { phone: "319200041", pin: "7780", name: "Víctor Fernando Ocampo Amaya", role: "operario", salary: 1750905 },
   { phone: "3228241425", pin: "1520", name: "Wilfer Alberto Sepulveda Restrepo", role: "operario", salary: 1750905 },
   { phone: "3206311945", pin: "1764", name: "Willer Alexis Quintero Hurtado", role: "operario", salary: 1750905 },
   { phone: "3105385889", pin: "7841", name: "Wilmar Diovany Muñoz Giraldo", role: "operario", salary: 1750905 },
   { phone: "3102276487", pin: "7926", name: "Yeison Alberson Morales Uribe", role: "operario", salary: 1750905 }
 ];
 
-// Tareas por defecto
-let defaultMockTasks = [
-  {
-    id: "1045",
-    cliente: "INFRASCTRUCTURAS S.A.S",
-    direccion: "Av. 30 de Agosto #45-12",
-    maquinaria: "AY23",
-    ciudad: "PEREIRA",
-    estado: "pendiente"
-  },
-  {
-    id: "1046",
-    cliente: "ECOPETROL S.A.",
-    direccion: "Planta La Virginia Km 2",
-    maquinaria: "AY05",
-    ciudad: "LA VIRGINIA",
-    estado: "pendiente"
-  }
+// Listados desplegables de Operadores y Aparejadores (mixtos aparecen en ambos)
+let defaultOperadores = [
+  "Cristian Camilo Rodas Grajales", "Daniel Antonio Rodas Jaramillo", "Diógenes Marín Franco",
+  "Duban Alberto Rodriguez Castañeda", "Edixon Giovanni Alvarado Villada", "Giovanni Antonio Ocampo Cano",
+  "Héctor Alexander Quiroz Mosquera", "Héctor Augusto Cardona Arboleda", "Jhon Edwin Botero Rodas",
+  "Jair Antonio Ramirez García", "Javier de Jesús Restrepo Ladino", "Jhon Edier Castrillon Gallego",
+  "Jhon Ever Orejuela Ríos", "Jhonathan Arredondo Ossa", "Jonathan Alexander Martínez Betancourt",
+  "Jorge Miguel Gonzáles Vásquez", "Juan José Arango Gallego", "Luis Fernando Tangarife Moncada",
+  "Maico Andrey Trejos Chaves", "Milton Andrés Pérez Neva", "Santiago Rivera Marin",
+  "Uriel González Ocampo", "Víctor Fernando Ocampo Amaya", "Wilfer Alberto Sepulveda Restrepo",
+  "Willer Alexis Quintero Hurtado", "Wilmar Diovany Muñoz Giraldo", "Yeison Alberson Morales Uribe"
 ];
+
+let defaultAparejadores = [
+  "Andrés Camilo Montes Alzate", "Andrés Felipe Gonzalez Ruiz", "Andrés Felipe Ospina Zapata",
+  "Arley Cano Vergara", "Brandon Estiven Tapasco Piñeros", "Didier Roberto Orejuela Henao",
+  "Duban Alberto Rodriguez Castañeda", "Jhon Fredy Rios Bedoya", "Jhon Jaider Conrrado Mosquera",
+  "Jhonathan Arredondo Ossa", "Jonathan Steven Trujillo Taborda", "Juan Daniel Gómez Morales",
+  "Juan José Arango Gallego", "Luis Fernando Tangarife Moncada"
+];
+
+// Vehículos / Equipos (etiqueta visible en desplegables + características completas)
+let defaultVehiculos = [
+  { categoria: "Grúa", etiqueta: "#29 TADANO 70 TON", modelo: "TADANO/TADANO 70 TON", combustible: "Eléctrico" },
+  { categoria: "Alquiladas", etiqueta: "ALQUILADAS #45", modelo: "Foton/4612 Aumark", combustible: "Gasolina" },
+  { categoria: "Grúa", etiqueta: "CAMIÓN GRÚA # 23", modelo: "INTERNATIONAL/4700 4*2 / NATIONAL CRANE", combustible: "Diésel" },
+  { categoria: "Grúa", etiqueta: "CAMIÓN GRÚA # 24", modelo: "HINO 500 2626/FM8JRTA / BRAZO SERIE EX0416 MODELO TM20110", combustible: "Diésel" },
+  { categoria: "Extensión de apoyo", etiqueta: "CANASTILLA", modelo: "Canastilla", combustible: "Diésel" },
+  { categoria: "Camioneta", etiqueta: "DFSK K01 CHASIS", modelo: "DFSK/K01 Chasis", combustible: "Gasolina" },
+  { categoria: "Extensión de apoyo", etiqueta: "DOLLY # 46", modelo: "N/A/DOLLY", combustible: "Diésel" },
+  { categoria: "Equipo Hidraulico", etiqueta: "EQUIPO HIDRAULICO # 5", modelo: "Acura/Equipo Hidraulico # 5", combustible: "Eléctrico" },
+  { categoria: "Camioneta", etiqueta: "FOTON 4612 AUMARK", modelo: "Foton/4612 Aumark", combustible: "Gasolina" },
+  { categoria: "Grúa", etiqueta: "GRÚA # 17", modelo: "XCMG/GRUA XCMG/MODELO XCA250SA", combustible: "Eléctrico" },
+  { categoria: "Grúa", etiqueta: "GRÚA # 18", modelo: "LINK-BELT/HC 138- SERIE 19TGK20020", combustible: "Diésel" },
+  { categoria: "Grúa", etiqueta: "GRÚA # 19", modelo: "Volkswagen/CAMION VW23-230 / BRAZO SERIE EX0416 MODELO TM20110", combustible: "Diésel" },
+  { categoria: "Grúa", etiqueta: "GRÚA # 2 ACURA", modelo: "Acura/#2", combustible: "Eléctrico" },
+  { categoria: "Grúa", etiqueta: "GRÚA # 2 TEREX", modelo: "TEREX/TEREX #02", combustible: "Eléctrico" },
+  { categoria: "Grúa", etiqueta: "GRÚA # 20", modelo: "LOCATELLI/GRIL 827/267", combustible: "Diésel" },
+  { categoria: "Grúa", etiqueta: "GRÚA # 22", modelo: "XCMG/MODELO XZJ5327JQZ30K/SERIE LXGCPA32X8A000706", combustible: "Diésel" },
+  { categoria: "Grúa", etiqueta: "GRÚA # 27", modelo: "XCMG/MODELO XZJ5410JQZ50K/SERIE LXGCPA438KA010388", combustible: "Diésel" },
+  { categoria: "Grúa", etiqueta: "GRÚA # 30", modelo: "Mitsubishi/FUSO", combustible: "Eléctrico" },
+  { categoria: "Grúa", etiqueta: "GRÚA # 32", modelo: "Foton/Camión Grúa Foton", combustible: "Eléctrico" },
+  { categoria: "Grúa", etiqueta: "GRÚA # 4", modelo: "Freightliner/PK19000", combustible: "Diésel" },
+  { categoria: "Grúa", etiqueta: "GRÚA # 43", modelo: "XCMG/MODELO XZJ5414JQZ60K/SERIE LXGCPA419AA002815", combustible: "Diésel" },
+  { categoria: "Grúa", etiqueta: "GRÚA # 47", modelo: "XCMG/MODELO XZJ5550JOZ130K / SERIE LXCDPA5567A008053", combustible: "Diésel" },
+  { categoria: "Grúa", etiqueta: "GRÚA # 48", modelo: "PYH OMEGA/M:OMEGA/48829", combustible: "Diésel" },
+  { categoria: "Grúa", etiqueta: "GRÚA # 55", modelo: "PYH OMEGA/HSHMC-25/55218", combustible: "Diésel" },
+  { categoria: "Grúa", etiqueta: "Grúa #44", modelo: "kato/Grúa kato", combustible: "Eléctrico" },
+  { categoria: "Grúa", etiqueta: "GRÚA GROVE # 70", modelo: "GROVE/GROVE #70", combustible: "Eléctrico" },
+  { categoria: "LanzaVigas", etiqueta: "LANZA-VIGAS # 25", modelo: "Alfa/Lanzavigas # 25", combustible: "Eléctrico" },
+  { categoria: "Extensión de apoyo", etiqueta: "MANLIFT 16 MT", modelo: "Acura/Alfa/Manlift de 16 mt", combustible: "Eléctrico" },
+  { categoria: "Extensión de apoyo", etiqueta: "MANLIFT DE 28", modelo: "Alfa/Manlift de 28 mt", combustible: "Eléctrico" },
+  { categoria: "Extensión de apoyo", etiqueta: "MANLIFT DE 30 MT", modelo: "Alfa/Manlift de 30mt", combustible: "Eléctrico" },
+  { categoria: "Minimula", etiqueta: "MINIMULA # 72", modelo: "Audi/Minimula# 72", combustible: "Eléctrico" },
+  { categoria: "Montacarga", etiqueta: "MONTACAGRA # 54", modelo: "HELI/Montacarga CPQYD30", combustible: "Totalmente híbrido" },
+  { categoria: "Montacarga", etiqueta: "MONTACARGA # 21", modelo: "Acura/MONTACARGA 12 TONELADAS", combustible: "Eléctrico" },
+  { categoria: "Camioneta", etiqueta: "RENAULT KANGOO", modelo: "Renault/KANGOO", combustible: "Gasolina" },
+  { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN # 10", modelo: "Foton/Tractocamión SUMSN 2544 6x2", combustible: "Diésel" },
+  { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN # 11", modelo: "Freightliner/Columbia", combustible: "Diésel" },
+  { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN # 12", modelo: "Freightliner/Columbia", combustible: "Diésel" },
+  { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN # 13", modelo: "INTERNATIONAL/4700 4*2 / NATIONAL CRANE", combustible: "Diésel" },
+  { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN # 14", modelo: "Foton/Tractocamión SUMSN 2544 6x2", combustible: "Diésel" },
+  { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN # 15", modelo: "Kenworth/T800", combustible: "Diésel" },
+  { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN # 28", modelo: "Volkswagen/VW 17-280", combustible: "Diésel" },
+  { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN # 7", modelo: "Foton/Tractocamión AUMAN EST 6x4", combustible: "Diésel" },
+  { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN # 8", modelo: "Foton/4612 Aumark", combustible: "Gasolina" },
+  { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN #9", modelo: "Foton/Tractocamión AUMAN EST 6x4", combustible: "Diésel" }
+];
+
+let defaultMockTasks = [];
 
 // Variables globales de estado
 let totalDaysCreated = 0;
@@ -78,6 +129,60 @@ let ultimoReporteFilasConta = [];
 let ultimoReporteTotalesConta = { horas: 0, valor: 0 };
 let ultimaJornadaAbiertaId = null;
 let tabRedesActiva = "pendientes";
+
+// ==========================================
+// PERSISTENCIA Y CATÁLOGOS
+// ==========================================
+function getDBUsers() {
+  const local = JSON.parse(localStorage.getItem("ayax_users_db"));
+  if (!local || !local.length) {
+    localStorage.setItem("ayax_users_db", JSON.stringify(defaultUsers));
+    return [...defaultUsers];
+  }
+  return local;
+}
+
+function saveDBUsers(users) {
+  localStorage.setItem("ayax_users_db", JSON.stringify(users));
+}
+
+function getDBOperadores() {
+  const local = JSON.parse(localStorage.getItem("ayax_operadores_db"));
+  if (!local || !local.length) {
+    localStorage.setItem("ayax_operadores_db", JSON.stringify(defaultOperadores));
+    return [...defaultOperadores];
+  }
+  return local;
+}
+
+function getDBAparejadores() {
+  const local = JSON.parse(localStorage.getItem("ayax_aparejadores_db"));
+  if (!local || !local.length) {
+    localStorage.setItem("ayax_aparejadores_db", JSON.stringify(defaultAparejadores));
+    return [...defaultAparejadores];
+  }
+  return local;
+}
+
+function getDBVehiculos() {
+  const local = JSON.parse(localStorage.getItem("ayax_vehiculos_db"));
+  if (!local || !local.length) {
+    localStorage.setItem("ayax_vehiculos_db", JSON.stringify(defaultVehiculos));
+    return [...defaultVehiculos];
+  }
+  return local;
+}
+
+function getNextConsecutivoGP() {
+  const seq = parseInt(localStorage.getItem("ayax_consecutivo_gp") || "1", 10);
+  const code = "GP " + String(seq).padStart(4, "0");
+  return { code, seq };
+}
+
+function incrementConsecutivoGP() {
+  const seq = parseInt(localStorage.getItem("ayax_consecutivo_gp") || "1", 10);
+  localStorage.setItem("ayax_consecutivo_gp", String(seq + 1));
+}
 
 // ==========================================
 // CONTROL DE CONECTIVIDAD
@@ -111,56 +216,40 @@ function normalizarTexto(valor) {
     .trim();
 }
 
-function esUsuarioTatianaHoras(usuario) {
+function esUsuarioOperarioHoras(usuario) {
   if (!usuario) return false;
-  const rol = normalizarTexto(usuario.role);
-  const nombre = normalizarTexto(usuario.name);
-  return rol === "operario_horas" && nombre.includes("tatiana");
+  return normalizarTexto(usuario.role) === "operario_horas";
 }
 
 function loginUser(phone, pin) {
   const cleanPhone = String(phone || "").trim();
   const cleanPin = String(pin || "").trim();
-
-  const operador = authorizedOperators.find(
+  const operador = getDBUsers().find(
     (op) => String(op.phone).trim() === cleanPhone && String(op.pin).trim() === cleanPin
   );
-
   if (!operador) {
     alert("Teléfono o PIN incorrecto. Por favor verifique.");
     return null;
   }
-
   localStorage.setItem("usuario_activo", JSON.stringify(operador));
-
   const loginScreen = document.getElementById("loginScreen");
   const appContainer = document.getElementById("app");
   const userBadgeSpan = document.querySelector("#userBadge span");
-
   if (userBadgeSpan) userBadgeSpan.textContent = operador.name;
   if (loginScreen) loginScreen.classList.add("hidden");
   if (appContainer) appContainer.classList.remove("hidden");
-
   configurarVistaPorRol(operador);
   return operador;
-}
-
-function handleLogin() {
-  const phoneVal = document.getElementById("loginPhone")?.value || "";
-  const pinVal = document.getElementById("loginPin")?.value || "";
-  return loginUser(phoneVal, pinVal);
 }
 
 function logoutUser() {
   localStorage.removeItem("usuario_activo");
   localStorage.removeItem("token_sesion");
-
   const loginPhone = document.getElementById("loginPhone");
   const loginPin = document.getElementById("loginPin");
   const dropdown = document.getElementById("userDropdownMenu");
   const appContainer = document.getElementById("app");
   const loginScreen = document.getElementById("loginScreen");
-
   if (loginPhone) loginPhone.value = "";
   if (loginPin) loginPin.value = "";
   if (dropdown) dropdown.classList.add("hidden");
@@ -172,7 +261,6 @@ function setVisibilidadTab(tabKey, visible) {
   const cap = tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
   const btn = document.getElementById(`btnTab${cap}`);
   const sec = document.getElementById(`sec${cap}`);
-
   if (btn) {
     btn.classList.toggle("hidden", !visible);
     btn.style.display = visible ? "" : "none";
@@ -185,24 +273,39 @@ function setVisibilidadTab(tabKey, visible) {
 
 function configurarVistaPorRol(usuario) {
   if (!usuario) return;
-
   const rol = normalizarTexto(usuario.role);
-  const nombre = normalizarTexto(usuario.name);
-
-  const esTatiana = esUsuarioTatianaHoras(usuario);
-  const esRedes = rol === "redes" || nombre.includes("danilo");
-  const esConta = rol === "contabilidad" || nombre.includes("liliana");
+  const esHoras = rol === "operario_horas";
+  const esProyectos = rol === "proyectos";
+  const esRedes = rol === "redes";
+  const esConta = rol === "contabilidad";
   const esAdmin = rol === "admin" || rol === "administrador";
 
-  setVisibilidadTab("horas", esTatiana);
-  setVisibilidadTab("diasRegistrados", esTatiana);
-  setVisibilidadTab("historial", esTatiana);
+  // Oculta o muestra la barra de pestañas según el rol:
+  // En 'proyectos' solo se muestran los 6 botones de su cuadrícula, sin pestañas superiores.
+  const navTabs = document.getElementById("mainNavTabs");
+  if (navTabs) {
+    navTabs.classList.toggle("hidden", esProyectos);
+    navTabs.style.display = esProyectos ? "none" : "";
+  }
 
-  setVisibilidadTab("pendientes", !esTatiana && !esConta);
-  setVisibilidadTab("finalizadas", !esTatiana && !esConta);
+  setVisibilidadTab("proyectos", esProyectos || esAdmin);
+  setVisibilidadTab("admin", esAdmin);
+  setVisibilidadTab("horas", esHoras || esAdmin);
+  setVisibilidadTab("diasRegistrados", esHoras || esAdmin);
+  setVisibilidadTab("historial", esHoras || esAdmin);
+  setVisibilidadTab("pendientes", !esHoras && !esProyectos && !esConta && !esRedes);
+  setVisibilidadTab("finalizadas", !esHoras && !esProyectos && !esConta);
   setVisibilidadTab("contabilidad", esConta || esAdmin);
 
-  if (esTatiana) {
+  if (esProyectos) {
+    switchTab("proyectos");
+    return;
+  }
+  if (esAdmin) {
+    switchTab("admin");
+    return;
+  }
+  if (esHoras) {
     switchTab("horas");
     return;
   }
@@ -218,11 +321,16 @@ function configurarVistaPorRol(usuario) {
   switchTab("pendientes");
 }
 
+
 // ==========================================
 // INICIALIZACIÓN DE LA APLICACIÓN
 // ==========================================
 window.addEventListener("DOMContentLoaded", () => {
   verificarModoMantenimiento();
+  getDBUsers();
+  getDBOperadores();
+  getDBAparejadores();
+  getDBVehiculos();
   purgeSyncedTasks();
 
   const formLogin = document.getElementById("loginForm") || document.getElementById("formLogin");
@@ -252,11 +360,6 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db"));
-  if (!savedTasks || savedTasks.length === 0) {
-    localStorage.setItem("ayax_tasks_db", JSON.stringify(defaultMockTasks));
-  }
-
   const today = new Date();
   const hoyStr = obtenerFechaLocalYYYYMMDD(today);
   const firstDay = obtenerFechaLocalYYYYMMDD(new Date(today.getFullYear(), today.getMonth(), 1));
@@ -275,11 +378,9 @@ window.addEventListener("DOMContentLoaded", () => {
     const loginScreen = document.getElementById("loginScreen");
     const appContainer = document.getElementById("app");
     const userBadgeSpan = document.querySelector("#userBadge span");
-
     if (loginScreen) loginScreen.classList.add("hidden");
     if (appContainer) appContainer.classList.remove("hidden");
     if (userBadgeSpan) userBadgeSpan.textContent = usuarioActivo.name;
-
     configurarVistaPorRol(usuarioActivo);
   }
 });
@@ -294,7 +395,6 @@ function verificarModoMantenimiento() {
   const pantallaMantenimiento = document.getElementById("maintenance-screen");
   const appContainer = document.getElementById("app");
   const loginScreen = document.getElementById("loginScreen");
-
   if (enMantenimiento && pantallaMantenimiento) {
     pantallaMantenimiento.style.display = "flex";
     if (appContainer) appContainer.classList.add("hidden");
@@ -306,12 +406,13 @@ function verificarModoMantenimiento() {
 
 function switchTab(tab) {
   const usuarioActivo = JSON.parse(localStorage.getItem("usuario_activo"));
-  const tabsSoloTatiana = ["horas", "diasRegistrados", "historial"];
-  if (tabsSoloTatiana.includes(tab) && !esUsuarioTatianaHoras(usuarioActivo)) {
+  const rol = normalizarTexto(usuarioActivo?.role);
+  const tabsSoloHoras = ["horas", "diasRegistrados", "historial"];
+  if (tabsSoloHoras.includes(tab) && !esUsuarioOperarioHoras(usuarioActivo) && rol !== "admin") {
     tab = "pendientes";
   }
 
-  const tabs = ["pendientes", "horas", "diasRegistrados", "historial", "finalizadas", "contabilidad"];
+  const tabs = ["proyectos", "admin", "pendientes", "horas", "diasRegistrados", "historial", "finalizadas", "contabilidad"];
   tabs.forEach((t) => {
     const cap = t.charAt(0).toUpperCase() + t.slice(1);
     const btn = document.getElementById(`btnTab${cap}`);
@@ -323,6 +424,8 @@ function switchTab(tab) {
     }
   });
 
+  if (tab === "proyectos") renderMenuProyectos();
+  if (tab === "admin") renderMenuAdmin();
   if (tab === "pendientes") renderTasks();
   if (tab === "horas") renderVistaJornada();
   if (tab === "diasRegistrados") renderListaDiasRegistrados();
@@ -365,7 +468,641 @@ function formatearNombreMes(claveMes) {
 }
 
 // ==========================================
-// FLUJO DE JORNADA, DÍAS REGISTRADOS E HISTORIAL (TATIANA)
+// ROL PROYECTOS
+// ==========================================
+function renderMenuProyectos() {
+  document.getElementById("grid-proyectos-menu")?.classList.remove("hidden");
+  document.getElementById("subvista-proyectos-container")?.classList.add("hidden");
+}
+
+function volverMenuProyectos() {
+  renderMenuProyectos();
+}
+
+function abrirFormularioCrearTarea() {
+  const { code } = getNextConsecutivoGP();
+  const ops = getDBOperadores().map((o) => `<option value="${o}">${o}</option>`).join("");
+  const vehs = getDBVehiculos().map((v) => `<option value="${v.etiqueta}">${v.etiqueta}</option>`).join("");
+
+  document.getElementById("grid-proyectos-menu").classList.add("hidden");
+  const container = document.getElementById("subvista-proyectos-container");
+  const body = document.getElementById("subvista-proyectos-body");
+  document.getElementById("subvista-proyectos-titulo").innerText = `Crear Tarea (${code})`;
+  container.classList.remove("hidden");
+
+  body.innerHTML = `
+    <form id="form-crear-tarea-proyectos">
+      <div class="form-group">
+        <label>Consecutivo Automático</label>
+        <input type="text" value="${code}" disabled style="background:#f1f5f9; font-weight:700;">
+      </div>
+      <div class="form-group">
+        <label>Título de la Tarea *</label>
+        <input type="text" id="p-titulo" placeholder="Ej: Izaje de estructura metálica" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label>Fecha Inicio *</label>
+          <input type="date" id="p-fecha" value="${obtenerFechaLocalYYYYMMDD()}" required>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>Hora Inicio *</label>
+          <input type="time" id="p-hora" value="07:00" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Cliente *</label>
+        <input type="text" id="p-cliente" placeholder="Nombre del cliente" required>
+      </div>
+      <div class="form-group">
+        <label>Dirección del Cliente *</label>
+        <input type="text" id="p-direccion" placeholder="Dirección o ubicación" required>
+      </div>
+      <div class="form-group">
+        <label>Operador *</label>
+        <select id="p-operador" required><option value="">-- Seleccione Operador --</option>${ops}</select>
+      </div>
+      <div class="form-group">
+        <label>Equipo Asignado *</label>
+        <select id="p-equipo" required><option value="">-- Seleccione Equipo --</option>${vehs}</select>
+      </div>
+      <div class="form-group">
+        <label>Número de Cotización (Opcional)</label>
+        <input type="text" id="p-cotizacion" placeholder="Ej: COT-00322">
+      </div>
+      <button type="submit" class="btn-primary" style="background:#27ae60;">Asignar Tarea</button>
+    </form>
+  `;
+
+  document.getElementById("form-crear-tarea-proyectos").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const nuevaTarea = {
+      id: code,
+      titulo: document.getElementById("p-titulo").value.trim(),
+      fechaInicio: document.getElementById("p-fecha").value,
+      horaInicio: document.getElementById("p-hora").value,
+      cliente: document.getElementById("p-cliente").value.trim(),
+      direccion: document.getElementById("p-direccion").value.trim(),
+      operador: document.getElementById("p-operador").value,
+      maquinaria: document.getElementById("p-equipo").value,
+      cotizacion: document.getElementById("p-cotizacion").value.trim(),
+      estado: "pendiente",
+      fechaCreacion: new Date().toISOString()
+    };
+
+    const tasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
+    tasks.push(nuevaTarea);
+    localStorage.setItem("ayax_tasks_db", JSON.stringify(tasks));
+    incrementConsecutivoGP();
+
+    alert(`Tarea ${code} asignada a ${nuevaTarea.operador}. Ya aparece en Tareas Pendientes y en el usuario del operador.`);
+    volverMenuProyectos();
+  });
+}
+
+function verSubVistaProyectos(tipo) {
+  document.getElementById("grid-proyectos-menu").classList.add("hidden");
+  const container = document.getElementById("subvista-proyectos-container");
+  const body = document.getElementById("subvista-proyectos-body");
+  container.classList.remove("hidden");
+
+  const titulos = {
+    pendientes: "Tareas Pendientes",
+    proceso: "Tareas en Proceso",
+    finalizadas: "Tareas Finalizadas",
+    canceladas: "Tareas Canceladas",
+    informes: "Informes"
+  };
+  document.getElementById("subvista-proyectos-titulo").innerText = titulos[tipo] || "Proyectos";
+
+  if (tipo === "informes") {
+    renderInformesProyectos(body);
+    return;
+  }
+
+  body.innerHTML = `
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
+      <input type="text" id="filtro-p-codigo" placeholder="Buscar por código..." onkeyup="filtrarListaSubvistaProyectos('${tipo}')" style="flex:1; min-width:120px;">
+      <input type="date" id="filtro-p-inicio" onchange="filtrarListaSubvistaProyectos('${tipo}')" style="flex:1; min-width:120px;">
+      <input type="date" id="filtro-p-fin" onchange="filtrarListaSubvistaProyectos('${tipo}')" style="flex:1; min-width:120px;">
+    </div>
+    <div id="lista-subvista-proyectos-content" class="stack"></div>
+  `;
+  filtrarListaSubvistaProyectos(tipo);
+}
+
+function filtrarListaSubvistaProyectos(tipo) {
+  const container = document.getElementById("lista-subvista-proyectos-content");
+  if (!container) return;
+
+  const cod = (document.getElementById("filtro-p-codigo")?.value || "").toLowerCase().trim();
+  const fIni = document.getElementById("filtro-p-inicio")?.value || "";
+  const fFin = document.getElementById("filtro-p-fin")?.value || "";
+
+  const tasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
+  const estadoMap = {
+    pendientes: "pendiente",
+    proceso: "en_proceso",
+    finalizadas: "finalizada",
+    canceladas: "cancelada"
+  };
+  const targetEstado = estadoMap[tipo];
+
+  const filtradas = tasks.filter((t) => {
+    const st = t.estado || "pendiente";
+    if (st !== targetEstado) return false;
+    if (cod && !String(t.id).toLowerCase().includes(cod) && !String(t.cliente || "").toLowerCase().includes(cod)) return false;
+    const fTarea = t.fechaInicio || (t.fechaCreacion ? t.fechaCreacion.slice(0, 10) : "");
+    if (fIni && fTarea < fIni) return false;
+    if (fFin && fTarea > fFin) return false;
+    return true;
+  });
+
+  if (!filtradas.length) {
+    container.innerHTML = `<p class="empty-msg">No hay tareas en esta sección con esos filtros.</p>`;
+    return;
+  }
+
+  container.innerHTML = filtradas.map((t) => {
+    const diasHtml = (t.diasDetalle && t.diasDetalle.length)
+      ? `<div style="margin-top:8px; padding-top:8px; border-top:1px solid #e2e8f0; font-size:0.78rem;">
+          ${t.diasDetalle.map((d) => `
+            <div style="margin-bottom:6px; background:#f8fafc; padding:6px; border-radius:6px;">
+              <strong>Día #${d.dayNum}</strong> · ${d.labor || "N/A"}<br>
+              Operador: ${d.operador || "N/A"} · Aparejador: ${d.aparejador || "N/A"} · Equipo: ${d.grua || t.maquinaria || "N/A"}<br>
+              Horas: ${d.horasTrabajadas || 0}h · Km/Hr: ${d.kmInicial || "-"} a ${d.kmFinal || "-"} · Comb: ${d.combustibleInicial || "-"}→${d.combustibleFinal || "-"} · Urea: ${d.ureaInicial || "-"}→${d.ureaFinal || "-"}
+            </div>
+          `).join("")}
+        </div>`
+      : "";
+
+    return `
+      <div class="task-card">
+        <div class="task-header">
+          <span class="task-code">${t.id} ${t.titulo ? "· " + t.titulo : ""}</span>
+          <small style="color:#64748b;">${t.estado}</small>
+        </div>
+        <p class="task-client"><strong>Cliente:</strong> ${t.cliente}</p>
+        <p class="task-client"><strong>Dirección:</strong> ${t.direccion || "N/A"}</p>
+        <p class="task-client"><strong>Operador:</strong> ${t.operador || "Sin asignar"} · <strong>Equipo:</strong> ${t.maquinaria || "N/A"}</p>
+        <p class="task-client"><strong>Cotización:</strong> ${t.cotizacion || "N/A"} · <strong>Total Horas:</strong> ${t.totalHoras || 0}</p>
+        ${diasHtml}
+        ${tipo === "pendientes" ? `<button type="button" class="btn-danger-small" style="margin-top:8px;" onclick="cancelarTareaPorProyectos('${t.id}')">Cancelar Tarea</button>` : ""}
+      </div>
+    `;
+  }).join("");
+}
+
+function cancelarTareaPorProyectos(id) {
+  if (!confirm(`¿Cancelar la tarea ${id}? Al operario se le marcará como cancelada y no podrá iniciar ni registrar.`)) return;
+  let tasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
+  tasks = tasks.map((t) => String(t.id) === String(id) ? { ...t, estado: "cancelada", fechaCancelacion: new Date().toISOString() } : t);
+  localStorage.setItem("ayax_tasks_db", JSON.stringify(tasks));
+  alert(`Tarea ${id} marcada como cancelada.`);
+  filtrarListaSubvistaProyectos("pendientes");
+}
+
+function renderInformesProyectos(container) {
+  container.innerHTML = `
+    <div class="form-group">
+      <label>Estado de Tareas</label>
+      <select id="inf-p-estado" class="form-control">
+        <option value="todas">Todas las Tareas</option>
+        <option value="pendiente">Pendientes</option>
+        <option value="en_proceso">En Proceso</option>
+        <option value="finalizada">Finalizadas</option>
+        <option value="cancelada">Canceladas</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1;">
+        <label>Fecha Inicio</label>
+        <input type="date" id="inf-p-inicio" class="form-control">
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label>Fecha Fin</label>
+        <input type="date" id="inf-p-fin" class="form-control">
+      </div>
+    </div>
+    <button type="button" class="btn-primary" onclick="descargarExcelInformesProyectos()" style="background:#27ae60;">Descargar Excel (.xls)</button>
+  `;
+}
+
+function descargarExcelInformesProyectos() {
+  const est = document.getElementById("inf-p-estado")?.value || "todas";
+  const fIni = document.getElementById("inf-p-inicio")?.value || "";
+  const fFin = document.getElementById("inf-p-fin")?.value || "";
+
+  const tasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
+  const filtradas = tasks.filter((t) => {
+    if (est !== "todas" && (t.estado || "pendiente") !== est) return false;
+    const fT = t.fechaInicio || (t.fechaCreacion ? t.fechaCreacion.slice(0, 10) : "");
+    if (fIni && fT < fIni) return false;
+    if (fFin && fT > fFin) return false;
+    return true;
+  });
+
+  let filasHtml = "";
+  filtradas.forEach((t) => {
+    const fechaCreacionStr = (t.fechaCreacion || "").slice(0, 10);
+    if (t.diasDetalle && t.diasDetalle.length > 0) {
+      t.diasDetalle.forEach((d) => {
+        filasHtml += `<tr>
+          <td>${fechaCreacionStr}</td>
+          <td>${t.id}</td>
+          <td>${t.cliente || ""}</td>
+          <td>${d.direccion || t.direccion || ""}</td>
+          <td>${d.operador || t.operador || ""}</td>
+          <td>${d.aparejador || ""}</td>
+          <td>${d.grua || t.maquinaria || ""}</td>
+          <td>${t.cotizacion || ""}</td>
+          <td>${t.estado || "pendiente"}</td>
+          <td>Día #${d.dayNum}</td>
+          <td>${d.horasTrabajadas || 0}</td>
+          <td>${d.kmInicial || ""}</td>
+          <td>${d.kmFinal || ""}</td>
+          <td>${d.combustibleInicial || ""}</td>
+          <td>${d.combustibleFinal || ""}</td>
+          <td>${d.ureaInicial || ""}</td>
+          <td>${d.ureaFinal || ""}</td>
+          <td>${d.observaciones || ""}</td>
+        </tr>`;
+      });
+    } else {
+      filasHtml += `<tr>
+        <td>${fechaCreacionStr}</td>
+        <td>${t.id}</td>
+        <td>${t.cliente || ""}</td>
+        <td>${t.direccion || ""}</td>
+        <td>${t.operador || ""}</td>
+        <td></td>
+        <td>${t.maquinaria || ""}</td>
+        <td>${t.cotizacion || ""}</td>
+        <td>${t.estado || "pendiente"}</td>
+        <td>-</td>
+        <td>${t.totalHoras || 0}</td>
+        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+      </tr>`;
+    }
+  });
+
+  const html = `<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body><table border="1">
+    <thead><tr>
+      <th>Fecha Creación</th><th>Código Tarea</th><th>Cliente</th><th>Dirección</th>
+      <th>Operador</th><th>Aparejador</th><th>Equipo</th><th>Cotización</th><th>Estado</th>
+      <th>Día</th><th>Horas</th><th>Km/Hr Ini</th><th>Km/Hr Fin</th>
+      <th>Comb Ini</th><th>Comb Fin</th><th>Urea Ini</th><th>Urea Fin</th><th>Observaciones</th>
+    </tr></thead>
+    <tbody>${filasHtml}</tbody>
+  </table></body></html>`;
+
+  const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `informe_proyectos_${obtenerFechaLocalYYYYMMDD()}.xls`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// ==========================================
+// ROL ADMINISTRADOR
+// ==========================================
+function renderMenuAdmin() {
+  document.getElementById("grid-admin-menu")?.classList.remove("hidden");
+  document.getElementById("subvista-admin-container")?.classList.add("hidden");
+}
+
+function volverMenuAdmin() {
+  renderMenuAdmin();
+}
+
+function verSubVistaAdmin(tipo) {
+  document.getElementById("grid-admin-menu").classList.add("hidden");
+  const container = document.getElementById("subvista-admin-container");
+  const body = document.getElementById("subvista-admin-body");
+  container.classList.remove("hidden");
+
+  const titulos = {
+    usuarios: "Gestión de Usuarios",
+    catalogos: "Operadores, Aparejadores y Equipos",
+    informes: "Informes por Rol",
+    backup: "Copia de Seguridad"
+  };
+  document.getElementById("subvista-admin-titulo").innerText = titulos[tipo] || "Administración";
+
+  if (tipo === "usuarios") renderAdminUsuarios(body);
+  if (tipo === "catalogos") renderAdminCatalogos(body);
+  if (tipo === "informes") renderAdminInformes(body);
+  if (tipo === "backup") renderAdminBackup(body);
+}
+
+function renderAdminUsuarios(container) {
+  const users = getDBUsers();
+  container.innerHTML = `
+    <h3>Crear Usuario</h3>
+    <form id="form-admin-crear-user" style="margin-bottom:18px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
+      <div class="form-row">
+        <div class="form-group" style="flex:1;"><label>Número de Teléfono *</label><input type="tel" id="u-phone" required></div>
+        <div class="form-group" style="flex:1;"><label>PIN de Acceso (4 dígitos) *</label><input type="password" id="u-pin" maxlength="4" required></div>
+      </div>
+      <div class="form-group"><label>Nombre Completo *</label><input type="text" id="u-name" required></div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label>Rol de Usuario *</label>
+          <select id="u-role" required>
+            <option value="operario">operario</option>
+            <option value="operario_horas">operario_horas</option>
+            <option value="proyectos">proyectos</option>
+            <option value="contabilidad">contabilidad</option>
+            <option value="redes">redes</option>
+            <option value="admin">admin</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1;"><label>Salario Base ($)</label><input type="number" id="u-salary" value="1750905"></div>
+      </div>
+      <button type="submit" class="btn-primary" style="background:#27ae60;">Guardar Usuario</button>
+    </form>
+
+    <h3>Usuarios Creados (${users.length})</h3>
+    <div class="stack">
+      ${users.map((u, idx) => `
+        <div class="open-item-card" style="flex-direction:column; align-items:stretch; gap:8px;">
+          <div>
+            <strong>${u.name}</strong> · <span style="color:#040B5D; font-weight:700;">${u.role}</span><br>
+            <span class="muted">Tel: ${u.phone} | PIN: ${u.pin} | Salario: $${Number(u.salary || 0).toLocaleString("es-CO")}</span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn-secondary-small" style="flex:1;" onclick="editarUsuarioAdmin(${idx})">Editar</button>
+            <button type="button" class="btn-danger-small" style="flex:1;" onclick="eliminarUsuarioAdmin('${u.phone}')">Eliminar</button>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+
+  document.getElementById("form-admin-crear-user").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const phone = document.getElementById("u-phone").value.trim();
+    const pin = document.getElementById("u-pin").value.trim();
+    const name = document.getElementById("u-name").value.trim();
+    const role = document.getElementById("u-role").value;
+    const salary = parseFloat(document.getElementById("u-salary").value) || 0;
+
+    if (!/^\d{4}$/.test(pin)) {
+      alert("El PIN debe tener exactamente 4 dígitos numéricos.");
+      return;
+    }
+
+    const currentUsers = getDBUsers();
+    if (currentUsers.some((u) => String(u.phone).trim() === phone)) {
+      alert("Ese número de teléfono ya existe.");
+      return;
+    }
+
+    currentUsers.push({ phone, pin, name, role, salary });
+    saveDBUsers(currentUsers);
+    alert("Usuario guardado en Usuarios Creados.");
+    renderAdminUsuarios(container);
+  });
+}
+
+function editarUsuarioAdmin(index) {
+  const users = getDBUsers();
+  const u = users[index];
+  if (!u) return;
+
+  const nuevoNombre = prompt("Nombre completo:", u.name);
+  if (nuevoNombre === null) return;
+  const nuevoTel = prompt("Número de teléfono:", u.phone);
+  if (nuevoTel === null) return;
+  const nuevoPin = prompt("PIN de 4 dígitos:", u.pin);
+  if (nuevoPin === null) return;
+  const nuevoRol = prompt("Rol (operario, operario_horas, proyectos, contabilidad, redes, admin):", u.role);
+  if (nuevoRol === null) return;
+  const nuevoSalario = prompt("Salario base:", String(u.salary || 0));
+  if (nuevoSalario === null) return;
+
+  users[index] = {
+    phone: nuevoTel.trim() || u.phone,
+    pin: /^\d{4}$/.test(nuevoPin.trim()) ? nuevoPin.trim() : u.pin,
+    name: nuevoNombre.trim() || u.name,
+    role: nuevoRol.trim() || u.role,
+    salary: Number(nuevoSalario) || 0
+  };
+  saveDBUsers(users);
+  alert("Usuario actualizado.");
+  renderAdminUsuarios(document.getElementById("subvista-admin-body"));
+}
+
+function eliminarUsuarioAdmin(phone) {
+  if (!confirm("¿Eliminar este usuario?")) return;
+  const currentUsers = getDBUsers().filter((u) => String(u.phone) !== String(phone));
+  saveDBUsers(currentUsers);
+  renderAdminUsuarios(document.getElementById("subvista-admin-body"));
+}
+
+function renderAdminCatalogos(container) {
+  const ops = getDBOperadores();
+  const aps = getDBAparejadores();
+  const vehs = getDBVehiculos();
+
+  container.innerHTML = `
+    <h3>Agregar Operador</h3>
+    <div style="display:flex; gap:6px; margin-bottom:12px;">
+      <input type="text" id="new-op-name" placeholder="Nombre del operador" style="flex:1;">
+      <button type="button" class="btn-primary" onclick="agregarOperadorAdmin()" style="width:auto; padding:0 14px;">Agregar</button>
+    </div>
+
+    <h3>Agregar Aparejador</h3>
+    <div style="display:flex; gap:6px; margin-bottom:12px;">
+      <input type="text" id="new-ap-name" placeholder="Nombre del aparejador" style="flex:1;">
+      <button type="button" class="btn-primary" onclick="agregarAparejadorAdmin()" style="width:auto; padding:0 14px;">Agregar</button>
+    </div>
+
+    <h3>Agregar Vehículo / Equipo</h3>
+    <div class="stack" style="margin-bottom:14px; background:#f8fafc; padding:10px; border-radius:8px;">
+      <input type="text" id="new-veh-etiqueta" placeholder="Etiqueta (ej: GRÚA # 99)">
+      <input type="text" id="new-veh-categoria" placeholder="Categoría (ej: Grúa)">
+      <input type="text" id="new-veh-modelo" placeholder="Modelo">
+      <input type="text" id="new-veh-combustible" placeholder="Tipo de combustible (ej: Diésel)">
+      <button type="button" class="btn-primary" onclick="agregarVehiculoAdmin()">Agregar Vehículo</button>
+    </div>
+
+    <h4>Operadores (${ops.length})</h4>
+    <div class="stack" style="max-height:130px; overflow-y:auto; margin-bottom:12px;">
+      ${ops.map((o, i) => `
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; font-size:0.82rem;">
+          <span>${o}</span>
+          <div style="display:flex; gap:4px;">
+            <button type="button" class="btn-secondary-small" onclick="editarOperadorAdmin(${i})">Editar</button>
+            <button type="button" class="btn-danger-small" onclick="eliminarOperadorAdmin(${i})">✕</button>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+
+    <h4>Aparejadores (${aps.length})</h4>
+    <div class="stack" style="max-height:130px; overflow-y:auto; margin-bottom:12px;">
+      ${aps.map((a, i) => `
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; font-size:0.82rem;">
+          <span>${a}</span>
+          <div style="display:flex; gap:4px;">
+            <button type="button" class="btn-secondary-small" onclick="editarAparejadorAdmin(${i})">Editar</button>
+            <button type="button" class="btn-danger-small" onclick="eliminarAparejadorAdmin(${i})">✕</button>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+
+    <h4>Vehículos / Equipos (${vehs.length})</h4>
+    <div class="stack" style="max-height:160px; overflow-y:auto;">
+      ${vehs.map((v, i) => `
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; font-size:0.82rem;">
+          <span><strong>${v.etiqueta}</strong> · ${v.combustible || ""}</span>
+          <div style="display:flex; gap:4px;">
+            <button type="button" class="btn-secondary-small" onclick="editarVehiculoAdmin(${i})">Editar</button>
+            <button type="button" class="btn-danger-small" onclick="eliminarVehiculoAdmin(${i})">✕</button>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function agregarOperadorAdmin() {
+  const name = document.getElementById("new-op-name")?.value.trim();
+  if (!name) return;
+  const ops = getDBOperadores();
+  ops.push(name);
+  localStorage.setItem("ayax_operadores_db", JSON.stringify(ops));
+  renderAdminCatalogos(document.getElementById("subvista-admin-body"));
+}
+
+function editarOperadorAdmin(idx) {
+  const ops = getDBOperadores();
+  const nuevo = prompt("Editar nombre del operador:", ops[idx]);
+  if (!nuevo || !nuevo.trim()) return;
+  ops[idx] = nuevo.trim();
+  localStorage.setItem("ayax_operadores_db", JSON.stringify(ops));
+  renderAdminCatalogos(document.getElementById("subvista-admin-body"));
+}
+
+function eliminarOperadorAdmin(idx) {
+  const ops = getDBOperadores().filter((_, i) => i !== idx);
+  localStorage.setItem("ayax_operadores_db", JSON.stringify(ops));
+  renderAdminCatalogos(document.getElementById("subvista-admin-body"));
+}
+
+function agregarAparejadorAdmin() {
+  const name = document.getElementById("new-ap-name")?.value.trim();
+  if (!name) return;
+  const aps = getDBAparejadores();
+  aps.push(name);
+  localStorage.setItem("ayax_aparejadores_db", JSON.stringify(aps));
+  renderAdminCatalogos(document.getElementById("subvista-admin-body"));
+}
+
+function editarAparejadorAdmin(idx) {
+  const aps = getDBAparejadores();
+  const nuevo = prompt("Editar nombre del aparejador:", aps[idx]);
+  if (!nuevo || !nuevo.trim()) return;
+  aps[idx] = nuevo.trim();
+  localStorage.setItem("ayax_aparejadores_db", JSON.stringify(aps));
+  renderAdminCatalogos(document.getElementById("subvista-admin-body"));
+}
+
+function eliminarAparejadorAdmin(idx) {
+  const aps = getDBAparejadores().filter((_, i) => i !== idx);
+  localStorage.setItem("ayax_aparejadores_db", JSON.stringify(aps));
+  renderAdminCatalogos(document.getElementById("subvista-admin-body"));
+}
+
+function agregarVehiculoAdmin() {
+  const etiqueta = document.getElementById("new-veh-etiqueta")?.value.trim();
+  if (!etiqueta) return;
+  const vehs = getDBVehiculos();
+  vehs.push({
+    etiqueta,
+    categoria: document.getElementById("new-veh-categoria")?.value.trim() || "General",
+    modelo: document.getElementById("new-veh-modelo")?.value.trim() || "",
+    combustible: document.getElementById("new-veh-combustible")?.value.trim() || ""
+  });
+  localStorage.setItem("ayax_vehiculos_db", JSON.stringify(vehs));
+  renderAdminCatalogos(document.getElementById("subvista-admin-body"));
+}
+
+function editarVehiculoAdmin(idx) {
+  const vehs = getDBVehiculos();
+  const v = vehs[idx];
+  if (!v) return;
+  const etiqueta = prompt("Etiqueta del vehículo:", v.etiqueta);
+  if (etiqueta === null) return;
+  const combustible = prompt("Tipo de combustible:", v.combustible || "");
+  if (combustible === null) return;
+  vehs[idx] = { ...v, etiqueta: etiqueta.trim() || v.etiqueta, combustible: combustible.trim() };
+  localStorage.setItem("ayax_vehiculos_db", JSON.stringify(vehs));
+  renderAdminCatalogos(document.getElementById("subvista-admin-body"));
+}
+
+function eliminarVehiculoAdmin(idx) {
+  const vehs = getDBVehiculos().filter((_, i) => i !== idx);
+  localStorage.setItem("ayax_vehiculos_db", JSON.stringify(vehs));
+  renderAdminCatalogos(document.getElementById("subvista-admin-body"));
+}
+
+function renderAdminInformes(container) {
+  container.innerHTML = `
+    <div class="form-group">
+      <label>Elegir Rol</label>
+      <select id="admin-inf-rol" class="form-control">
+        <option value="proyectos">proyectos (Tareas y Control de Operaciones)</option>
+        <option value="contabilidad">contabilidad (Nómina y Recargos)</option>
+        <option value="operario_horas">operario_horas (Jornadas Registradas)</option>
+      </select>
+    </div>
+    <button type="button" class="btn-primary" onclick="exportarInformePorRolAdmin()" style="background:#27ae60;">Generar Informe del Rol</button>
+  `;
+}
+
+function exportarInformePorRolAdmin() {
+  const rol = document.getElementById("admin-inf-rol")?.value || "proyectos";
+  if (rol === "contabilidad") {
+    renderReporteContabilidad();
+    exportarExcelContabilidad();
+  } else {
+    descargarExcelInformesProyectos();
+  }
+}
+
+function renderAdminBackup(container) {
+  container.innerHTML = `
+    <p class="muted" style="margin-bottom:10px;">Descarga una copia de seguridad completa en formato JSON.</p>
+    <button type="button" class="btn-primary" onclick="generarBackupJSON()" style="background:#ea580c;">Descargar Copia de Seguridad</button>
+  `;
+}
+
+function generarBackupJSON() {
+  const data = {
+    users: getDBUsers(),
+    tasks: JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]"),
+    jornadas: JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]"),
+    operadores: getDBOperadores(),
+    aparejadores: getDBAparejadores(),
+    vehiculos: getDBVehiculos(),
+    fechaBackup: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `backup_ayax_${obtenerFechaLocalYYYYMMDD()}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// ==========================================
+// FLUJO DE JORNADA, DÍAS REGISTRADOS E HISTORIAL (OPERARIO HORAS)
 // ==========================================
 function initEventListenersHoras() {
   const acordeon = document.getElementById("acordeon-apertura-jornada");
@@ -417,7 +1154,6 @@ function initEventListenersHoras() {
 
   const btnCamNov = document.getElementById("btn-camara-nov");
   if (btnCamNov) btnCamNov.addEventListener("click", () => document.getElementById("input-camara-nov").click());
-
   const btnGalNov = document.getElementById("btn-galeria-nov");
   if (btnGalNov) btnGalNov.addEventListener("click", () => document.getElementById("input-galeria-nov").click());
 
@@ -451,7 +1187,6 @@ function actualizarTituloAcordeonDia() {
   const titulo = document.getElementById("titulo-acordeon-dia");
   const btnElim = document.getElementById("btn-eliminar-apertura-activa");
   if (!acordeon || !titulo) return;
-
   const abierta = obtenerUltimaJornadaAbiertaUsuario();
   titulo.innerText = "1. Abrir Jornada de Trabajo";
   if (btnElim) btnElim.style.display = abierta ? "inline-block" : "none";
@@ -509,31 +1244,24 @@ function estamparFotoJornada(file, canvasId, lineasTexto, callback) {
       const scale = img.width > maxWidth ? maxWidth / img.width : 1;
       canvas.width = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
       const fontSize = Math.max(18, Math.round(canvas.width * 0.032));
       const lineHeight = Math.round(fontSize * 1.35);
       const paddingY = Math.max(12, Math.round(fontSize * 0.65));
       const paddingX = Math.max(14, Math.round(fontSize * 0.75));
       const altoBanner = paddingY * 2 + lineasTexto.length * lineHeight;
-
       ctx.fillStyle = "rgba(4, 11, 93, 0.92)";
       ctx.fillRect(0, canvas.height - altoBanner, canvas.width, altoBanner);
-
       ctx.fillStyle = "#BF956E";
       ctx.fillRect(0, canvas.height - altoBanner, canvas.width, Math.max(4, Math.round(fontSize * 0.22)));
-
       ctx.fillStyle = "#ffffff";
       ctx.font = `bold ${fontSize}px sans-serif`;
       ctx.textBaseline = "top";
-
       lineasTexto.forEach((linea, idx) => {
         const yPos = canvas.height - altoBanner + paddingY + idx * lineHeight;
         ctx.fillText(linea, paddingX, yPos, canvas.width - paddingX * 2);
       });
-
       callback(canvas.toDataURL("image/jpeg", 0.85));
     };
     img.src = e.target.result;
@@ -577,7 +1305,6 @@ function guardarAperturaJornada() {
   const direccion = document.getElementById("jornada-direccion").value.trim();
   const horaInicio = document.getElementById("jornada-hora-inicio").value.trim() || horaActualHHMM();
   const fileInicio = document.getElementById("foto-inicio-file").files[0];
-
   if (!user || !fecha || !cliente || !direccion || !fileInicio) {
     alert("Por favor complete los campos obligatorios y adjunte la foto de inicio.");
     return;
@@ -648,15 +1375,12 @@ function renderJornadasAbiertas() {
   const user = JSON.parse(localStorage.getItem("usuario_activo"));
   const cont = document.getElementById("lista-jornadas-abiertas");
   if (!cont || !user) return;
-
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const abiertas = dbJornadas.filter((j) => j.estado === "abierta" && j.empleadoId === user.phone);
-
   if (!abiertas.length) {
     cont.innerHTML = `<p class="empty-msg">No tienes jornadas abiertas pendientes de cierre.</p>`;
     return;
   }
-
   cont.innerHTML = abiertas.map((j) => `
     <div class="open-item-card">
       <div>
@@ -676,7 +1400,6 @@ function abrirCierreJornada(id) {
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const j = dbJornadas.find((item) => item.id === id);
   if (!j) return;
-
   fotoFinStamped = "";
   fotosNovedadesStamped = [];
   document.getElementById("cierre-jornada-id").value = j.id;
@@ -684,7 +1407,7 @@ function abrirCierreJornada(id) {
   document.getElementById("foto-fin-file").value = "";
   document.getElementById("jornada-hora-fin").value = "";
   document.getElementById("hora-fin-badge").innerText = "";
-  document.getElementById("jornada-almuerzo-min").value = "60";
+  document.getElementById("jornada-almuerzo-min").value = "0";
   document.getElementById("jornada-observaciones").value = "";
   document.getElementById("galeria-novedades-thumbs").innerHTML = "";
   const canvas = document.getElementById("canvas-fin-preview");
@@ -693,7 +1416,6 @@ function abrirCierreJornada(id) {
     canvas.width = 0;
     canvas.height = 0;
   }
-
   document.getElementById("panel-cierre-jornada").classList.remove("hidden");
   document.getElementById("panel-cierre-jornada").scrollIntoView({ behavior: "smooth" });
 }
@@ -708,7 +1430,6 @@ function procesarArchivosNovedad(fileList) {
   const cliente = j ? j.cliente : "Novedad";
   const fecha = j ? formatearFechaDDMMAAAA(j.fecha) : formatearFechaDDMMAAAA(obtenerFechaLocalYYYYMMDD());
   const hora = horaActualHHMM();
-
   Array.from(fileList).forEach((file) => {
     estamparFotoJornada(file, "canvas-fin-preview", [`AYAX NOVEDAD · ${cliente}`, `Fecha: ${fecha} | Hora: ${hora}`], (url) => {
       fotosNovedadesStamped.push({ id: "nov-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6), url });
@@ -738,9 +1459,8 @@ function guardarCierreJornada() {
   const horaFin = document.getElementById("jornada-hora-fin").value.trim() || horaActualHHMM();
   const almuerzoRaw = document.getElementById("jornada-almuerzo-min").value;
   const fileFin = document.getElementById("foto-fin-file").files[0];
-
   if (!id || almuerzoRaw === "" || !fileFin) {
-    alert("Debes adjuntar la foto de finalización y colocar el tiempo de almuerzo.");
+    alert("Debes adjuntar la foto de finalización y colocar el tiempo de almuerzo/descanso.");
     return;
   }
 
@@ -759,13 +1479,11 @@ function guardarCierreJornada() {
     j.mesClave = obtenerClaveMes(j.fecha);
     j.estado = "cerrada";
     j.calculo = calcularJornadaLaboral(j.fecha, j.horaInicio, horaFin, almuerzoMin, j.salario);
-
     dbJornadas[idx] = j;
     localStorage.setItem("ayax_jornadas_db", JSON.stringify(dbJornadas));
     if (ultimaJornadaAbiertaId === id) {
       ultimaJornadaAbiertaId = null;
     }
-
     document.getElementById("panel-cierre-jornada").classList.add("hidden");
     document.getElementById("form-cierre-jornada").reset();
     fotosNovedadesStamped = [];
@@ -801,7 +1519,6 @@ function renderTarjetaDiaCerrado(j) {
       ${j.fotoFin ? `<div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; background: #fff;"><div style="font-size: 0.72rem; font-weight: 700; color: #c2410c; margin-bottom: 4px;">Foto Cierre</div><img src="${j.fotoFin}" alt="Cierre" style="width: 100%; height: auto; border-radius: 4px; display: block;"></div>` : ""}
     </div>
   `;
-
   return `
     <details class="card" style="margin-bottom: 8px; padding: 10px 12px; border-left: 4px solid #27ae60;">
       <summary style="cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
@@ -818,7 +1535,7 @@ function renderTarjetaDiaCerrado(j) {
         <p style="margin-bottom: 4px;"><strong>Fecha:</strong> ${fechaBonita}</p>
         <p style="margin-bottom: 4px;"><strong>Cliente:</strong> ${j.cliente}</p>
         <p style="margin-bottom: 4px;"><strong>Ubicación:</strong> ${j.direccion}</p>
-        <p style="margin-bottom: 4px;"><strong>Horario:</strong> ${j.horaInicio} a ${j.horaFin} · <strong>Almuerzo:</strong> ${j.almuerzoMin ?? 0} min</p>
+        <p style="margin-bottom: 4px;"><strong>Horario:</strong> ${j.horaInicio} a ${j.horaFin} · <strong>Descanso/Almuerzo:</strong> ${j.almuerzoMin ?? 0} min</p>
         <p style="margin-bottom: 6px;"><strong>Observaciones:</strong> ${j.observaciones || "Ninguna"}</p>
         <div style="background: #f8fafc; padding: 8px; border-radius: 6px; margin-bottom: 6px;">
           <strong>Horas netas:</strong> ${c.horasNetas ?? 0} h ·
@@ -838,16 +1555,13 @@ function renderListaDiasRegistrados() {
   const user = JSON.parse(localStorage.getItem("usuario_activo"));
   const cont = document.getElementById("lista-dias-registrados-mes");
   if (!cont || !user) return;
-
   const mesActual = obtenerClaveMes(obtenerFechaLocalYYYYMMDD());
   const titulo = document.getElementById("titulo-pestana-dias");
   if (titulo) {
     titulo.innerText = `Días Registrados (${formatearNombreMes(mesActual)})`;
   }
-
   const fechaFiltro = document.getElementById("filtro-fecha-dias-registrados")?.value || "";
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
-
   const diasMes = dbJornadas
     .filter((j) => j.estado === "cerrada" && j.empleadoId === user.phone && (j.mesClave || obtenerClaveMes(j.fecha)) === mesActual)
     .filter((j) => !fechaFiltro || j.fecha === fechaFiltro)
@@ -857,7 +1571,6 @@ function renderListaDiasRegistrados() {
     cont.innerHTML = `<p class="empty-msg">${fechaFiltro ? "No hay registros para esa fecha." : "No hay días cerrados registrados en este mes."}</p>`;
     return;
   }
-
   cont.innerHTML = diasMes.map(renderTarjetaDiaCerrado).join("");
 }
 
@@ -865,10 +1578,8 @@ function renderCarpetasHistorial() {
   const user = JSON.parse(localStorage.getItem("usuario_activo"));
   const cont = document.getElementById("carpetas-historial-meses");
   if (!cont || !user) return;
-
   const fechaFiltro = document.getElementById("filtro-fecha-historial")?.value || "";
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
-
   const cerradas = dbJornadas
     .filter((j) => j.estado === "cerrada" && j.empleadoId === user.phone)
     .filter((j) => !fechaFiltro || j.fecha === fechaFiltro)
@@ -887,13 +1598,11 @@ function renderCarpetasHistorial() {
   });
 
   const mesesOrdenados = Object.keys(gruposPorMes).sort((a, b) => b.localeCompare(a));
-
   cont.innerHTML = mesesOrdenados.map((clave) => {
     const lista = gruposPorMes[clave];
     const totalHoras = lista.reduce((acc, item) => acc + (item.calculo?.totalHorasConceptos || 0), 0);
     const totalValor = lista.reduce((acc, item) => acc + (item.calculo?.valorPagar || 0), 0);
     const debeAbrirCarpeta = Boolean(fechaFiltro);
-
     return `
       <details class="card" ${debeAbrirCarpeta ? "open" : ""} style="margin-bottom: 10px; border: 1px solid #cbd5e1;">
         <summary style="cursor: pointer; font-weight: 700; color: #040B5D; list-style: none; display: flex; justify-content: space-between; align-items: center;">
@@ -934,7 +1643,8 @@ function eliminarJornadaPorId(id) {
 }
 
 // ==========================================
-// CÁLCULO DE EXTRAS Y RECARGOS (COLOMBIA 2026)
+// CÁLCULO DE EXTRAS Y RECARGOS (COLOMBIA — NOVIEMBRE 2026)
+// Semana de 42h: Lun-Jue 8.5h, Vie 8.0h, Divisor 210, Nocturno 19:00-06:00, Dom/Fest 90%
 // ==========================================
 function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMinutos, salarioMensual) {
   const [y, m, d] = fechaStr.split("-").map(Number);
@@ -945,18 +1655,19 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
   const fin = new Date(y, m - 1, d, hF, minF, 0);
   if (fin <= inicio) fin.setDate(fin.getDate() + 1);
 
-  const diaSemana = inicio.getDay();
-  // Sábado (6) se trata como día normal; solo Domingo (0) o festivos aplican recargo dominical/festivo
+  const diaSemana = inicio.getDay(); // 0: Dom, 1: Lun ... 4: Jue, 5: Vie, 6: Sáb
   const esDomingoOFestivo = diaSemana === 0 || FESTIVOS_COLOMBIA.has(fechaStr);
-  // Jornada normal diaria de 8 horas
-  const jornadaOrdinariaDia = 8;
+
+  // Jornada ordinaria diaria según esquema de 42 horas semanales
+  let jornadaOrdinariaDia = 8.5; // Lunes a Jueves
+  if (diaSemana === 5) jornadaOrdinariaDia = 8.0; // Viernes
+  if (diaSemana === 6 || diaSemana === 0) jornadaOrdinariaDia = 0.0; // Sábado/Domingo fuera de jornada base lun-vie
 
   const descansoMinutos = Math.max(0, Number(almuerzoMinutos) || 0);
   const totalBrutoHoras = (fin - inicio) / (1000 * 60 * 60);
   const horasNetas = Math.max(0, totalBrutoHoras - descansoMinutos / 60);
 
   let heDiurna = 0, heNocturna = 0, recNocturno = 0, recDominical = 0, hedDominical = 0, henDominical = 0;
-
   const tramos = [];
   const pasoMs = 15 * 60 * 1000;
   let cursor = new Date(inicio);
@@ -977,7 +1688,7 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
     cursor = siguiente;
   }
 
-  // 1. Descontar minutos de descanso primero en ventana de almuerzo (12:00 - 14:30)
+  // Descontar descanso/almuerzo reportado del tiempo de trabajo
   let descansoPendiente = descansoMinutos;
   for (const t of tramos) {
     if (descansoPendiente <= 0) break;
@@ -987,8 +1698,6 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
       descansoPendiente -= descontado;
     }
   }
-
-  // 2. Si queda descanso por descontar, descontarlo desde el final del turno
   if (descansoPendiente > 0) {
     for (let i = tramos.length - 1; i >= 0 && descansoPendiente > 0; i--) {
       const t = tramos[i];
@@ -1000,9 +1709,7 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
     }
   }
 
-  // 3. Clasificar horas ordinarias / recargos / extras respetando jornadaOrdinariaDia (8 horas)
   let horasAcumuladas = 0;
-
   function sumarTramo(horas, superaJornada, domFest, noct) {
     if (horas <= 0) return;
     if (domFest) {
@@ -1020,7 +1727,6 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
   for (const t of tramos) {
     if (t.minsTrabajados <= 0) continue;
     const horas = t.minsTrabajados / 60;
-
     if (horasAcumuladas < jornadaOrdinariaDia && horasAcumuladas + horas > jornadaOrdinariaDia) {
       const hOrdinarias = jornadaOrdinariaDia - horasAcumuladas;
       const hExtras = horas - hOrdinarias;
@@ -1030,12 +1736,11 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
       const supera = horasAcumuladas + 1e-9 >= jornadaOrdinariaDia;
       sumarTramo(horas, supera, esDomingoOFestivo, t.esFranjaNocturna);
     }
-
     horasAcumuladas += horas;
   }
 
-  const valorHoraOrd = salarioMensual / DIVISOR_MENSUAL;
-  // Liquidación enfocada en extras y recargos (recargo dominical 90% = 0.90)
+  const valorHoraOrd = (salarioMensual || 1750905) / DIVISOR_MENSUAL;
+
   const valorPagar =
     heDiurna * valorHoraOrd * 1.25 +
     heNocturna * valorHoraOrd * 1.75 +
@@ -1061,19 +1766,18 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
 }
 
 // ==========================================
-// MÓDULO CONTABILIDAD (LILIANA GUZMÁN / ADMIN)
+// MÓDULO CONTABILIDAD (NÓMINA Y AUDITORÍA)
 // ==========================================
 function renderReporteContabilidad() {
   const selEmp = document.getElementById("filtro-emp-conta");
   if (selEmp && selEmp.options.length === 0) {
     selEmp.innerHTML = `<option value="todos">Todos los empleados</option>` +
-      authorizedOperators.filter((o) => o.role === "operario_horas").map((o) => `<option value="${o.phone}">${o.name}</option>`).join("");
+      getDBUsers().filter((o) => o.role === "operario_horas").map((o) => `<option value="${o.phone}">${o.name}</option>`).join("");
   }
 
   const empFiltro = selEmp ? selEmp.value : "todos";
   const fechaInicio = document.getElementById("filtro-fecha-inicio-conta")?.value || "";
   const fechaFin = document.getElementById("filtro-fecha-fin-conta")?.value || "";
-
   const txtRango = document.getElementById("txt-rango-activo");
   if (txtRango) {
     if (fechaInicio && fechaFin) {
@@ -1112,19 +1816,16 @@ function renderReporteContabilidad() {
 
   Object.values(porEmpleado).forEach((grupo) => {
     let subHoras = 0, subValor = 0;
-
     grupo.filas.forEach((f) => {
       const c = f.calculo;
       subHoras += c.totalHorasConceptos;
       subValor += c.valorPagar;
-
       ultimoReporteFilasConta.push({
         tipo: "registro", fecha: f.fecha, empleado: f.empleadoNombre, cliente: f.cliente,
         direccion: f.direccion, horaInicio: f.horaInicio, horaFin: f.horaFin, almuerzoMin: f.almuerzoMin ?? 0,
         heDiurna: c.heDiurna, heNocturna: c.heNocturna, recNocturno: c.recNocturno, recDominical: c.recDominical,
         hedDominical: c.hedDominical, henDominical: c.henDominical, totalHoras: c.totalHorasConceptos, valorPagar: c.valorPagar
       });
-
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${f.fecha}</td>
@@ -1149,7 +1850,6 @@ function renderReporteContabilidad() {
 
     granHoras += subHoras;
     granValor += subValor;
-
     ultimoReporteFilasConta.push({
       tipo: "subtotal", etiqueta: `Subtotal ${grupo.nombre}`, totalHoras: Number(subHoras.toFixed(2)), valorPagar: Math.round(subValor)
     });
@@ -1180,7 +1880,6 @@ function exportarExcelContabilidad() {
     "H.E. Diurna (25%)", "H.E. Nocturna (75%)", "Rec. Nocturno (35%)", "Rec. Dominical (90%)",
     "H.E.D. Dom/Fest (115%)", "H.E.N. Dom/Fest (165%)", "Total Horas", "Valor a Pagar"
   ];
-
   let filasHtml = "";
   ultimoReporteFilasConta.forEach((item) => {
     if (item.tipo === "registro") {
@@ -1217,7 +1916,6 @@ function exportarExcelContabilidad() {
       </table>
     </body>
     </html>`;
-
   const blob = new Blob([htmlExcel], { type: "application/vnd.ms-excel;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -1234,7 +1932,6 @@ function abrirModalAuditoria(id) {
   const j = dbJornadas.find((item) => item.id === id);
   if (!j || !j.calculo) return;
   const c = j.calculo;
-
   document.getElementById("auditoria-titulo-txt").innerText = `Auditoría · ${j.empleadoNombre}`;
 
   const novHtml = j.fotosNovedades && j.fotosNovedades.length
@@ -1252,7 +1949,7 @@ function abrirModalAuditoria(id) {
       <strong>Cliente:</strong> ${j.cliente}<br>
       <strong>Dirección:</strong> ${j.direccion}<br>
       <strong>Tipo de Día:</strong> ${c.esDomingoOFestivo ? "Domingo / Festivo" : "Día Hábil"}<br>
-      <strong>Horario:</strong> ${j.horaInicio} a ${j.horaFin} | <strong>Almuerzo:</strong> ${j.almuerzoMin ?? 0} min<br>
+      <strong>Horario:</strong> ${j.horaInicio} a ${j.horaFin} | <strong>Almuerzo/Descanso:</strong> ${j.almuerzoMin ?? 0} min<br>
       <strong>Observaciones:</strong> ${j.observaciones || "Ninguna"}<br>
       <strong>Total Extras/Recargos:</strong> ${c.totalHorasConceptos} h · <strong>A Pagar:</strong> $${c.valorPagar.toLocaleString("es-CO")}
     </div>
@@ -1271,7 +1968,6 @@ function abrirModalAuditoria(id) {
     <h4 style="margin-top: 15px; color: #040B5D;">Evidencias de Novedades</h4>
     ${novHtml}
   `;
-
   document.getElementById("modalAuditoriaConta").classList.remove("hidden");
 }
 
@@ -1297,7 +1993,7 @@ function cerrarModalAuditoria() {
 }
 
 // ==========================================
-// RENDERIZADO DE TAREAS PENDIENTES
+// RENDERIZADO DE TAREAS PENDIENTES (OPERARIO)
 // ==========================================
 function renderTasks() {
   const usuarioActivo = JSON.parse(localStorage.getItem("usuario_activo"));
@@ -1310,22 +2006,31 @@ function renderTasks() {
   if (!containerPendientes) return;
   containerPendientes.innerHTML = "";
 
-  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
-  let countP = 0;
+  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
+  const esAdmin = normalizarTexto(usuarioActivo?.role) === "admin";
+  const nombreUsuario = normalizarTexto(usuarioActivo?.name);
 
+  let countP = 0;
   savedTasks.forEach((task) => {
-    if (task.estado === "pendiente") {
+    const estado = task.estado || "pendiente";
+    const asignadaAlUsuario = !task.operador || normalizarTexto(task.operador) === nombreUsuario || esAdmin;
+    if (!asignadaAlUsuario) return;
+
+    if (estado === "pendiente" || estado === "en_proceso") {
       countP++;
       const card = document.createElement("div");
       card.className = "task-card";
       card.innerHTML = `
         <div class="task-header">
-          <span class="task-code">Tarea #${task.id}</span>
-          <small style="color: #64748b;">Pendiente</small>
+          <span class="task-code">${task.id} ${task.titulo ? "· " + task.titulo : ""}</span>
+          <small style="color: #64748b;">${estado === "en_proceso" ? "En proceso" : "Pendiente"}</small>
         </div>
         <p class="task-client"><strong>Cliente:</strong> ${task.cliente}</p>
         <p class="task-client"><strong>Ubicación:</strong> ${task.direccion || task.ubicacion || "N/A"}</p>
-        <button type="button" class="btn-primary" onclick="openTask('${task.id}')" style="margin-top: 10px;">Iniciar Servicio</button>
+        <p class="task-client"><strong>Equipo:</strong> ${task.maquinaria || "N/A"}</p>
+        <button type="button" class="btn-primary" onclick="openTask('${task.id}')" style="margin-top: 10px;">
+          ${estado === "en_proceso" ? "Continuar Servicio" : "Iniciar Servicio"}
+        </button>
       `;
       containerPendientes.appendChild(card);
     }
@@ -1333,7 +2038,6 @@ function renderTasks() {
 
   const countPendElem = document.getElementById("countPendientes");
   if (countPendElem) countPendElem.innerText = countP;
-
   filterFinalized();
 }
 
@@ -1343,16 +2047,13 @@ function renderTasks() {
 function renderPanelRedesParaDanilo() {
   const containerFinalizadas = document.getElementById("listFinalizadas");
   if (!containerFinalizadas) return;
-
   const pdfBox = document.getElementById("pdfButtonContainer");
   if (pdfBox) pdfBox.classList.add("hidden");
   const searchBox = document.querySelector("#secFinalizadas .search-box");
   if (searchBox) searchBox.classList.add("hidden");
-
   containerFinalizadas.innerHTML = "";
 
-  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
-
+  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const headerNotice = document.createElement("div");
   headerNotice.style.cssText = "background: #e0f2fe; color: #0369a1; padding: 12px; border-radius: 6px; margin-bottom: 12px; font-weight: bold; border: 1px solid #bae6fd; font-size: 0.85rem;";
   headerNotice.innerHTML = `📥 Descargar fotos redes`;
@@ -1394,14 +2095,13 @@ function renderPanelRedesParaDanilo() {
   tareasFiltradas.forEach((task) => {
     const cantFotosTotal = task.diasDetalle.reduce((acc, d) => acc + (d.fotosLista ? d.fotosLista.length : 0), 0);
     const isFinalizada = task.estado === "finalizada";
-
     const card = document.createElement("div");
     card.className = "task-card";
     card.style.cssText = `background: white; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid ${tabRedesActiva === "pendientes" ? "#BF956E" : "#cbd5e1"};`;
     card.innerHTML = `
       <div class="task-header">
         <span class="task-code" style="color: ${isFinalizada ? "#27ae60" : "#040B5D"}; font-weight: bold;">
-          Tarea #${task.id} (${isFinalizada ? "Finalizada" : "En Progreso / Activa"})
+          Tarea ${task.id} (${isFinalizada ? "Finalizada" : "En Progreso / Activa"})
         </span>
         <small style="color: #64748b;">${new Date(task.fechaActualizacion || task.fechaCreacion || Date.now()).toLocaleDateString()}</small>
       </div>
@@ -1425,14 +2125,12 @@ function cambiarTabRedes(tab) {
 }
 
 async function descargarEvidenciasTarea(taskId) {
-  let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
+  let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const task = savedTasks.find((t) => String(t.id) === String(taskId));
-
   if (!task || !task.diasDetalle || task.diasDetalle.length === 0) {
     alert("No hay evidencias fotográficas registradas para esta tarea.");
     return;
   }
-
   if (typeof JSZip === "undefined") {
     alert("La librería JSZip no está cargada en la aplicación.");
     return;
@@ -1452,7 +2150,7 @@ async function descargarEvidenciasTarea(taskId) {
   renderPanelRedesParaDanilo();
 
   const zip = new JSZip();
-  const folderName = `Tarea_${task.id}_${task.cliente.replace(/[^a-zA-Z0-9]/g, "_")}`;
+  const folderName = `Tarea_${String(task.id).replace(/[^a-zA-Z0-9]/g, "_")}_${String(task.cliente || "").replace(/[^a-zA-Z0-9]/g, "_")}`;
   const taskFolder = zip.folder(folderName);
   let fotosAgregadas = 0;
 
@@ -1509,16 +2207,14 @@ function filterFinalized() {
 
   const textQuery = document.getElementById("searchInput") ? document.getElementById("searchInput").value.toLowerCase().trim() : "";
   const dateQuery = document.getElementById("searchDate") ? document.getElementById("searchDate").value : "";
-
   const containerFinalizadas = document.getElementById("listFinalizadas");
   if (!containerFinalizadas) return;
   containerFinalizadas.innerHTML = "";
 
-  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
+  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
-
   let matchCount = 0;
   let totalFinalizedCount = 0;
 
@@ -1527,12 +2223,10 @@ function filterFinalized() {
       const taskDateObj = new Date(task.fechaFinalizacion || task.fechaCreacion || Date.now());
       const taskDateStr = taskDateObj.toISOString().split("T")[0];
       const matchesCurrentMonthYear = (taskDateObj.getMonth() === currentMonth && taskDateObj.getFullYear() === currentYear);
-
       if (matchesCurrentMonthYear || dateQuery) {
         totalFinalizedCount++;
-        const matchesText = task.id.toLowerCase().includes(textQuery) || task.cliente.toLowerCase().includes(textQuery);
+        const matchesText = String(task.id).toLowerCase().includes(textQuery) || String(task.cliente || "").toLowerCase().includes(textQuery);
         const matchesDate = !dateQuery || taskDateStr === dateQuery;
-
         if (matchesText && matchesDate) {
           matchCount++;
           const card = document.createElement("div");
@@ -1540,7 +2234,7 @@ function filterFinalized() {
           card.style.borderColor = "#27ae60";
           card.innerHTML = `
             <div class="task-header">
-              <span class="task-code" style="color: #27ae60;">Tarea #${task.id} (Finalizada)</span>
+              <span class="task-code" style="color: #27ae60;">${task.id} (Finalizada)</span>
               <small style="color: #27ae60;">${taskDateObj.toLocaleDateString()}</small>
             </div>
             <p class="task-client"><strong>Cliente:</strong> ${task.cliente}</p>
@@ -1569,6 +2263,21 @@ function filterFinalized() {
 // CONTROL DEL WIZARD DE TAREAS (OPERARIOS / ADMIN)
 // ==========================================
 function openTask(id) {
+  let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
+  const task = savedTasks.find((t) => String(t.id) === String(id));
+  if (!task) return;
+
+  if (task.estado === "cancelada") {
+    alert("Tarea cancelada. No es posible iniciar ni registrar información en esta tarea.");
+    renderTasks();
+    return;
+  }
+
+  savedTasks = savedTasks.map((t) => String(t.id) === String(id) && (t.estado || "pendiente") === "pendiente"
+    ? { ...t, estado: "en_proceso", fechaInicioEjecucion: new Date().toISOString() }
+    : t);
+  localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
+
   currentActiveTaskId = id;
   document.getElementById("mainNavTabs").classList.add("hidden");
   document.getElementById("secPendientes").classList.add("hidden");
@@ -1576,24 +2285,20 @@ function openTask(id) {
 
   const secWizard = document.getElementById("secWizard");
   secWizard.classList.remove("hidden");
-  document.getElementById("wizardTitle").innerText = `Servicio #${id} Operación`;
-
+  document.getElementById("wizardTitle").innerText = `${id} · Operación`;
   document.getElementById("daysContainer").innerHTML = "";
+
   const daysListContainer = document.getElementById("daysListContainer");
   if (daysListContainer) daysListContainer.innerHTML = "";
   totalDaysCreated = 0;
 
-  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
-  const task = savedTasks.find((t) => String(t.id) === String(id));
-
-  if (task && task.diasDetalle && task.diasDetalle.length > 0) {
+  if (task.diasDetalle && task.diasDetalle.length > 0) {
     currentDaysData = [...task.diasDetalle];
     totalDaysCreated = currentDaysData.length;
     renderDaysAccordion();
   } else {
     currentDaysData = [];
   }
-
   addNewDay();
 }
 
@@ -1612,11 +2317,25 @@ function closeWizard() {
 function addNewDay() {
   totalDaysCreated++;
   fotosDiaTemporal = [];
+  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
+  const currentTask = savedTasks.find((t) => String(t.id) === String(currentActiveTaskId)) || {};
+
+  const opsOptions = getDBOperadores().map((o) => {
+    const sel = currentTask.operador && normalizarTexto(currentTask.operador) === normalizarTexto(o) ? "selected" : "";
+    return `<option value="${o}" ${sel}>${o}</option>`;
+  }).join("");
+
+  const apsOptions = getDBAparejadores().map((a) => `<option value="${a}">${a}</option>`).join("");
+
+  const vehsOptions = getDBVehiculos().map((v) => {
+    const sel = currentTask.maquinaria && normalizarTexto(currentTask.maquinaria) === normalizarTexto(v.etiqueta) ? "selected" : "";
+    return `<option value="${v.etiqueta}" ${sel}>${v.etiqueta}</option>`;
+  }).join("");
+
   const container = document.getElementById("daysContainer");
   const dayCard = document.createElement("div");
   dayCard.className = "day-card";
   dayCard.id = `dayCard-${totalDaysCreated}`;
-
   dayCard.innerHTML = `
     <div class="day-card-header">
       <span class="day-card-title">Día #${totalDaysCreated} (En curso)</span>
@@ -1624,20 +2343,18 @@ function addNewDay() {
     </div>
     <div class="form-group">
       <label>Dirección de Trabajo *</label>
-      <input type="text" id="dir-day-${totalDaysCreated}" placeholder="Ej: Vía Cerritos Km 4">
+      <input type="text" id="dir-day-${totalDaysCreated}" value="${currentTask.direccion || ""}" placeholder="Ej: Vía Cerritos Km 4">
     </div>
     <div class="form-group">
       <label>Descripción Corta de la Labor Realizada *</label>
-      <input type="text" id="desc-day-${totalDaysCreated}" placeholder="Ej: Izaje de estructura metálica">
+      <input type="text" id="desc-day-${totalDaysCreated}" value="${currentTask.titulo || ""}" placeholder="Ej: Izaje de estructura metálica">
     </div>
     <div class="form-row">
       <div class="form-group">
         <label>Vehículo / Grúa *</label>
         <select id="grua-day-${totalDaysCreated}" class="form-control">
           <option value="">-- Seleccione Grúa --</option>
-          <option value="Grúa 01 - Kenworth">Grúa 01 - Kenworth</option>
-          <option value="Grúa 02 - Mack">Grúa 02 - Mack</option>
-          <option value="Grúa 03 - Liebherr">Grúa 03 - Liebherr</option>
+          ${vehsOptions}
         </select>
       </div>
     </div>
@@ -1646,19 +2363,14 @@ function addNewDay() {
         <label>Operador *</label>
         <select id="op-day-${totalDaysCreated}" class="form-control">
           <option value="">-- Operador --</option>
-          <option value="Brandon Tapasco">Brandon Tapasco</option>
-          <option value="Cristian Rodas">Cristian Rodas</option>
-          <option value="Giovanni Ocampo">Giovanni Ocampo</option>
-          <option value="Carlos Operario">Carlos Operario</option>
-          <option value="Mario Restrepo">Mario Restrepo</option>
+          ${opsOptions}
         </select>
       </div>
       <div class="form-group">
         <label>Aparejador *</label>
         <select id="ap-day-${totalDaysCreated}" class="form-control">
           <option value="">-- Aparejador --</option>
-          <option value="Juan Pérez">Juan Pérez</option>
-          <option value="Andrés Gómez">Andrés Gómez</option>
+          ${apsOptions}
         </select>
       </div>
     </div>
@@ -1712,7 +2424,6 @@ function addNewDay() {
       <label>Observaciones / Novedades en Sitio (Rayones, Varadas, etc.)</label>
       <textarea id="obs-day-${totalDaysCreated}" rows="2" placeholder="Describa cualquier novedad ocurrida..."></textarea>
     </div>
-
     <div class="form-group" style="background: #f0fdf4; padding: 14px; border-radius: 8px; border: 2px dashed #27ae60; margin-bottom: 15px;">
       <label style="color: #27ae60; font-weight: bold; display: block; margin-bottom: 6px;">
         📸 Evidencias Fotográficas del Día * (Puede tomar varias)
@@ -1724,39 +2435,32 @@ function addNewDay() {
       </button>
       <div id="galeria-fotos-${totalDaysCreated}" style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;"></div>
     </div>
-
     <button type="button" id="btnSaveDay-${totalDaysCreated}" class="btn-save-day" onclick="saveDayRecord(${totalDaysCreated})" style="background-color: #040B5D; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 5px;">
       Guardar Día #${totalDaysCreated}
     </button>
   `;
-
   container.appendChild(dayCard);
 }
 
 function procesarFotoMulti(event, dayNum) {
   const file = event.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = function (e) {
     const img = new Image();
     img.onload = function () {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
-
       canvas.width = img.width;
       const footerHeight = 125;
       canvas.height = img.height + footerHeight;
-
       ctx.drawImage(img, 0, 0);
-
       ctx.fillStyle = "#040B5D";
       ctx.fillRect(0, img.height, canvas.width, footerHeight);
-
       ctx.fillStyle = "#BF956E";
       ctx.fillRect(0, img.height, canvas.width, 6);
 
-      const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
+      const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
       const currentTask = savedTasks.find((t) => String(t.id) === String(currentActiveTaskId)) || {};
       const clienteNombre = currentTask.cliente || "CLIENTE GENERAL";
       const numTarea = currentActiveTaskId || "S/N";
@@ -1769,20 +2473,18 @@ function procesarFotoMulti(event, dayNum) {
       const ahora = new Date();
       const fechaActual = ahora.toLocaleDateString();
       const horaActual = ahora.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
       const colIzquierdaX = Math.max(15, Math.floor(canvas.width * 0.025));
       const colDerechaX = Math.floor(canvas.width * 0.52);
       const fontSize = Math.max(12, Math.floor(canvas.width * 0.021));
 
       ctx.fillStyle = "#FFFFFF";
       ctx.font = `bold ${fontSize + 2}px sans-serif`;
-      ctx.fillText(`AYAX | TAREA #${numTarea}`, colIzquierdaX, img.height + 32);
+      ctx.fillText(`AYAX | ${numTarea}`, colIzquierdaX, img.height + 32);
       ctx.fillText(`Vehículo: ${grua}`, colDerechaX, img.height + 32);
 
       ctx.font = `${fontSize}px sans-serif`;
       ctx.fillText(`Cliente: ${clienteNombre}`, colIzquierdaX, img.height + 64);
       ctx.fillText(`Fecha: ${fechaActual}`, colDerechaX, img.height + 64);
-
       ctx.fillText(`Ciudad: ${ciudadTexto}`, colIzquierdaX, img.height + 96);
       ctx.fillText(`Hora: ${horaActual}`, colDerechaX, img.height + 96);
 
@@ -1792,7 +2494,6 @@ function procesarFotoMulti(event, dayNum) {
         enviadoRedes: false,
         fechaCaptura: ahora.toISOString()
       });
-
       renderGaleriaMiniaturas(dayNum);
       event.target.value = "";
     };
@@ -1805,7 +2506,6 @@ function renderGaleriaMiniaturas(dayNum) {
   const galeria = document.getElementById(`galeria-fotos-${dayNum}`);
   if (!galeria) return;
   galeria.innerHTML = "";
-
   fotosDiaTemporal.forEach((fotoObj, index) => {
     const fotoSrc = typeof fotoObj === "string" ? fotoObj : fotoObj.data;
     const contenedorMini = document.createElement("div");
@@ -1819,21 +2519,7 @@ function renderGaleriaMiniaturas(dayNum) {
 }
 
 function verFotoGrande(base64Url) {
-  let modal = document.getElementById("modalVistaPreviaFoto");
-  if (!modal) {
-    modal = document.createElement("div");
-    modal.id = "modalVistaPreviaFoto";
-    modal.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; padding: 15px;";
-    document.body.appendChild(modal);
-  }
-  modal.innerHTML = `
-    <div style="position: relative; max-width: 95%; max-height: 85%; text-align: center;">
-      <img src="${base64Url}" style="max-width: 100%; max-height: 80vh; border-radius: 8px; border: 2px solid #BF956E; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
-      <br>
-      <button type="button" onclick="document.getElementById('modalVistaPreviaFoto').style.display='none'" style="margin-top: 15px; background: #dc2626; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem;">Cerrar Vista Previa</button>
-    </div>
-  `;
-  modal.style.display = "flex";
+  abrirVisorFoto("Vista Previa de Evidencia", base64Url);
 }
 
 function eliminarFotoTemporal(dayNum, index) {
@@ -1874,6 +2560,14 @@ function calculateHours(dayNum) {
 }
 
 function saveDayRecord(dayNum) {
+  const savedTasksCheck = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
+  const tareaActual = savedTasksCheck.find((t) => String(t.id) === String(currentActiveTaskId));
+  if (tareaActual && tareaActual.estado === "cancelada") {
+    alert("Tarea cancelada. No se puede guardar información en esta tarea.");
+    closeWizard();
+    return;
+  }
+
   const dir = document.getElementById(`dir-day-${dayNum}`).value;
   const desc = document.getElementById(`desc-day-${dayNum}`).value;
   const grua = document.getElementById(`grua-day-${dayNum}`).value;
@@ -1893,7 +2587,6 @@ function saveDayRecord(dayNum) {
     alert("Por favor complete todos los campos obligatorios (*)");
     return;
   }
-
   if (fotosDiaTemporal.length === 0) {
     alert("⚠️ ¡Atención! Debe tomar o adjuntar al menos una foto de evidencia para este día.");
     return;
@@ -1904,6 +2597,7 @@ function saveDayRecord(dayNum) {
 
   const dayData = {
     dayNum,
+    fechaRegistro: obtenerFechaLocalYYYYMMDD(),
     direccion: dir,
     labor: desc,
     grua,
@@ -1932,13 +2626,13 @@ function saveDayRecord(dayNum) {
 }
 
 function sincronizarAvanceEnSegundoPlano() {
-  let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
+  let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const totalHoursSum = currentDaysData.reduce((acc, day) => acc + (day.horasTrabajadas || 0), 0);
-
   savedTasks = savedTasks.map((t) => {
     if (String(t.id) === String(currentActiveTaskId)) {
       return {
         ...t,
+        estado: t.estado === "cancelada" ? "cancelada" : "en_proceso",
         totalDias: currentDaysData.length,
         totalHoras: totalHoursSum.toFixed(1),
         diasDetalle: currentDaysData,
@@ -1947,7 +2641,6 @@ function sincronizarAvanceEnSegundoPlano() {
     }
     return t;
   });
-
   localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
 }
 
@@ -1955,16 +2648,13 @@ function renderDaysAccordion() {
   const container = document.getElementById("daysListContainer");
   if (!container) return;
   container.innerHTML = "";
-
   currentDaysData.forEach((day) => {
     const details = document.createElement("details");
     details.className = "day-accordion";
     details.style.cssText = "background: #f8f9fa; border: 1px solid #DDC9B8; border-radius: 8px; margin-bottom: 10px; overflow: hidden;";
-
     const summary = document.createElement("summary");
     summary.style.cssText = "background: #ffffff; padding: 12px 16px; font-weight: 600; color: #040B5D; cursor: pointer; display: flex; justify-content: space-between; align-items: center;";
     summary.innerHTML = `<span>Día #${day.dayNum} - ${day.grua} (${day.horasTrabajadas} hrs)</span> <span style="font-size: 12px; color: #BF956E;">Ver detalle ▾</span>`;
-
     const content = document.createElement("div");
     content.style.cssText = "padding: 15px; background: #ffffff; border-top: 1px solid #DDC9B8; font-size: 0.85rem; color: #333;";
     content.innerHTML = `
@@ -1974,7 +2664,6 @@ function renderDaysAccordion() {
       <p><strong>Horario:</strong> ${day.horaInicio} - ${day.horaFin} (${day.horasTrabajadas} Horas)</p>
       <p style="color: #27ae60; font-weight: bold; margin-top: 5px;">📷 ${day.fotosLista ? day.fotosLista.length : 0} Evidencia(s) Fotográfica(s) Registrada(s)</p>
     `;
-
     details.appendChild(summary);
     details.appendChild(content);
     container.appendChild(details);
@@ -1989,13 +2678,11 @@ async function goToSignSection() {
     alert("Por favor guarde al menos un día de trabajo antes de continuar a firmas.");
     return;
   }
-
   const totalFotosTotal = currentDaysData.reduce((acc, day) => acc + (day.fotosLista ? day.fotosLista.length : 0), 0);
   const badgeFotos = document.getElementById("cantFotosAcumuladas");
   if (badgeFotos) {
     badgeFotos.textContent = totalFotosTotal;
   }
-
   document.getElementById("secWizard").classList.add("hidden");
   document.getElementById("secSignatures").classList.remove("hidden");
   initSignCanvas("canvasOperador");
@@ -2012,7 +2699,6 @@ function initSignCanvas(canvasId) {
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   let painting = false;
-
   function startPosition(e) {
     painting = true;
     draw(e);
@@ -2034,7 +2720,6 @@ function initSignCanvas(canvasId) {
     ctx.beginPath();
     ctx.moveTo(x, y);
   }
-
   canvas.onmousedown = startPosition;
   canvas.onmouseup = endPosition;
   canvas.onmousemove = draw;
@@ -2051,10 +2736,8 @@ function clearCanvas(canvasId) {
 }
 
 function finalizeTask() {
-  let totalHoursSum = currentDaysData.reduce((acc, day) => acc + (day.horasTrabajadas || 0), 0);
-  if (totalHoursSum === 0) totalHoursSum = 16.5;
-
-  let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
+  const totalHoursSum = currentDaysData.reduce((acc, day) => acc + (day.horasTrabajadas || 0), 0);
+  let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   savedTasks = savedTasks.map((t) => {
     if (String(t.id) === String(currentActiveTaskId)) {
       return {
@@ -2069,9 +2752,8 @@ function finalizeTask() {
     }
     return t;
   });
-
   localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
-  alert("¡Tarea finalizada con éxito! Todas las evidencias fotográficas selladas han quedado disponibles en el panel de Redes.");
+  alert(`¡Tarea ${currentActiveTaskId} finalizada con éxito! Quedó disponible en Tareas Finalizadas y en el panel de Redes.`);
   showReportView(currentActiveTaskId);
 }
 
@@ -2080,10 +2762,8 @@ function showReportView(id) {
   const secReporte = document.getElementById("secReporte");
   secReporte.classList.remove("hidden");
   document.getElementById("repTaskId").innerText = id;
-
-  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
+  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const task = savedTasks.find((t) => String(t.id) === String(id));
-
   let htmlDetails = "";
   if (task) {
     htmlDetails = `
@@ -2101,19 +2781,16 @@ function showReportView(id) {
 function descargarReportePDF() {
   const startDate = document.getElementById("pdfStartDate").value;
   const endDate = document.getElementById("pdfEndDate").value;
-
   if (!startDate || !endDate) {
     alert("Por favor seleccione una fecha de inicio y una fecha final para el reporte.");
     return;
   }
-
-  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || defaultMockTasks;
+  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const filteredTasks = savedTasks.filter((t) => {
     if (t.estado !== "finalizada") return false;
     const taskDateStr = new Date(t.fechaFinalizacion || t.fechaCierre || t.fechaCreacion || Date.now()).toISOString().split("T")[0];
     return taskDateStr >= startDate && taskDateStr <= endDate;
   });
-
   if (filteredTasks.length === 0) {
     alert(`No hay tareas finalizadas en el rango del ${startDate} al ${endDate}.`);
     return;
@@ -2142,21 +2819,18 @@ function descargarReportePDF() {
   `;
 
   let totalGeneralHoras = 0;
-
   filteredTasks.forEach((task) => {
     const fecha = new Date(task.fechaFinalizacion || task.fechaCierre || task.fechaCreacion || Date.now()).toLocaleDateString();
     totalGeneralHoras += parseFloat(task.totalHoras || 0);
-
     htmlContent += `
       <div class="task-box">
         <div class="header-info">
-          <span>Servicio #${task.id} - Cliente: ${task.cliente}</span>
+          <span>Servicio ${task.id} - Cliente: ${task.cliente}</span>
           <span>Fecha: ${fecha}</span>
         </div>
         <p><strong>Dirección:</strong> ${task.direccion || "N/A"}</p>
         <p><strong>Total Días:</strong> ${task.totalDias || 1}</p>
     `;
-
     if (task.diasDetalle && task.diasDetalle.length > 0) {
       task.diasDetalle.forEach((d) => {
         htmlContent += `
@@ -2168,7 +2842,6 @@ function descargarReportePDF() {
         `;
       });
     }
-
     htmlContent += `
         <p style="text-align: right; font-weight: bold; color: #040B5D; margin-top: 8px;">Total Tarea: ${task.totalHoras || 0} Horas</p>
       </div>
@@ -2183,7 +2856,6 @@ function descargarReportePDF() {
     </body>
     </html>
   `;
-
   printWindow.document.write(htmlContent);
   printWindow.document.close();
 }
@@ -2192,13 +2864,12 @@ function descargarReportePDF() {
 // PURGA DE TAREAS ANTIGUAS
 // ==========================================
 function purgeSyncedTasks() {
-  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db")) || [];
+  const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const retentionDays = 7;
   const now = new Date();
-
   const cleanedTasks = savedTasks.filter((task) => {
     if (task.estado === "sincronizada") return false;
-    if (task.estado === "pendiente") return true;
+    if (task.estado === "pendiente" || task.estado === "en_proceso" || task.estado === "cancelada") return true;
     if (task.estado === "finalizada") {
       const finishDate = new Date(task.fechaFinalizacion || task.fechaCierre || Date.now());
       const diffTime = Math.abs(now - finishDate);
@@ -2209,3 +2880,4 @@ function purgeSyncedTasks() {
   });
   localStorage.setItem("ayax_tasks_db", JSON.stringify(cleanedTasks));
 }
+
