@@ -35,7 +35,7 @@
             <form id="loginForm">
                 <div class="form-group">
                     <label for="loginPhone">Número de Teléfono</label>
-                    <input type="tel" id="loginPhone" placeholder="Ej: 3204618830" required>
+                    <input type="tel" id="loginPhone" placeholder="Ej: 3217293985" required>
                 </div>
                 <div class="form-group">
                     <label for="loginPin">PIN de Acceso (4 dígitos)</label>
@@ -67,6 +67,12 @@
 
         <!-- NAVEGACIÓN PRINCIPAL -->
         <nav class="nav-tabs" id="mainNavTabs">
+            <button type="button" id="btnTabProyectos" class="tab-btn hidden" onclick="switchTab('proyectos')">
+                📌 Proyectos
+            </button>
+            <button type="button" id="btnTabAdmin" class="tab-btn hidden" onclick="switchTab('admin')">
+                ⚙️ Admin
+            </button>
             <button type="button" id="btnTabPendientes" class="tab-btn active" onclick="switchTab('pendientes')">
                 Pendientes (<span id="countPendientes">0</span>)
             </button>
@@ -87,6 +93,92 @@
             </button>
         </nav>
 
+        <!-- VISTA ROL PROYECTOS -->
+        <section id="secProyectos" class="tab-content hidden">
+            <div id="grid-proyectos-menu" class="grid-menu">
+                <button type="button" class="grid-card" onclick="abrirFormularioCrearTarea()">
+                    <div class="grid-icon">➕</div>
+                    <span>Crear tarea</span>
+                </button>
+                <button type="button" class="grid-card" onclick="verSubVistaProyectos('pendientes')">
+                    <div class="grid-icon">📋</div>
+                    <span>Tareas pendientes</span>
+                </button>
+                <button type="button" class="grid-card" onclick="verSubVistaProyectos('proceso')">
+                    <div class="grid-icon">🚜</div>
+                    <span>Tareas en proceso</span>
+                </button>
+                <button type="button" class="grid-card" onclick="verSubVistaProyectos('finalizadas')">
+                    <div class="grid-icon">✅</div>
+                    <span>Tareas finalizadas</span>
+                </button>
+                <button type="button" class="grid-card" onclick="verSubVistaProyectos('canceladas')">
+                    <div class="grid-icon">🚫</div>
+                    <span>Tareas canceladas</span>
+                </button>
+                <button type="button" class="grid-card" onclick="verSubVistaProyectos('informes')">
+                    <div class="grid-icon">📊</div>
+                    <span>Informes</span>
+                </button>
+            </div>
+            <div id="subvista-proyectos-container" class="card hidden" style="margin-top: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px;">
+                    <h2 id="subvista-proyectos-titulo" style="margin: 0; font-size: 1.05rem;">Proyectos</h2>
+                    <button type="button" class="btn-back" onclick="volverMenuProyectos()">Volver</button>
+                </div>
+                <div id="subvista-proyectos-body"></div>
+            </div>
+        </section>
+
+        <!-- VISTA ROL ADMINISTRADOR -->
+        <section id="secAdmin" class="tab-content hidden">
+            <div id="grid-admin-menu" class="grid-menu">
+                <button type="button" class="grid-card" onclick="verSubVistaAdmin('usuarios')">
+                    <div class="grid-icon">👥</div>
+                    <span>Usuarios</span>
+                </button>
+                <button type="button" class="grid-card" onclick="verSubVistaAdmin('catalogos')">
+                    <div class="grid-icon">🚛</div>
+                    <span>Personal y Equipos</span>
+                </button>
+                <button type="button" class="grid-card" onclick="verSubVistaAdmin('informes')">
+                    <div class="grid-icon">📈</div>
+                    <span>Informes por Rol</span>
+                </button>
+                <button type="button" class="grid-card" onclick="verSubVistaAdmin('backup')">
+                    <div class="grid-icon">💾</div>
+                    <span>Copia de Seguridad</span>
+                </button>
+                <button type="button" class="grid-card" onclick="switchTab('proyectos')">
+                    <div class="grid-icon">📌</div>
+                    <span>Rol Proyectos</span>
+                </button>
+                <button type="button" class="grid-card" onclick="switchTab('pendientes')">
+                    <div class="grid-icon">👷</div>
+                    <span>Rol Operario</span>
+                </button>
+                <button type="button" class="grid-card" onclick="switchTab('horas')">
+                    <div class="grid-icon">⏱️</div>
+                    <span>Rol Operario Horas</span>
+                </button>
+                <button type="button" class="grid-card" onclick="switchTab('contabilidad')">
+                    <div class="grid-icon">📊</div>
+                    <span>Rol Contabilidad</span>
+                </button>
+                <button type="button" class="grid-card" onclick="switchTab('finalizadas'); renderPanelRedesParaDanilo();">
+                    <div class="grid-icon">📦</div>
+                    <span>Rol Redes</span>
+                </button>
+            </div>
+            <div id="subvista-admin-container" class="card hidden" style="margin-top: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px;">
+                    <h2 id="subvista-admin-titulo" style="margin: 0; font-size: 1.05rem;">Administración</h2>
+                    <button type="button" class="btn-back" onclick="volverMenuAdmin()">Volver</button>
+                </div>
+                <div id="subvista-admin-body"></div>
+            </div>
+        </section>
+
         <!-- VISTA 1: PENDIENTES DE SERVICIOS -->
         <section id="secPendientes" class="tab-content active">
             <div class="cards-list" id="listPendientes"></div>
@@ -94,7 +186,6 @@
 
         <!-- VISTA MÓVIL: REGISTRO DE JORNADA (OPERADOR) -->
         <section id="secHoras" class="tab-content hidden">
-            <!-- 1. APERTURA DE JORNADA COLAPSABLE -->
             <details id="acordeon-apertura-jornada" class="card" open>
                 <summary style="cursor: pointer; font-weight: 700; font-size: 1.02rem; color: #040B5D; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                     <span id="titulo-acordeon-dia">1. Abrir Jornada de Trabajo</span>
@@ -130,13 +221,11 @@
                 </form>
             </details>
 
-            <!-- JORNADAS EN CURSO -->
             <div class="card">
                 <h2>Jornadas en Curso (Pendientes de Cierre)</h2>
                 <div id="lista-jornadas-abiertas" class="stack"></div>
             </div>
 
-            <!-- PANEL DE CIERRE DE DÍA -->
             <div id="panel-cierre-jornada" class="card hidden">
                 <h2 style="color: #c2410c;">Completar y Cerrar Jornada</h2>
                 <p id="cierre-resumen-txt" class="muted" style="margin-bottom: 12px;"></p>
@@ -151,11 +240,11 @@
                     </div>
                     <div class="form-group">
                         <label for="jornada-almuerzo-min">Tiempo tomado para almuerzo / descanso (minutos) *</label>
-                        <input type="number" id="jornada-almuerzo-min" min="0" max="360" value="60" placeholder="Ej. 30, 60, 90" required>
+                        <input type="number" id="jornada-almuerzo-min" min="0" max="360" value="0" placeholder="Ej. 0, 60, 90" required>
                     </div>
                     <div class="form-group">
-                        <label for="jornada-observaciones">Observaciones / Novedades (opcional)</label>
-                        <textarea id="jornada-observaciones" rows="2" placeholder="Describa imprevistos, varadas, demoras, etc..."></textarea>
+                        <label for="jornada-observaciones">Observaciones / Novedades / Extensión de Jornada</label>
+                        <textarea id="jornada-observaciones" rows="2" placeholder="Describa imprevistos, varadas, demoras o motivo de extensión..."></textarea>
                     </div>
                     <div class="form-group">
                         <label>Evidencia Fotográfica de Novedades (Opcional, Múltiple)</label>
