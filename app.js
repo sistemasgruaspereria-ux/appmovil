@@ -2,7 +2,6 @@
 // CONFIGURACIÓN, ROLES Y LEGISLACIÓN COLOMBIA 2026
 // ==========================================
 const DIVISOR_MENSUAL = 210; // Divisor legal Colombia 2026 (42 horas semanales)
-
 const FESTIVOS_COLOMBIA = new Set([
   "2026-01-01", "2026-01-12", "2026-03-23", "2026-04-02", "2026-04-03",
   "2026-05-01", "2026-05-18", "2026-06-08", "2026-06-15", "2026-06-29",
@@ -46,7 +45,7 @@ let defaultUsers = [
   { phone: "3102276487", pin: "7926", name: "Yeison Alberson Morales Uribe", role: "operario", salary: 1750905 }
 ];
 
-// Listados desplegables de Operadores y Aparejadores (mixtos aparecen en ambos)
+// Listados desplegables de Operadores y Aparejadores
 let defaultOperadores = [
   "Cristian Camilo Rodas Grajales", "Daniel Antonio Rodas Jaramillo", "Diógenes Marín Franco",
   "Duban Alberto Rodriguez Castañeda", "Edixon Giovanni Alvarado Villada", "Giovanni Antonio Ocampo Cano",
@@ -67,7 +66,7 @@ let defaultAparejadores = [
   "Juan José Arango Gallego", "Luis Fernando Tangarife Moncada"
 ];
 
-// Vehículos / Equipos (etiqueta visible en desplegables + características completas)
+// Vehículos / Equipos
 let defaultVehiculos = [
   { categoria: "Grúa", etiqueta: "#29 TADANO 70 TON", modelo: "TADANO/TADANO 70 TON", combustible: "Eléctrico" },
   { categoria: "Alquiladas", etiqueta: "ALQUILADAS #45", modelo: "Foton/4612 Aumark", combustible: "Gasolina" },
@@ -115,8 +114,6 @@ let defaultVehiculos = [
   { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN #9", modelo: "Foton/Tractocamión AUMAN EST 6x4", combustible: "Diésel" }
 ];
 
-let defaultMockTasks = [];
-
 // Variables globales de estado
 let totalDaysCreated = 0;
 let currentActiveTaskId = null;
@@ -126,7 +123,7 @@ let fotoInicioStamped = "";
 let fotoFinStamped = "";
 let fotosNovedadesStamped = [];
 let ultimoReporteFilasConta = [];
-let ultimoReporteTotalesConta = { horas: 0, valor: 0 };
+let ultimoReporteTotalesConta = { horasExtras: 0, horasRecargos: 0, totalHoras: 0, valor: 0 };
 let ultimaJornadaAbiertaId = null;
 let tabRedesActiva = "pendientes";
 
@@ -245,6 +242,15 @@ function loginUser(phone, pin) {
 function logoutUser() {
   localStorage.removeItem("usuario_activo");
   localStorage.removeItem("token_sesion");
+  totalDaysCreated = 0;
+  currentActiveTaskId = null;
+  currentDaysData = [];
+  fotosDiaTemporal = [];
+  fotoInicioStamped = "";
+  fotoFinStamped = "";
+  fotosNovedadesStamped = [];
+  ultimaJornadaAbiertaId = null;
+
   const loginPhone = document.getElementById("loginPhone");
   const loginPin = document.getElementById("loginPin");
   const dropdown = document.getElementById("userDropdownMenu");
@@ -280,14 +286,11 @@ function configurarVistaPorRol(usuario) {
   const esConta = rol === "contabilidad";
   const esAdmin = rol === "admin" || rol === "administrador";
 
-  // Oculta o muestra la barra de pestañas según el rol:
-  // En 'proyectos' solo se muestran los 6 botones de su cuadrícula, sin pestañas superiores.
   const navTabs = document.getElementById("mainNavTabs");
   if (navTabs) {
     navTabs.classList.toggle("hidden", esProyectos);
     navTabs.style.display = esProyectos ? "none" : "";
   }
-
   setVisibilidadTab("proyectos", esProyectos || esAdmin);
   setVisibilidadTab("admin", esAdmin);
   setVisibilidadTab("horas", esHoras || esAdmin);
@@ -320,7 +323,6 @@ function configurarVistaPorRol(usuario) {
   }
   switchTab("pendientes");
 }
-
 
 // ==========================================
 // INICIALIZACIÓN DE LA APLICACIÓN
@@ -411,7 +413,6 @@ function switchTab(tab) {
   if (tabsSoloHoras.includes(tab) && !esUsuarioOperarioHoras(usuarioActivo) && rol !== "admin") {
     tab = "pendientes";
   }
-
   const tabs = ["proyectos", "admin", "pendientes", "horas", "diasRegistrados", "historial", "finalizadas", "contabilidad"];
   tabs.forEach((t) => {
     const cap = t.charAt(0).toUpperCase() + t.slice(1);
@@ -423,7 +424,6 @@ function switchTab(tab) {
       sec.classList.toggle("active", t === tab);
     }
   });
-
   if (tab === "proyectos") renderMenuProyectos();
   if (tab === "admin") renderMenuAdmin();
   if (tab === "pendientes") renderTasks();
@@ -483,13 +483,11 @@ function abrirFormularioCrearTarea() {
   const { code } = getNextConsecutivoGP();
   const ops = getDBOperadores().map((o) => `<option value="${o}">${o}</option>`).join("");
   const vehs = getDBVehiculos().map((v) => `<option value="${v.etiqueta}">${v.etiqueta}</option>`).join("");
-
   document.getElementById("grid-proyectos-menu").classList.add("hidden");
   const container = document.getElementById("subvista-proyectos-container");
   const body = document.getElementById("subvista-proyectos-body");
   document.getElementById("subvista-proyectos-titulo").innerText = `Crear Tarea (${code})`;
   container.classList.remove("hidden");
-
   body.innerHTML = `
     <form id="form-crear-tarea-proyectos">
       <div class="form-group">
@@ -533,7 +531,6 @@ function abrirFormularioCrearTarea() {
       <button type="submit" class="btn-primary" style="background:#27ae60;">Asignar Tarea</button>
     </form>
   `;
-
   document.getElementById("form-crear-tarea-proyectos").addEventListener("submit", (e) => {
     e.preventDefault();
     const nuevaTarea = {
@@ -549,12 +546,10 @@ function abrirFormularioCrearTarea() {
       estado: "pendiente",
       fechaCreacion: new Date().toISOString()
     };
-
     const tasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
     tasks.push(nuevaTarea);
     localStorage.setItem("ayax_tasks_db", JSON.stringify(tasks));
     incrementConsecutivoGP();
-
     alert(`Tarea ${code} asignada a ${nuevaTarea.operador}. Ya aparece en Tareas Pendientes y en el usuario del operador.`);
     volverMenuProyectos();
   });
@@ -565,7 +560,6 @@ function verSubVistaProyectos(tipo) {
   const container = document.getElementById("subvista-proyectos-container");
   const body = document.getElementById("subvista-proyectos-body");
   container.classList.remove("hidden");
-
   const titulos = {
     pendientes: "Tareas Pendientes",
     proceso: "Tareas en Proceso",
@@ -574,12 +568,10 @@ function verSubVistaProyectos(tipo) {
     informes: "Informes"
   };
   document.getElementById("subvista-proyectos-titulo").innerText = titulos[tipo] || "Proyectos";
-
   if (tipo === "informes") {
     renderInformesProyectos(body);
     return;
   }
-
   body.innerHTML = `
     <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
       <input type="text" id="filtro-p-codigo" placeholder="Buscar por código..." onkeyup="filtrarListaSubvistaProyectos('${tipo}')" style="flex:1; min-width:120px;">
@@ -594,11 +586,9 @@ function verSubVistaProyectos(tipo) {
 function filtrarListaSubvistaProyectos(tipo) {
   const container = document.getElementById("lista-subvista-proyectos-content");
   if (!container) return;
-
   const cod = (document.getElementById("filtro-p-codigo")?.value || "").toLowerCase().trim();
   const fIni = document.getElementById("filtro-p-inicio")?.value || "";
   const fFin = document.getElementById("filtro-p-fin")?.value || "";
-
   const tasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const estadoMap = {
     pendientes: "pendiente",
@@ -607,7 +597,6 @@ function filtrarListaSubvistaProyectos(tipo) {
     canceladas: "cancelada"
   };
   const targetEstado = estadoMap[tipo];
-
   const filtradas = tasks.filter((t) => {
     const st = t.estado || "pendiente";
     if (st !== targetEstado) return false;
@@ -617,12 +606,10 @@ function filtrarListaSubvistaProyectos(tipo) {
     if (fFin && fTarea > fFin) return false;
     return true;
   });
-
   if (!filtradas.length) {
     container.innerHTML = `<p class="empty-msg">No hay tareas en esta sección con esos filtros.</p>`;
     return;
   }
-
   container.innerHTML = filtradas.map((t) => {
     const diasHtml = (t.diasDetalle && t.diasDetalle.length)
       ? `<div style="margin-top:8px; padding-top:8px; border-top:1px solid #e2e8f0; font-size:0.78rem;">
@@ -635,7 +622,6 @@ function filtrarListaSubvistaProyectos(tipo) {
           `).join("")}
         </div>`
       : "";
-
     return `
       <div class="task-card">
         <div class="task-header">
@@ -692,7 +678,6 @@ function descargarExcelInformesProyectos() {
   const est = document.getElementById("inf-p-estado")?.value || "todas";
   const fIni = document.getElementById("inf-p-inicio")?.value || "";
   const fFin = document.getElementById("inf-p-fin")?.value || "";
-
   const tasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const filtradas = tasks.filter((t) => {
     if (est !== "todas" && (t.estado || "pendiente") !== est) return false;
@@ -701,7 +686,6 @@ function descargarExcelInformesProyectos() {
     if (fFin && fT > fFin) return false;
     return true;
   });
-
   let filasHtml = "";
   filtradas.forEach((t) => {
     const fechaCreacionStr = (t.fechaCreacion || "").slice(0, 10);
@@ -745,7 +729,6 @@ function descargarExcelInformesProyectos() {
       </tr>`;
     }
   });
-
   const html = `<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body><table border="1">
     <thead><tr>
       <th>Fecha Creación</th><th>Código Tarea</th><th>Cliente</th><th>Dirección</th>
@@ -755,7 +738,6 @@ function descargarExcelInformesProyectos() {
     </tr></thead>
     <tbody>${filasHtml}</tbody>
   </table></body></html>`;
-
   const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8;" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
@@ -782,7 +764,6 @@ function verSubVistaAdmin(tipo) {
   const container = document.getElementById("subvista-admin-container");
   const body = document.getElementById("subvista-admin-body");
   container.classList.remove("hidden");
-
   const titulos = {
     usuarios: "Gestión de Usuarios",
     catalogos: "Operadores, Aparejadores y Equipos",
@@ -790,7 +771,6 @@ function verSubVistaAdmin(tipo) {
     backup: "Copia de Seguridad"
   };
   document.getElementById("subvista-admin-titulo").innerText = titulos[tipo] || "Administración";
-
   if (tipo === "usuarios") renderAdminUsuarios(body);
   if (tipo === "catalogos") renderAdminCatalogos(body);
   if (tipo === "informes") renderAdminInformes(body);
@@ -823,7 +803,6 @@ function renderAdminUsuarios(container) {
       </div>
       <button type="submit" class="btn-primary" style="background:#27ae60;">Guardar Usuario</button>
     </form>
-
     <h3>Usuarios Creados (${users.length})</h3>
     <div class="stack">
       ${users.map((u, idx) => `
@@ -840,7 +819,6 @@ function renderAdminUsuarios(container) {
       `).join("")}
     </div>
   `;
-
   document.getElementById("form-admin-crear-user").addEventListener("submit", (e) => {
     e.preventDefault();
     const phone = document.getElementById("u-phone").value.trim();
@@ -848,18 +826,15 @@ function renderAdminUsuarios(container) {
     const name = document.getElementById("u-name").value.trim();
     const role = document.getElementById("u-role").value;
     const salary = parseFloat(document.getElementById("u-salary").value) || 0;
-
     if (!/^\d{4}$/.test(pin)) {
       alert("El PIN debe tener exactamente 4 dígitos numéricos.");
       return;
     }
-
     const currentUsers = getDBUsers();
     if (currentUsers.some((u) => String(u.phone).trim() === phone)) {
       alert("Ese número de teléfono ya existe.");
       return;
     }
-
     currentUsers.push({ phone, pin, name, role, salary });
     saveDBUsers(currentUsers);
     alert("Usuario guardado en Usuarios Creados.");
@@ -871,7 +846,6 @@ function editarUsuarioAdmin(index) {
   const users = getDBUsers();
   const u = users[index];
   if (!u) return;
-
   const nuevoNombre = prompt("Nombre completo:", u.name);
   if (nuevoNombre === null) return;
   const nuevoTel = prompt("Número de teléfono:", u.phone);
@@ -882,7 +856,6 @@ function editarUsuarioAdmin(index) {
   if (nuevoRol === null) return;
   const nuevoSalario = prompt("Salario base:", String(u.salary || 0));
   if (nuevoSalario === null) return;
-
   users[index] = {
     phone: nuevoTel.trim() || u.phone,
     pin: /^\d{4}$/.test(nuevoPin.trim()) ? nuevoPin.trim() : u.pin,
@@ -906,20 +879,17 @@ function renderAdminCatalogos(container) {
   const ops = getDBOperadores();
   const aps = getDBAparejadores();
   const vehs = getDBVehiculos();
-
   container.innerHTML = `
     <h3>Agregar Operador</h3>
     <div style="display:flex; gap:6px; margin-bottom:12px;">
       <input type="text" id="new-op-name" placeholder="Nombre del operador" style="flex:1;">
       <button type="button" class="btn-primary" onclick="agregarOperadorAdmin()" style="width:auto; padding:0 14px;">Agregar</button>
     </div>
-
     <h3>Agregar Aparejador</h3>
     <div style="display:flex; gap:6px; margin-bottom:12px;">
       <input type="text" id="new-ap-name" placeholder="Nombre del aparejador" style="flex:1;">
       <button type="button" class="btn-primary" onclick="agregarAparejadorAdmin()" style="width:auto; padding:0 14px;">Agregar</button>
     </div>
-
     <h3>Agregar Vehículo / Equipo</h3>
     <div class="stack" style="margin-bottom:14px; background:#f8fafc; padding:10px; border-radius:8px;">
       <input type="text" id="new-veh-etiqueta" placeholder="Etiqueta (ej: GRÚA # 99)">
@@ -928,7 +898,6 @@ function renderAdminCatalogos(container) {
       <input type="text" id="new-veh-combustible" placeholder="Tipo de combustible (ej: Diésel)">
       <button type="button" class="btn-primary" onclick="agregarVehiculoAdmin()">Agregar Vehículo</button>
     </div>
-
     <h4>Operadores (${ops.length})</h4>
     <div class="stack" style="max-height:130px; overflow-y:auto; margin-bottom:12px;">
       ${ops.map((o, i) => `
@@ -941,7 +910,6 @@ function renderAdminCatalogos(container) {
         </div>
       `).join("")}
     </div>
-
     <h4>Aparejadores (${aps.length})</h4>
     <div class="stack" style="max-height:130px; overflow-y:auto; margin-bottom:12px;">
       ${aps.map((a, i) => `
@@ -954,7 +922,6 @@ function renderAdminCatalogos(container) {
         </div>
       `).join("")}
     </div>
-
     <h4>Vehículos / Equipos (${vehs.length})</h4>
     <div class="stack" style="max-height:160px; overflow-y:auto;">
       ${vehs.map((v, i) => `
@@ -1111,7 +1078,6 @@ function initEventListenersHoras() {
       actualizarTituloAcordeonDia();
     });
   }
-
   const fotoInicioInput = document.getElementById("foto-inicio-file");
   if (fotoInicioInput) {
     fotoInicioInput.addEventListener("change", () => {
@@ -1123,7 +1089,6 @@ function initEventListenersHoras() {
       refrescarSelloInicioJornada();
     });
   }
-
   const fotoFinInput = document.getElementById("foto-fin-file");
   if (fotoFinInput) {
     fotoFinInput.addEventListener("change", () => {
@@ -1135,7 +1100,6 @@ function initEventListenersHoras() {
       refrescarSelloFinJornada();
     });
   }
-
   const formInicio = document.getElementById("form-inicio-jornada");
   if (formInicio) {
     formInicio.addEventListener("submit", (e) => {
@@ -1143,7 +1107,6 @@ function initEventListenersHoras() {
       guardarAperturaJornada();
     });
   }
-
   const formCierre = document.getElementById("form-cierre-jornada");
   if (formCierre) {
     formCierre.addEventListener("submit", (e) => {
@@ -1151,18 +1114,15 @@ function initEventListenersHoras() {
       guardarCierreJornada();
     });
   }
-
   const btnCamNov = document.getElementById("btn-camara-nov");
   if (btnCamNov) btnCamNov.addEventListener("click", () => document.getElementById("input-camara-nov").click());
   const btnGalNov = document.getElementById("btn-galeria-nov");
   if (btnGalNov) btnGalNov.addEventListener("click", () => document.getElementById("input-galeria-nov").click());
-
   const inCamNov = document.getElementById("input-camara-nov");
   if (inCamNov) inCamNov.addEventListener("change", (e) => {
     if (e.target.files.length) procesarArchivosNovedad(e.target.files);
     e.target.value = "";
   });
-
   const inGalNov = document.getElementById("input-galeria-nov");
   if (inGalNov) inGalNov.addEventListener("change", (e) => {
     if (e.target.files.length) procesarArchivosNovedad(e.target.files);
@@ -1309,7 +1269,6 @@ function guardarAperturaJornada() {
     alert("Por favor complete los campos obligatorios y adjunte la foto de inicio.");
     return;
   }
-
   const finalizarApertura = (imgDataUrl) => {
     const nuevaId = "jrn-" + Date.now();
     const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
@@ -1348,7 +1307,6 @@ function guardarAperturaJornada() {
     if (acordeon) acordeon.open = false;
     renderVistaJornada();
   };
-
   if (fotoInicioStamped) {
     finalizarApertura(fotoInicioStamped);
   } else {
@@ -1402,12 +1360,14 @@ function abrirCierreJornada(id) {
   if (!j) return;
   fotoFinStamped = "";
   fotosNovedadesStamped = [];
+  const [y, m, d] = (j.fecha || obtenerFechaLocalYYYYMMDD()).split("-").map(Number);
+  const esViernes = new Date(y, (m || 1) - 1, d || 1).getDay() === 5;
   document.getElementById("cierre-jornada-id").value = j.id;
   document.getElementById("cierre-resumen-txt").innerText = `${j.cliente} | Fecha: ${formatearFechaDDMMAAAA(j.fecha)} | Entrada: ${j.horaInicio}`;
   document.getElementById("foto-fin-file").value = "";
   document.getElementById("jornada-hora-fin").value = "";
   document.getElementById("hora-fin-badge").innerText = "";
-  document.getElementById("jornada-almuerzo-min").value = "0";
+  document.getElementById("jornada-almuerzo-min").value = esViernes ? "60" : "0";
   document.getElementById("jornada-observaciones").value = "";
   document.getElementById("galeria-novedades-thumbs").innerHTML = "";
   const canvas = document.getElementById("canvas-fin-preview");
@@ -1459,18 +1419,23 @@ function guardarCierreJornada() {
   const horaFin = document.getElementById("jornada-hora-fin").value.trim() || horaActualHHMM();
   const almuerzoRaw = document.getElementById("jornada-almuerzo-min").value;
   const fileFin = document.getElementById("foto-fin-file").files[0];
-  if (!id || almuerzoRaw === "" || !fileFin) {
-    alert("Debes adjuntar la foto de finalización y colocar el tiempo de almuerzo/descanso.");
+  if (!id || !fileFin) {
+    alert("Debes adjuntar la foto de finalización.");
     return;
   }
-
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const idx = dbJornadas.findIndex((j) => j.id === id);
   if (idx === -1) return;
 
   const finalizarCierre = (imgFinUrl) => {
-    const almuerzoMin = parseInt(almuerzoRaw, 10);
     const j = dbJornadas[idx];
+    const [y, m, d] = j.fecha.split("-").map(Number);
+    const esViernes = new Date(y, m - 1, d).getDay() === 5;
+    const almuerzoMin =
+      almuerzoRaw !== "" && almuerzoRaw !== null && almuerzoRaw !== undefined
+        ? Math.max(0, parseInt(almuerzoRaw, 10) || 0)
+        : (esViernes ? 60 : 0);
+
     j.horaFin = horaFin;
     j.fotoFin = imgFinUrl;
     j.almuerzoMin = almuerzoMin;
@@ -1527,7 +1492,7 @@ function renderTarjetaDiaCerrado(j) {
           <span class="muted" style="font-size: 0.8rem;"> · ${j.cliente}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 0.85rem; color: #040B5D;">▾</span>
+          <span class="flecha-acordeon" style="font-size: 0.85rem; color: #040B5D;">▾</span>
           <button type="button" title="Eliminar registro" onclick="event.preventDefault(); event.stopPropagation(); eliminarJornadaPorId('${j.id}');" style="background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 6px; padding: 3px 9px; font-weight: 700; cursor: pointer;">✕</button>
         </div>
       </summary>
@@ -1539,11 +1504,9 @@ function renderTarjetaDiaCerrado(j) {
         <p style="margin-bottom: 6px;"><strong>Observaciones:</strong> ${j.observaciones || "Ninguna"}</p>
         <div style="background: #f8fafc; padding: 8px; border-radius: 6px; margin-bottom: 6px;">
           <strong>Horas netas:</strong> ${c.horasNetas ?? 0} h ·
-          <strong>H.E.D:</strong> ${c.heDiurna ?? 0} h ·
-          <strong>H.E.N:</strong> ${c.heNocturna ?? 0} h ·
-          <strong>Rec.N:</strong> ${c.recNocturno ?? 0} h ·
-          <strong>Dom/Fest:</strong> ${((c.recDominical ?? 0) + (c.hedDominical ?? 0) + (c.henDominical ?? 0)).toFixed(2)} h ·
-          <strong>Total:</strong> ${c.totalHorasConceptos ?? 0} h ($${(c.valorPagar ?? 0).toLocaleString("es-CO")})
+          <strong>Total H. Extras:</strong> ${c.totalHorasExtras ?? 0} h ·
+          <strong>Total Recargos:</strong> ${c.totalHorasRecargos ?? 0} h ·
+          <strong>A Pagar:</strong> $${(c.valorPagar ?? 0).toLocaleString("es-CO")}
         </div>
         ${fotosHtml}
       </div>
@@ -1566,7 +1529,6 @@ function renderListaDiasRegistrados() {
     .filter((j) => j.estado === "cerrada" && j.empleadoId === user.phone && (j.mesClave || obtenerClaveMes(j.fecha)) === mesActual)
     .filter((j) => !fechaFiltro || j.fecha === fechaFiltro)
     .sort((a, b) => b.fecha.localeCompare(a.fecha));
-
   if (!diasMes.length) {
     cont.innerHTML = `<p class="empty-msg">${fechaFiltro ? "No hay registros para esa fecha." : "No hay días cerrados registrados en este mes."}</p>`;
     return;
@@ -1584,19 +1546,16 @@ function renderCarpetasHistorial() {
     .filter((j) => j.estado === "cerrada" && j.empleadoId === user.phone)
     .filter((j) => !fechaFiltro || j.fecha === fechaFiltro)
     .sort((a, b) => b.fecha.localeCompare(a.fecha));
-
   if (!cerradas.length) {
     cont.innerHTML = `<p class="empty-msg">${fechaFiltro ? "No hay registros en el historial para esa fecha." : "Aún no hay carpetas mensuales en el historial."}</p>`;
     return;
   }
-
   const gruposPorMes = {};
   cerradas.forEach((j) => {
     const clave = j.mesClave || obtenerClaveMes(j.fecha);
     if (!gruposPorMes[clave]) gruposPorMes[clave] = [];
     gruposPorMes[clave].push(j);
   });
-
   const mesesOrdenados = Object.keys(gruposPorMes).sort((a, b) => b.localeCompare(a));
   cont.innerHTML = mesesOrdenados.map((clave) => {
     const lista = gruposPorMes[clave];
@@ -1606,7 +1565,7 @@ function renderCarpetasHistorial() {
     return `
       <details class="card" ${debeAbrirCarpeta ? "open" : ""} style="margin-bottom: 10px; border: 1px solid #cbd5e1;">
         <summary style="cursor: pointer; font-weight: 700; color: #040B5D; list-style: none; display: flex; justify-content: space-between; align-items: center;">
-          <span>📁 ${formatearNombreMes(clave)} (${lista.length} día${lista.length === 1 ? "" : "s"}) ▾</span>
+          <span>📁 ${formatearNombreMes(clave)} (${lista.length} día${lista.length === 1 ? "" : "s"}) <span class="flecha-acordeon">▾</span></span>
           <span style="font-size: 0.8rem; color: #27ae60;">$${totalValor.toLocaleString("es-CO")} · ${totalHoras.toFixed(2)}h</span>
         </summary>
         <div class="stack" style="margin-top: 10px;">
@@ -1644,7 +1603,8 @@ function eliminarJornadaPorId(id) {
 
 // ==========================================
 // CÁLCULO DE EXTRAS Y RECARGOS (COLOMBIA — NOVIEMBRE 2026)
-// Semana de 42h: Lun-Jue 8.5h, Vie 8.0h, Divisor 210, Nocturno 19:00-06:00, Dom/Fest 90%
+// Esquema: Lun-Jue 8.5h (sin almuerzo) | Vie 8.0h (60 min almuerzo) = 42h/sem
+// Divisor: 210h/mes | Nocturno: 19:00-06:00 | Dom/Fest: 90%
 // ==========================================
 function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMinutos, salarioMensual) {
   const [y, m, d] = fechaStr.split("-").map(Number);
@@ -1655,19 +1615,26 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
   const fin = new Date(y, m - 1, d, hF, minF, 0);
   if (fin <= inicio) fin.setDate(fin.getDate() + 1);
 
-  const diaSemana = inicio.getDay(); // 0: Dom, 1: Lun ... 4: Jue, 5: Vie, 6: Sáb
+  const diaSemana = inicio.getDay(); // 0=Dom, 1=Lun, ..., 5=Vie, 6=Sab
   const esDomingoOFestivo = diaSemana === 0 || FESTIVOS_COLOMBIA.has(fechaStr);
 
-  // Jornada ordinaria diaria según esquema de 42 horas semanales
-  let jornadaOrdinariaDia = 8.5; // Lunes a Jueves
-  if (diaSemana === 5) jornadaOrdinariaDia = 8.0; // Viernes
-  if (diaSemana === 6 || diaSemana === 0) jornadaOrdinariaDia = 0.0; // Sábado/Domingo fuera de jornada base lun-vie
+  // Jornada ordinaria según día:
+  // Lun(1) a Jue(4): 8.5h | Vie(5): 8.0h | Sáb(6) y Dom(0): 0.0h
+  let jornadaOrdinariaDia = 8.5;
+  if (diaSemana === 5) jornadaOrdinariaDia = 8.0;
+  if (diaSemana === 6 || diaSemana === 0) jornadaOrdinariaDia = 0.0;
 
-  const descansoMinutos = Math.max(0, Number(almuerzoMinutos) || 0);
+  // Tiempo de almuerzo:
+  // Si es viernes (5) y no se especifica o se envía null/undefined, aplica 60 min por defecto.
+  // Lun-Jue por defecto es 0 min a menos que se indique un número explícito.
+  const descansoMinutos =
+    almuerzoMinutos !== undefined && almuerzoMinutos !== null && almuerzoMinutos !== ""
+      ? Math.max(0, Number(almuerzoMinutos))
+      : (diaSemana === 5 ? 60 : 0);
+
   const totalBrutoHoras = (fin - inicio) / (1000 * 60 * 60);
   const horasNetas = Math.max(0, totalBrutoHoras - descansoMinutos / 60);
 
-  let heDiurna = 0, heNocturna = 0, recNocturno = 0, recDominical = 0, hedDominical = 0, henDominical = 0;
   const tramos = [];
   const pasoMs = 15 * 60 * 1000;
   let cursor = new Date(inicio);
@@ -1676,6 +1643,8 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
     const siguiente = new Date(Math.min(cursor.getTime() + pasoMs, fin.getTime()));
     const minsTramo = (siguiente - cursor) / (1000 * 60);
     const horaDecimal = cursor.getHours() + cursor.getMinutes() / 60;
+
+    // Horario nocturno Colombia: 19:00 (7:00 p.m.) a 06:00 (6:00 a.m.)
     const esFranjaNocturna = horaDecimal >= 19 || horaDecimal < 6;
     const esVentanaAlmuerzo = horaDecimal >= 12 && horaDecimal < 14.5;
 
@@ -1688,7 +1657,6 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
     cursor = siguiente;
   }
 
-  // Descontar descanso/almuerzo reportado del tiempo de trabajo
   let descansoPendiente = descansoMinutos;
   for (const t of tramos) {
     if (descansoPendiente <= 0) break;
@@ -1709,59 +1677,84 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
     }
   }
 
+  let heDiurna = 0;       // Extra diurna hábil (+25%)
+  let heNocturna = 0;      // Extra nocturna hábil (+75%)
+  let recNocturno = 0;     // Recargo nocturno ordinario hábil (+35%)
+  let recDominical = 0;    // Recargo dominical/festivo ordinario (+90%)
+  let recNoctDom = 0;      // Recargo nocturno en domingo/festivo (+125% = +90% + 35%)
+  let hedDominical = 0;    // Extra diurna dominical/festivo (+115% = +90% + 25%)
+  let henDominical = 0;    // Extra nocturna dominical/festivo (+165% = +90% + 75%)
+
   let horasAcumuladas = 0;
-  function sumarTramo(horas, superaJornada, domFest, noct) {
+
+  function clasificarHoras(horas, superaJornada, domFest, noct) {
     if (horas <= 0) return;
+
     if (domFest) {
-      if (!superaJornada) recDominical += horas;
-      else if (noct) henDominical += horas;
-      else hedDominical += horas;
-    } else if (superaJornada) {
-      if (noct) heNocturna += horas;
-      else heDiurna += horas;
-    } else if (noct) {
-      recNocturno += horas;
+      if (!superaJornada) {
+        if (noct) recNoctDom += horas;
+        else recDominical += horas;
+      } else {
+        if (noct) henDominical += horas;
+        else hedDominical += horas;
+      }
+    } else {
+      if (superaJornada) {
+        if (noct) heNocturna += horas;
+        else heDiurna += horas;
+      } else if (noct) {
+        recNocturno += horas;
+      }
     }
   }
 
   for (const t of tramos) {
     if (t.minsTrabajados <= 0) continue;
     const horas = t.minsTrabajados / 60;
+
     if (horasAcumuladas < jornadaOrdinariaDia && horasAcumuladas + horas > jornadaOrdinariaDia) {
       const hOrdinarias = jornadaOrdinariaDia - horasAcumuladas;
       const hExtras = horas - hOrdinarias;
-      sumarTramo(hOrdinarias, false, esDomingoOFestivo, t.esFranjaNocturna);
-      sumarTramo(hExtras, true, esDomingoOFestivo, t.esFranjaNocturna);
+      clasificarHoras(hOrdinarias, false, esDomingoOFestivo, t.esFranjaNocturna);
+      clasificarHoras(hExtras, true, esDomingoOFestivo, t.esFranjaNocturna);
     } else {
       const supera = horasAcumuladas + 1e-9 >= jornadaOrdinariaDia;
-      sumarTramo(horas, supera, esDomingoOFestivo, t.esFranjaNocturna);
+      clasificarHoras(horas, supera, esDomingoOFestivo, t.esFranjaNocturna);
     }
     horasAcumuladas += horas;
   }
 
-  const valorHoraOrd = (salarioMensual || 1750905) / DIVISOR_MENSUAL;
+  const valorHoraOrd = (Number(salarioMensual) || 1750905) / DIVISOR_MENSUAL;
 
-  const valorPagar =
-    heDiurna * valorHoraOrd * 1.25 +
-    heNocturna * valorHoraOrd * 1.75 +
+  const valorExtrasYRecargos =
+    heDiurna * valorHoraOrd * 0.25 +
+    heNocturna * valorHoraOrd * 0.75 +
     recNocturno * valorHoraOrd * 0.35 +
     recDominical * valorHoraOrd * 0.90 +
-    hedDominical * valorHoraOrd * 2.15 +
-    henDominical * valorHoraOrd * 2.65;
+    recNoctDom * valorHoraOrd * 1.25 +
+    hedDominical * valorHoraOrd * 1.15 +
+    henDominical * valorHoraOrd * 1.65;
 
-  const totalHorasConceptos = heDiurna + heNocturna + recNocturno + recDominical + hedDominical + henDominical;
+  const totalHorasExtras = Number((heDiurna + heNocturna + hedDominical + henDominical).toFixed(2));
+  const totalHorasRecargos = Number((recNocturno + recDominical + recNoctDom).toFixed(2));
+  const totalHorasConceptos = Number((totalHorasExtras + totalHorasRecargos).toFixed(2));
 
   return {
     esDomingoOFestivo,
+    jornadaOrdinariaDia,
+    descansoMinutos,
     horasNetas: Number(horasNetas.toFixed(2)),
     heDiurna: Number(heDiurna.toFixed(2)),
     heNocturna: Number(heNocturna.toFixed(2)),
     recNocturno: Number(recNocturno.toFixed(2)),
     recDominical: Number(recDominical.toFixed(2)),
+    recNoctDom: Number(recNoctDom.toFixed(2)),
     hedDominical: Number(hedDominical.toFixed(2)),
     henDominical: Number(henDominical.toFixed(2)),
-    totalHorasConceptos: Number(totalHorasConceptos.toFixed(2)),
-    valorPagar: Math.round(valorPagar)
+    totalHorasExtras,
+    totalHorasRecargos,
+    totalHorasConceptos,
+    valorPagar: Math.round(valorExtrasYRecargos)
   };
 }
 
@@ -1774,7 +1767,6 @@ function renderReporteContabilidad() {
     selEmp.innerHTML = `<option value="todos">Todos los empleados</option>` +
       getDBUsers().filter((o) => o.role === "operario_horas").map((o) => `<option value="${o.phone}">${o.name}</option>`).join("");
   }
-
   const empFiltro = selEmp ? selEmp.value : "todos";
   const fechaInicio = document.getElementById("filtro-fecha-inicio-conta")?.value || "";
   const fechaFin = document.getElementById("filtro-fecha-fin-conta")?.value || "";
@@ -1790,7 +1782,6 @@ function renderReporteContabilidad() {
       txtRango.innerText = `Filtro activo: Todos los registros cerrados`;
     }
   }
-
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const filtradas = dbJornadas.filter((j) => {
     if (j.estado !== "cerrada" || !j.calculo) return false;
@@ -1809,23 +1800,45 @@ function renderReporteContabilidad() {
   const tbody = document.getElementById("tbody-contabilidad");
   const tfoot = document.getElementById("tfoot-contabilidad");
   if (!tbody || !tfoot) return;
-
   tbody.innerHTML = "";
   ultimoReporteFilasConta = [];
-  let granHoras = 0, granValor = 0;
+  let granExtras = 0, granRecargos = 0, granHoras = 0, granValor = 0;
 
   Object.values(porEmpleado).forEach((grupo) => {
-    let subHoras = 0, subValor = 0;
+    let subExtras = 0, subRecargos = 0, subHoras = 0, subValor = 0;
     grupo.filas.forEach((f) => {
       const c = f.calculo;
-      subHoras += c.totalHorasConceptos;
+      const hExtras = Number(c.totalHorasExtras ?? ((c.heDiurna || 0) + (c.heNocturna || 0) + (c.hedDominical || 0) + (c.henDominical || 0)));
+      const hRecargos = Number(c.totalHorasRecargos ?? ((c.recNocturno || 0) + (c.recDominical || 0) + (c.recNoctDom || 0)));
+      const hTotal = Number(c.totalHorasConceptos ?? (hExtras + hRecargos));
+
+      subExtras += hExtras;
+      subRecargos += hRecargos;
+      subHoras += hTotal;
       subValor += c.valorPagar;
+
       ultimoReporteFilasConta.push({
-        tipo: "registro", fecha: f.fecha, empleado: f.empleadoNombre, cliente: f.cliente,
-        direccion: f.direccion, horaInicio: f.horaInicio, horaFin: f.horaFin, almuerzoMin: f.almuerzoMin ?? 0,
-        heDiurna: c.heDiurna, heNocturna: c.heNocturna, recNocturno: c.recNocturno, recDominical: c.recDominical,
-        hedDominical: c.hedDominical, henDominical: c.henDominical, totalHoras: c.totalHorasConceptos, valorPagar: c.valorPagar
+        tipo: "registro",
+        fecha: f.fecha,
+        empleado: f.empleadoNombre,
+        cliente: f.cliente,
+        direccion: f.direccion,
+        horaInicio: f.horaInicio,
+        horaFin: f.horaFin,
+        almuerzoMin: f.almuerzoMin ?? 0,
+        totalHorasExtras: Number(hExtras.toFixed(2)),
+        totalHorasRecargos: Number(hRecargos.toFixed(2)),
+        heDiurna: c.heDiurna || 0,
+        heNocturna: c.heNocturna || 0,
+        recNocturno: c.recNocturno || 0,
+        recDominical: c.recDominical || 0,
+        recNoctDom: c.recNoctDom || 0,
+        hedDominical: c.hedDominical || 0,
+        henDominical: c.henDominical || 0,
+        totalHoras: Number(hTotal.toFixed(2)),
+        valorPagar: c.valorPagar
       });
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${f.fecha}</td>
@@ -1836,38 +1849,75 @@ function renderReporteContabilidad() {
         <td>${f.horaFin}</td>
         <td>${f.almuerzoMin ?? 0}m</td>
         <td><button type="button" class="btn-audit" onclick="abrirModalAuditoria('${f.id}')">Auditar</button></td>
-        <td>${c.heDiurna}</td>
-        <td>${c.heNocturna}</td>
-        <td>${c.recNocturno}</td>
-        <td>${c.recDominical}</td>
-        <td>${c.hedDominical}</td>
-        <td>${c.henDominical}</td>
-        <td>${c.totalHorasConceptos.toFixed(2)}</td>
+        <td><strong>${hExtras.toFixed(2)}</strong></td>
+        <td>${hRecargos.toFixed(2)}</td>
+        <td>${c.heDiurna || 0}</td>
+        <td>${c.heNocturna || 0}</td>
+        <td>${c.recNocturno || 0}</td>
+        <td>${c.recDominical || 0}</td>
+        <td>${c.recNoctDom || 0}</td>
+        <td>${c.hedDominical || 0}</td>
+        <td>${c.henDominical || 0}</td>
+        <td>${hTotal.toFixed(2)}</td>
         <td>$${c.valorPagar.toLocaleString("es-CO")}</td>
       `;
       tbody.appendChild(tr);
     });
 
+    granExtras += subExtras;
+    granRecargos += subRecargos;
     granHoras += subHoras;
     granValor += subValor;
+
     ultimoReporteFilasConta.push({
-      tipo: "subtotal", etiqueta: `Subtotal ${grupo.nombre}`, totalHoras: Number(subHoras.toFixed(2)), valorPagar: Math.round(subValor)
+      tipo: "subtotal",
+      etiqueta: `Subtotal ${grupo.nombre}`,
+      totalHorasExtras: Number(subExtras.toFixed(2)),
+      totalHorasRecargos: Number(subRecargos.toFixed(2)),
+      totalHoras: Number(subHoras.toFixed(2)),
+      valorPagar: Math.round(subValor)
     });
 
     const trSub = document.createElement("tr");
     trSub.className = "subtotal-row";
     trSub.innerHTML = `
-      <td colspan="14" style="text-align:right;">Subtotal ${grupo.nombre}:</td>
+      <td colspan="8" style="text-align:right;">Subtotal ${grupo.nombre}:</td>
+      <td>${subExtras.toFixed(2)}</td>
+      <td>${subRecargos.toFixed(2)}</td>
+      <td colspan="7"></td>
       <td>${subHoras.toFixed(2)}</td>
       <td>$${subValor.toLocaleString("es-CO")}</td>
     `;
     tbody.appendChild(trSub);
   });
 
-  ultimoReporteTotalesConta = { horas: Number(granHoras.toFixed(2)), valor: Math.round(granValor) };
+  ultimoReporteTotalesConta = {
+    horasExtras: Number(granExtras.toFixed(2)),
+    horasRecargos: Number(granRecargos.toFixed(2)),
+    totalHoras: Number(granHoras.toFixed(2)),
+    valor: Math.round(granValor)
+  };
+
+  const resumenBox = document.getElementById("resumen-extras-conta");
+  if (resumenBox) {
+    resumenBox.innerHTML = `
+      <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:8px 10px;">
+        <div style="font-size:0.72rem; color:#1d4ed8; font-weight:700;">TOTAL HORAS EXTRAS</div>
+        <div style="font-size:1rem; color:#040B5D; font-weight:800;">${ultimoReporteTotalesConta.horasExtras.toFixed(2)} h</div>
+      </div>
+      <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:8px 10px;">
+        <div style="font-size:0.72rem; color:#15803d; font-weight:700;">TOTAL A PAGAR EXTRAS/RECARGOS</div>
+        <div style="font-size:1rem; color:#166534; font-weight:800;">$${ultimoReporteTotalesConta.valor.toLocaleString("es-CO")}</div>
+      </div>
+    `;
+  }
+
   tfoot.innerHTML = `
     <tr class="gran-total-row">
-      <td colspan="14" style="text-align:right;">TOTAL GENERAL:</td>
+      <td colspan="8" style="text-align:right;">TOTAL GENERAL:</td>
+      <td>${granExtras.toFixed(2)}</td>
+      <td>${granRecargos.toFixed(2)}</td>
+      <td colspan="7"></td>
       <td>${granHoras.toFixed(2)}</td>
       <td>$${granValor.toLocaleString("es-CO")}</td>
     </tr>
@@ -1877,8 +1927,10 @@ function renderReporteContabilidad() {
 function exportarExcelContabilidad() {
   const encabezados = [
     "Fecha", "Empleado", "Cliente", "Dirección", "Hora Inicio", "Hora Fin", "Almuerzo (min)",
+    "Total Horas Extras", "Total Horas Recargos",
     "H.E. Diurna (25%)", "H.E. Nocturna (75%)", "Rec. Nocturno (35%)", "Rec. Dominical (90%)",
-    "H.E.D. Dom/Fest (115%)", "H.E.N. Dom/Fest (165%)", "Total Horas", "Valor a Pagar"
+    "Rec. Noct. Dom/Fest (125%)", "H.E.D. Dom/Fest (115%)", "H.E.N. Dom/Fest (165%)",
+    "Total Conceptos", "Valor a Pagar"
   ];
   let filasHtml = "";
   ultimoReporteFilasConta.forEach((item) => {
@@ -1887,18 +1939,21 @@ function exportarExcelContabilidad() {
         <tr>
           <td>${item.fecha}</td><td>${item.empleado}</td><td>${item.cliente}</td><td>${item.direccion}</td>
           <td>${item.horaInicio}</td><td>${item.horaFin}</td><td>${item.almuerzoMin}</td>
+          <td>${item.totalHorasExtras}</td><td>${item.totalHorasRecargos}</td>
           <td>${item.heDiurna}</td><td>${item.heNocturna}</td><td>${item.recNocturno}</td>
-          <td>${item.recDominical}</td><td>${item.hedDominical}</td><td>${item.henDominical}</td>
-          <td>${item.totalHoras}</td><td>${item.valorPagar}</td>
+          <td>${item.recDominical}</td><td>${item.recNoctDom}</td><td>${item.hedDominical}</td>
+          <td>${item.henDominical}</td><td>${item.totalHoras}</td><td>${item.valorPagar}</td>
         </tr>`;
     } else if (item.tipo === "subtotal") {
       filasHtml += `
         <tr style="font-weight:bold;background:#eff6ff;">
-          <td colspan="13">${item.etiqueta}</td><td>${item.totalHoras}</td><td>${item.valorPagar}</td>
+          <td colspan="7">${item.etiqueta}</td>
+          <td>${item.totalHorasExtras}</td><td>${item.totalHorasRecargos}</td>
+          <td colspan="7"></td>
+          <td>${item.totalHoras}</td><td>${item.valorPagar}</td>
         </tr>`;
     }
   });
-
   const htmlExcel = `
     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
     <head><meta charset="UTF-8"></head>
@@ -1908,8 +1963,11 @@ function exportarExcelContabilidad() {
         <tbody>${filasHtml}</tbody>
         <tfoot>
           <tr style="font-weight:bold;background:#dbeafe;">
-            <td colspan="13">TOTAL GENERAL</td>
-            <td>${ultimoReporteTotalesConta.horas}</td>
+            <td colspan="7">TOTAL GENERAL</td>
+            <td>${ultimoReporteTotalesConta.horasExtras}</td>
+            <td>${ultimoReporteTotalesConta.horasRecargos}</td>
+            <td colspan="7"></td>
+            <td>${ultimoReporteTotalesConta.totalHoras}</td>
             <td>${ultimoReporteTotalesConta.valor}</td>
           </tr>
         </tfoot>
@@ -1933,7 +1991,6 @@ function abrirModalAuditoria(id) {
   if (!j || !j.calculo) return;
   const c = j.calculo;
   document.getElementById("auditoria-titulo-txt").innerText = `Auditoría · ${j.empleadoNombre}`;
-
   const novHtml = j.fotosNovedades && j.fotosNovedades.length
     ? `<div class="audit-grid">${j.fotosNovedades.map((f, i) => `
         <div class="audit-photo-card">
@@ -1943,15 +2000,14 @@ function abrirModalAuditoria(id) {
         </div>
       `).join("")}</div>`
     : `<p class="muted">Sin fotos adicionales de novedad.</p>`;
-
   document.getElementById("auditoria-body-content").innerHTML = `
     <div class="audit-summary">
       <strong>Cliente:</strong> ${j.cliente}<br>
       <strong>Dirección:</strong> ${j.direccion}<br>
-      <strong>Tipo de Día:</strong> ${c.esDomingoOFestivo ? "Domingo / Festivo" : "Día Hábil"}<br>
+      <strong>Tipo de Día:</strong> ${c.esDomingoOFestivo ? "Domingo / Festivo" : "Día Hábil"} (Jornada base: ${c.jornadaOrdinariaDia}h)<br>
       <strong>Horario:</strong> ${j.horaInicio} a ${j.horaFin} | <strong>Almuerzo/Descanso:</strong> ${j.almuerzoMin ?? 0} min<br>
       <strong>Observaciones:</strong> ${j.observaciones || "Ninguna"}<br>
-      <strong>Total Extras/Recargos:</strong> ${c.totalHorasConceptos} h · <strong>A Pagar:</strong> $${c.valorPagar.toLocaleString("es-CO")}
+      <strong>Total H. Extras:</strong> ${c.totalHorasExtras ?? 0} h · <strong>Total Recargos:</strong> ${c.totalHorasRecargos ?? 0} h · <strong>A Pagar:</strong> $${c.valorPagar.toLocaleString("es-CO")}
     </div>
     <div class="audit-grid">
       <div class="audit-photo-card">
@@ -2001,21 +2057,18 @@ function renderTasks() {
     renderPanelRedesParaDanilo();
     return;
   }
-
   const containerPendientes = document.getElementById("listPendientes");
   if (!containerPendientes) return;
   containerPendientes.innerHTML = "";
-
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const esAdmin = normalizarTexto(usuarioActivo?.role) === "admin";
   const nombreUsuario = normalizarTexto(usuarioActivo?.name);
-
   let countP = 0;
+
   savedTasks.forEach((task) => {
     const estado = task.estado || "pendiente";
     const asignadaAlUsuario = !task.operador || normalizarTexto(task.operador) === nombreUsuario || esAdmin;
     if (!asignadaAlUsuario) return;
-
     if (estado === "pendiente" || estado === "en_proceso") {
       countP++;
       const card = document.createElement("div");
@@ -2135,7 +2188,6 @@ async function descargarEvidenciasTarea(taskId) {
     alert("La librería JSZip no está cargada en la aplicación.");
     return;
   }
-
   savedTasks = savedTasks.map((t) => {
     if (String(t.id) === String(taskId)) {
       return {
@@ -2199,7 +2251,6 @@ function filterFinalized() {
     renderPanelRedesParaDanilo();
     return;
   }
-
   const pdfBox = document.getElementById("pdfButtonContainer");
   if (pdfBox) pdfBox.classList.remove("hidden");
   const searchBox = document.querySelector("#secFinalizadas .search-box");
@@ -2221,7 +2272,7 @@ function filterFinalized() {
   savedTasks.forEach((task) => {
     if (task.estado === "finalizada") {
       const taskDateObj = new Date(task.fechaFinalizacion || task.fechaCreacion || Date.now());
-      const taskDateStr = taskDateObj.toISOString().split("T")[0];
+      const taskDateStr = obtenerFechaLocalYYYYMMDD(taskDateObj);
       const matchesCurrentMonthYear = (taskDateObj.getMonth() === currentMonth && taskDateObj.getFullYear() === currentYear);
       if (matchesCurrentMonthYear || dateQuery) {
         totalFinalizedCount++;
@@ -2249,7 +2300,6 @@ function filterFinalized() {
 
   const countElem = document.getElementById("countFinalizadas");
   if (countElem) countElem.innerText = totalFinalizedCount;
-
   const btnPdfContainer = document.getElementById("pdfButtonContainer");
   if (matchCount === 0) {
     containerFinalizadas.innerHTML = `<p class="empty-msg">No se encontraron tareas finalizadas para este mes o con esos criterios.</p>`;
@@ -2266,13 +2316,11 @@ function openTask(id) {
   let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const task = savedTasks.find((t) => String(t.id) === String(id));
   if (!task) return;
-
   if (task.estado === "cancelada") {
     alert("Tarea cancelada. No es posible iniciar ni registrar información en esta tarea.");
     renderTasks();
     return;
   }
-
   savedTasks = savedTasks.map((t) => String(t.id) === String(id) && (t.estado || "pendiente") === "pendiente"
     ? { ...t, estado: "en_proceso", fechaInicioEjecucion: new Date().toISOString() }
     : t);
@@ -2282,12 +2330,10 @@ function openTask(id) {
   document.getElementById("mainNavTabs").classList.add("hidden");
   document.getElementById("secPendientes").classList.add("hidden");
   document.getElementById("secFinalizadas").classList.add("hidden");
-
   const secWizard = document.getElementById("secWizard");
   secWizard.classList.remove("hidden");
   document.getElementById("wizardTitle").innerText = `${id} · Operación`;
   document.getElementById("daysContainer").innerHTML = "";
-
   const daysListContainer = document.getElementById("daysListContainer");
   if (daysListContainer) daysListContainer.innerHTML = "";
   totalDaysCreated = 0;
@@ -2319,14 +2365,11 @@ function addNewDay() {
   fotosDiaTemporal = [];
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const currentTask = savedTasks.find((t) => String(t.id) === String(currentActiveTaskId)) || {};
-
   const opsOptions = getDBOperadores().map((o) => {
     const sel = currentTask.operador && normalizarTexto(currentTask.operador) === normalizarTexto(o) ? "selected" : "";
     return `<option value="${o}" ${sel}>${o}</option>`;
   }).join("");
-
   const apsOptions = getDBAparejadores().map((a) => `<option value="${a}">${a}</option>`).join("");
-
   const vehsOptions = getDBVehiculos().map((v) => {
     const sel = currentTask.maquinaria && normalizarTexto(currentTask.maquinaria) === normalizarTexto(v.etiqueta) ? "selected" : "";
     return `<option value="${v.etiqueta}" ${sel}>${v.etiqueta}</option>`;
@@ -2469,10 +2512,10 @@ function procesarFotoMulti(event, dayNum) {
       const inputDirElement = document.getElementById(`dir-day-${dayNum}`);
       const dirInput = (inputDirElement && inputDirElement.value.trim()) ? inputDirElement.value.trim() : (currentTask.direccion || "Pereira");
       const ciudadTexto = dirInput.includes(",") ? dirInput.split(",")[0].trim() : dirInput;
-
       const ahora = new Date();
       const fechaActual = ahora.toLocaleDateString();
       const horaActual = ahora.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
       const colIzquierdaX = Math.max(15, Math.floor(canvas.width * 0.025));
       const colDerechaX = Math.floor(canvas.width * 0.52);
       const fontSize = Math.max(12, Math.floor(canvas.width * 0.021));
@@ -2481,7 +2524,6 @@ function procesarFotoMulti(event, dayNum) {
       ctx.font = `bold ${fontSize + 2}px sans-serif`;
       ctx.fillText(`AYAX | ${numTarea}`, colIzquierdaX, img.height + 32);
       ctx.fillText(`Vehículo: ${grua}`, colDerechaX, img.height + 32);
-
       ctx.font = `${fontSize}px sans-serif`;
       ctx.fillText(`Cliente: ${clienteNombre}`, colIzquierdaX, img.height + 64);
       ctx.fillText(`Fecha: ${fechaActual}`, colDerechaX, img.height + 64);
@@ -2594,7 +2636,6 @@ function saveDayRecord(dayNum) {
 
   const hoursDisplay = document.getElementById(`hours-display-${dayNum}`);
   const hoursWorked = hoursDisplay && hoursDisplay.dataset.hours ? parseFloat(hoursDisplay.dataset.hours) : 0.0;
-
   const dayData = {
     dayNum,
     fechaRegistro: obtenerFechaLocalYYYYMMDD(),
@@ -2616,7 +2657,6 @@ function saveDayRecord(dayNum) {
     tieneEvidenciaFotografica: true,
     fotosLista: [...fotosDiaTemporal]
   };
-
   currentDaysData.push(dayData);
   sincronizarAvanceEnSegundoPlano();
   renderDaysAccordion();
@@ -2654,7 +2694,7 @@ function renderDaysAccordion() {
     details.style.cssText = "background: #f8f9fa; border: 1px solid #DDC9B8; border-radius: 8px; margin-bottom: 10px; overflow: hidden;";
     const summary = document.createElement("summary");
     summary.style.cssText = "background: #ffffff; padding: 12px 16px; font-weight: 600; color: #040B5D; cursor: pointer; display: flex; justify-content: space-between; align-items: center;";
-    summary.innerHTML = `<span>Día #${day.dayNum} - ${day.grua} (${day.horasTrabajadas} hrs)</span> <span style="font-size: 12px; color: #BF956E;">Ver detalle ▾</span>`;
+    summary.innerHTML = `<span>Día #${day.dayNum} - ${day.grua} (${day.horasTrabajadas} hrs)</span> <span class="flecha-acordeon" style="font-size: 12px; color: #BF956E;">Ver detalle ▾</span>`;
     const content = document.createElement("div");
     content.style.cssText = "padding: 15px; background: #ffffff; border-top: 1px solid #DDC9B8; font-size: 0.85rem; color: #333;";
     content.innerHTML = `
@@ -2788,7 +2828,7 @@ function descargarReportePDF() {
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const filteredTasks = savedTasks.filter((t) => {
     if (t.estado !== "finalizada") return false;
-    const taskDateStr = new Date(t.fechaFinalizacion || t.fechaCierre || t.fechaCreacion || Date.now()).toISOString().split("T")[0];
+    const taskDateStr = obtenerFechaLocalYYYYMMDD(new Date(t.fechaFinalizacion || t.fechaCierre || t.fechaCreacion || Date.now()));
     return taskDateStr >= startDate && taskDateStr <= endDate;
   });
   if (filteredTasks.length === 0) {
@@ -2861,23 +2901,10 @@ function descargarReportePDF() {
 }
 
 // ==========================================
-// PURGA DE TAREAS ANTIGUAS
+// LIMPIEZA DE TAREAS SINCRONIZADAS
 // ==========================================
 function purgeSyncedTasks() {
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
-  const retentionDays = 7;
-  const now = new Date();
-  const cleanedTasks = savedTasks.filter((task) => {
-    if (task.estado === "sincronizada") return false;
-    if (task.estado === "pendiente" || task.estado === "en_proceso" || task.estado === "cancelada") return true;
-    if (task.estado === "finalizada") {
-      const finishDate = new Date(task.fechaFinalizacion || task.fechaCierre || Date.now());
-      const diffTime = Math.abs(now - finishDate);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays <= retentionDays;
-    }
-    return true;
-  });
+  const cleanedTasks = savedTasks.filter((task) => task.estado !== "sincronizada");
   localStorage.setItem("ayax_tasks_db", JSON.stringify(cleanedTasks));
 }
-
