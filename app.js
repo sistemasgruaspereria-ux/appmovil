@@ -14,7 +14,9 @@ let defaultUsers = [
   { phone: "3000000000", pin: "2034", name: "Liliana Guzmán", role: "contabilidad", salary: 0 },
   { phone: "3218468761", pin: "1118", name: "Danilo", role: "redes", salary: 0 },
   { phone: "3100000000", pin: "1234", name: "Coordinación Proyectos", role: "proyectos", salary: 0 },
-  { phone: "3204618830", pin: "1934", name: "Tatiana Ruiz", role: "operario_horas", salary: 1750905 },
+  { phone: "3005051958", pin: "1934", name: "Didier Roberto Orejuela Henao", role: "operario_horas", salary: 1753000 },
+  { phone: "3233928131", pin: "1782", name: "Lina Sofia Tobar Erazo", role: "operario_horas", salary: 1845000 },
+  { phone: "3117659089", pin: "3819", name: "Natalia Correa Rodriguez", role: "operario_horas", salary: 1845000 },
   { phone: "3215617856", pin: "1824", name: "Cristian Camilo Rodas Grajales", role: "operario", salary: 1750905 },
   { phone: "3224032093", pin: "8752", name: "Daniel Antonio Rodas Jaramillo", role: "operario", salary: 1750905 },
   { phone: "3153722857", pin: "7629", name: "Diógenes Marín Franco", role: "operario", salary: 1750905 },
@@ -2890,6 +2892,7 @@ async function sincronizarJornadasDesdeNube(renderCallback) {
 async function sincronizarJornadasConNube(renderCallback) {
   await sincronizarJornadasDesdeNube(renderCallback);
 }
+
 
 
 
