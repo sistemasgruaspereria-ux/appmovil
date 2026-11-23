@@ -1510,29 +1510,71 @@ function eliminarJornadaPorId(id) {
   renderCarpetasHistorial();
   renderReporteContabilidad();
 }
+
 // ==========================================
 // CÁLCULO DE EXTRAS Y RECARGOS (COLOMBIA — NOVIEMBRE 2026)
 // Esquema: Lun-Jue 8.5h (sin almuerzo) | Vie 8.0h (60 min almuerzo) = 42h/sem
 // Divisor: 210h/mes | Nocturno: 19:00-06:00 | Dom/Fest: 90%
 // ==========================================
+function normalizarCalculoJornada(jornada, calculoRaw) {
+  const base = calculoRaw || {};
+  const mismaHora = Boolean(
+    jornada &&
+    jornada.horaInicio &&
+    jornada.horaFin &&
+    String(jornada.horaInicio).trim() === String(jornada.horaFin).trim()
+  );
+
+  if (mismaHora) {
+    return {
+      ...base,
+      heDiurna: 0,
+      heNocturna: 0,
+      recNocturno: 0,
+      recDominical: 0,
+      recNoctDom: 0,
+      hedDominical: 0,
+      henDominical: 0,
+      totalHorasExtras: 0,
+      totalHorasRecargos: 0,
+      totalHorasConceptos: 0,
+      valorPagar: 0
+    };
+  }
+
+  return base;
+}
+
 function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMinutos, salarioMensual) {
-  const [y, m, d] = fechaStr.split("-").map(Number);
-  const [hI, minI] = horaInicioStr.split(":").map(Number);
-  const [hF, minF] = horaFinStr.split(":").map(Number);
-  const inicio = new Date(y, m - 1, d, hI, minI, 0);
-  const fin = new Date(y, m - 1, d, hF, minF, 0);
-  if (fin <= inicio) fin.setDate(fin.getDate() + 1);
+  const [y, m, d] = String(fechaStr || "").split("-").map(Number);
+  const [hI, minI] = String(horaInicioStr || "00:00").split(":").map(Number);
+  const [hF, minF] = String(horaFinStr || "00:00").split(":").map(Number);
+
+  const inicio = new Date(y, (m || 1) - 1, d || 1, hI || 0, minI || 0, 0);
+  const fin = new Date(y, (m || 1) - 1, d || 1, hF || 0, minF || 0, 0);
+
+  // Solo suma 1 día si la hora de fin es estrictamente menor que la de inicio (cruce de medianoche).
+  // Si son iguales (ej. 10:21 y 10:21), queda en 0 horas.
+  if (fin < inicio) {
+    fin.setDate(fin.getDate() + 1);
+  }
+
   const diaSemana = inicio.getDay(); // 0=Dom, 1=Lun, ..., 5=Vie, 6=Sab
-  const esDomingoOFestivo = diaSemana === 0 || FESTIVOS_COLOMBIA.has(fechaStr);
+  const festivosSet = typeof FESTIVOS_COLOMBIA !== "undefined" && FESTIVOS_COLOMBIA ? FESTIVOS_COLOMBIA : new Set();
+  const esDomingoOFestivo = diaSemana === 0 || festivosSet.has(fechaStr);
+
   let jornadaOrdinariaDia = 8.5;
   if (diaSemana === 5) jornadaOrdinariaDia = 8.0;
   if (diaSemana === 6 || diaSemana === 0) jornadaOrdinariaDia = 0.0;
+
   const descansoMinutos =
     almuerzoMinutos !== undefined && almuerzoMinutos !== null && almuerzoMinutos !== ""
       ? Math.max(0, Number(almuerzoMinutos))
       : (diaSemana === 5 ? 60 : 0);
-  const totalBrutoHoras = (fin - inicio) / (1000 * 60 * 60);
+
+  const totalBrutoHoras = Math.max(0, (fin - inicio) / (1000 * 60 * 60));
   const horasNetas = Math.max(0, totalBrutoHoras - descansoMinutos / 60);
+
   const tramos = [];
   const pasoMs = 15 * 60 * 1000;
   let cursor = new Date(inicio);
@@ -1550,6 +1592,7 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
     });
     cursor = siguiente;
   }
+
   let descansoPendiente = descansoMinutos;
   for (const t of tramos) {
     if (descansoPendiente <= 0) break;
@@ -1569,6 +1612,7 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
       }
     }
   }
+
   let heDiurna = 0;
   let heNocturna = 0;
   let recNocturno = 0;
@@ -1577,6 +1621,7 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
   let hedDominical = 0;
   let henDominical = 0;
   let horasAcumuladas = 0;
+
   function clasificarHoras(horas, superaJornada, domFest, noct) {
     if (horas <= 0) return;
     if (domFest) {
@@ -1596,6 +1641,7 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
       }
     }
   }
+
   for (const t of tramos) {
     if (t.minsTrabajados <= 0) continue;
     const horas = t.minsTrabajados / 60;
@@ -1610,7 +1656,9 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
     }
     horasAcumuladas += horas;
   }
-  const valorHoraOrd = (Number(salarioMensual) || 1750905) / DIVISOR_MENSUAL;
+
+  const divisor = typeof DIVISOR_MENSUAL === "number" && DIVISOR_MENSUAL > 0 ? DIVISOR_MENSUAL : 210;
+  const valorHoraOrd = (Number(salarioMensual) || 1750905) / divisor;
   const valorExtrasYRecargos =
     heDiurna * valorHoraOrd * 0.25 +
     heNocturna * valorHoraOrd * 0.75 +
@@ -1619,9 +1667,11 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
     recNoctDom * valorHoraOrd * 1.25 +
     hedDominical * valorHoraOrd * 1.15 +
     henDominical * valorHoraOrd * 1.65;
+
   const totalHorasExtras = Number((heDiurna + heNocturna + hedDominical + henDominical).toFixed(2));
   const totalHorasRecargos = Number((recNocturno + recDominical + recNoctDom).toFixed(2));
   const totalHorasConceptos = Number((totalHorasExtras + totalHorasRecargos).toFixed(2));
+
   return {
     esDomingoOFestivo,
     jornadaOrdinariaDia,
@@ -1640,6 +1690,7 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
     valorPagar: Math.round(valorExtrasYRecargos)
   };
 }
+
 // ==========================================
 // MÓDULO CONTABILIDAD (NÓMINA Y AUDITORÍA)
 // ==========================================
@@ -1686,14 +1737,15 @@ function renderReporteContabilidad() {
   Object.values(porEmpleado).forEach((grupo) => {
     let subExtras = 0, subRecargos = 0, subHoras = 0, subValor = 0;
     grupo.filas.forEach((f) => {
-      const c = f.calculo;
+      const c = normalizarCalculoJornada(f, f.calculo);
       const hExtras = Number(c.totalHorasExtras ?? ((c.heDiurna || 0) + (c.heNocturna || 0) + (c.hedDominical || 0) + (c.henDominical || 0)));
       const hRecargos = Number(c.totalHorasRecargos ?? ((c.recNocturno || 0) + (c.recDominical || 0) + (c.recNoctDom || 0)));
       const hTotal = Number(c.totalHorasConceptos ?? (hExtras + hRecargos));
+      const valorFila = Number(c.valorPagar || 0);
       subExtras += hExtras;
       subRecargos += hRecargos;
       subHoras += hTotal;
-      subValor += c.valorPagar;
+      subValor += valorFila;
       ultimoReporteFilasConta.push({
         tipo: "registro",
         fecha: f.fecha,
@@ -1713,7 +1765,7 @@ function renderReporteContabilidad() {
         hedDominical: c.hedDominical || 0,
         henDominical: c.henDominical || 0,
         totalHoras: Number(hTotal.toFixed(2)),
-        valorPagar: c.valorPagar
+        valorPagar: valorFila
       });
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -1735,7 +1787,7 @@ function renderReporteContabilidad() {
         <td>${c.hedDominical || 0}</td>
         <td>${c.henDominical || 0}</td>
         <td>${hTotal.toFixed(2)}</td>
-        <td>$${c.valorPagar.toLocaleString("es-CO")}</td>
+        <td>$${valorFila.toLocaleString("es-CO")}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -1759,7 +1811,7 @@ function renderReporteContabilidad() {
       <td>${subRecargos.toFixed(2)}</td>
       <td colspan="7"></td>
       <td>${subHoras.toFixed(2)}</td>
-      <td>$${subValor.toLocaleString("es-CO")}</td>
+      <td>$${Math.round(subValor).toLocaleString("es-CO")}</td>
     `;
     tbody.appendChild(trSub);
   });
@@ -1789,10 +1841,11 @@ function renderReporteContabilidad() {
       <td>${granRecargos.toFixed(2)}</td>
       <td colspan="7"></td>
       <td>${granHoras.toFixed(2)}</td>
-      <td>$${granValor.toLocaleString("es-CO")}</td>
+      <td>$${Math.round(granValor).toLocaleString("es-CO")}</td>
     </tr>
   `;
 }
+
 function exportarExcelContabilidad() {
   const encabezados = [
     "Fecha", "Empleado", "Cliente", "Dirección", "Hora Inicio", "Hora Fin", "Almuerzo (min)",
@@ -1853,11 +1906,13 @@ function exportarExcelContabilidad() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
 function abrirModalAuditoria(id) {
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const j = dbJornadas.find((item) => item.id === id);
   if (!j || !j.calculo) return;
-  const c = j.calculo;
+  const c = normalizarCalculoJornada(j, j.calculo);
+  const valorPagar = Number(c.valorPagar || 0);
   document.getElementById("auditoria-titulo-txt").innerText = `Auditoría · ${j.empleadoNombre}`;
   const novHtml = j.fotosNovedades && j.fotosNovedades.length
     ? `<div class="audit-grid">${j.fotosNovedades.map((f, i) => `
@@ -1872,10 +1927,10 @@ function abrirModalAuditoria(id) {
     <div class="audit-summary">
       <strong>Cliente:</strong> ${j.cliente}<br>
       <strong>Dirección:</strong> ${j.direccion}<br>
-      <strong>Tipo de Día:</strong> ${c.esDomingoOFestivo ? "Domingo / Festivo" : "Día Hábil"} (Jornada base: ${c.jornadaOrdinariaDia}h)<br>
+      <strong>Tipo de Día:</strong> ${c.esDomingoOFestivo ? "Domingo / Festivo" : "Día Hábil"} (Jornada base: ${c.jornadaOrdinariaDia ?? 8.5}h)<br>
       <strong>Horario:</strong> ${j.horaInicio} a ${j.horaFin} | <strong>Almuerzo/Descanso:</strong> ${j.almuerzoMin ?? 0} min<br>
       <strong>Observaciones:</strong> ${j.observaciones || "Ninguna"}<br>
-      <strong>Total H. Extras:</strong> ${c.totalHorasExtras ?? 0} h · <strong>Total Recargos:</strong> ${c.totalHorasRecargos ?? 0} h · <strong>A Pagar:</strong> $${c.valorPagar.toLocaleString("es-CO")}
+      <strong>Total H. Extras:</strong> ${c.totalHorasExtras ?? 0} h · <strong>Total Recargos:</strong> ${c.totalHorasRecargos ?? 0} h · <strong>A Pagar:</strong> $${valorPagar.toLocaleString("es-CO")}
     </div>
     <div class="audit-grid">
       <div class="audit-photo-card">
@@ -1894,6 +1949,7 @@ function abrirModalAuditoria(id) {
   `;
   document.getElementById("modalAuditoriaConta").classList.remove("hidden");
 }
+
 function abrirVisorFoto(titulo, src) {
   if (!src) return;
   const modal = document.getElementById("modalVisorFoto");
@@ -1903,12 +1959,14 @@ function abrirVisorFoto(titulo, src) {
   if (imgEl) imgEl.src = src;
   if (modal) modal.classList.remove("hidden");
 }
+
 function cerrarVisorFoto() {
   const modal = document.getElementById("modalVisorFoto");
   const imgEl = document.getElementById("visor-foto-img");
   if (modal) modal.classList.add("hidden");
   if (imgEl) imgEl.src = "";
 }
+
 function cerrarModalAuditoria() {
   document.getElementById("modalAuditoriaConta").classList.add("hidden");
 }
