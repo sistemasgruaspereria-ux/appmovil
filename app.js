@@ -1200,7 +1200,7 @@ function estamparFotoJornada(file, canvasId, lineasTexto, callback) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
-      const maxWidth = 1080;
+      const maxWidth = 800;
       const scale = img.width > maxWidth ? maxWidth / img.width : 1;
       canvas.width = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
@@ -2908,3 +2908,4 @@ function purgeSyncedTasks() {
   const cleanedTasks = savedTasks.filter((task) => task.estado !== "sincronizada");
   localStorage.setItem("ayax_tasks_db", JSON.stringify(cleanedTasks));
 }
+
