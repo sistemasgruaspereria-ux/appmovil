@@ -8,7 +8,6 @@ const FESTIVOS_COLOMBIA = new Set([
   "2026-07-20", "2026-08-07", "2026-08-17", "2026-10-12", "2026-11-02",
   "2026-11-16", "2026-12-08", "2026-12-25"
 ]);
-
 // Usuarios y roles base (se pueden crear, editar y eliminar desde Admin)
 let defaultUsers = [
   { phone: "3217293985", pin: "1834", name: "Carolina Valencia Motato", role: "admin", salary: 0 },
@@ -44,7 +43,6 @@ let defaultUsers = [
   { phone: "3105385889", pin: "7841", name: "Wilmar Diovany Muñoz Giraldo", role: "operario", salary: 1750905 },
   { phone: "3102276487", pin: "7926", name: "Yeison Alberson Morales Uribe", role: "operario", salary: 1750905 }
 ];
-
 // Listados desplegables de Operadores y Aparejadores
 let defaultOperadores = [
   "Cristian Camilo Rodas Grajales", "Daniel Antonio Rodas Jaramillo", "Diógenes Marín Franco",
@@ -57,7 +55,6 @@ let defaultOperadores = [
   "Uriel González Ocampo", "Víctor Fernando Ocampo Amaya", "Wilfer Alberto Sepulveda Restrepo",
   "Willer Alexis Quintero Hurtado", "Wilmar Diovany Muñoz Giraldo", "Yeison Alberson Morales Uribe"
 ];
-
 let defaultAparejadores = [
   "Andrés Camilo Montes Alzate", "Andrés Felipe Gonzalez Ruiz", "Andrés Felipe Ospina Zapata",
   "Arley Cano Vergara", "Brandon Estiven Tapasco Piñeros", "Didier Roberto Orejuela Henao",
@@ -65,7 +62,6 @@ let defaultAparejadores = [
   "Jhonathan Arredondo Ossa", "Jonathan Steven Trujillo Taborda", "Juan Daniel Gómez Morales",
   "Juan José Arango Gallego", "Luis Fernando Tangarife Moncada"
 ];
-
 // Vehículos / Equipos
 let defaultVehiculos = [
   { categoria: "Grúa", etiqueta: "#29 TADANO 70 TON", modelo: "TADANO/TADANO 70 TON", combustible: "Eléctrico" },
@@ -113,7 +109,6 @@ let defaultVehiculos = [
   { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN # 8", modelo: "Foton/4612 Aumark", combustible: "Gasolina" },
   { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN #9", modelo: "Foton/Tractocamión AUMAN EST 6x4", combustible: "Diésel" }
 ];
-
 // Variables globales de estado
 let totalDaysCreated = 0;
 let currentActiveTaskId = null;
@@ -126,7 +121,6 @@ let ultimoReporteFilasConta = [];
 let ultimoReporteTotalesConta = { horasExtras: 0, horasRecargos: 0, totalHoras: 0, valor: 0 };
 let ultimaJornadaAbiertaId = null;
 let tabRedesActiva = "pendientes";
-
 // ==========================================
 // PERSISTENCIA Y CATÁLOGOS
 // ==========================================
@@ -138,11 +132,9 @@ function getDBUsers() {
   }
   return local;
 }
-
 function saveDBUsers(users) {
   localStorage.setItem("ayax_users_db", JSON.stringify(users));
 }
-
 function getDBOperadores() {
   const local = JSON.parse(localStorage.getItem("ayax_operadores_db"));
   if (!local || !local.length) {
@@ -151,7 +143,6 @@ function getDBOperadores() {
   }
   return local;
 }
-
 function getDBAparejadores() {
   const local = JSON.parse(localStorage.getItem("ayax_aparejadores_db"));
   if (!local || !local.length) {
@@ -160,7 +151,6 @@ function getDBAparejadores() {
   }
   return local;
 }
-
 function getDBVehiculos() {
   const local = JSON.parse(localStorage.getItem("ayax_vehiculos_db"));
   if (!local || !local.length) {
@@ -169,30 +159,25 @@ function getDBVehiculos() {
   }
   return local;
 }
-
 function getNextConsecutivoGP() {
   const seq = parseInt(localStorage.getItem("ayax_consecutivo_gp") || "1", 10);
   const code = "GP " + String(seq).padStart(4, "0");
   return { code, seq };
 }
-
 function incrementConsecutivoGP() {
   const seq = parseInt(localStorage.getItem("ayax_consecutivo_gp") || "1", 10);
   localStorage.setItem("ayax_consecutivo_gp", String(seq + 1));
 }
-
 // ==========================================
 // CONTROL DE CONECTIVIDAD
 // ==========================================
 window.addEventListener("online", handleNetworkChange);
 window.addEventListener("offline", handleNetworkChange);
-
 function handleNetworkChange() {
   if (navigator.onLine) {
     processOfflineQueue();
   }
 }
-
 function processOfflineQueue() {
   const pendingSync = JSON.parse(localStorage.getItem("ayax_sync_queue")) || [];
   if (pendingSync.length > 0) {
@@ -201,7 +186,6 @@ function processOfflineQueue() {
     }, 1500);
   }
 }
-
 // ==========================================
 // AUTENTICACIÓN, SESIÓN Y CONTROL POR ROL
 // ==========================================
@@ -212,12 +196,10 @@ function normalizarTexto(valor) {
     .toLowerCase()
     .trim();
 }
-
 function esUsuarioOperarioHoras(usuario) {
   if (!usuario) return false;
   return normalizarTexto(usuario.role) === "operario_horas";
 }
-
 function loginUser(phone, pin) {
   const cleanPhone = String(phone || "").trim();
   const cleanPin = String(pin || "").trim();
@@ -238,7 +220,6 @@ function loginUser(phone, pin) {
   configurarVistaPorRol(operador);
   return operador;
 }
-
 function logoutUser() {
   localStorage.removeItem("usuario_activo");
   localStorage.removeItem("token_sesion");
@@ -250,7 +231,6 @@ function logoutUser() {
   fotoFinStamped = "";
   fotosNovedadesStamped = [];
   ultimaJornadaAbiertaId = null;
-
   const loginPhone = document.getElementById("loginPhone");
   const loginPin = document.getElementById("loginPin");
   const dropdown = document.getElementById("userDropdownMenu");
@@ -262,7 +242,6 @@ function logoutUser() {
   if (appContainer) appContainer.classList.add("hidden");
   if (loginScreen) loginScreen.classList.remove("hidden");
 }
-
 function setVisibilidadTab(tabKey, visible) {
   const cap = tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
   const btn = document.getElementById(`btnTab${cap}`);
@@ -276,7 +255,6 @@ function setVisibilidadTab(tabKey, visible) {
     sec.classList.remove("active");
   }
 }
-
 function configurarVistaPorRol(usuario) {
   if (!usuario) return;
   const rol = normalizarTexto(usuario.role);
@@ -285,7 +263,6 @@ function configurarVistaPorRol(usuario) {
   const esRedes = rol === "redes";
   const esConta = rol === "contabilidad";
   const esAdmin = rol === "admin" || rol === "administrador";
-
   const navTabs = document.getElementById("mainNavTabs");
   if (navTabs) {
     navTabs.classList.toggle("hidden", esProyectos);
@@ -299,7 +276,6 @@ function configurarVistaPorRol(usuario) {
   setVisibilidadTab("pendientes", !esHoras && !esProyectos && !esConta && !esRedes);
   setVisibilidadTab("finalizadas", !esHoras && !esProyectos && !esConta);
   setVisibilidadTab("contabilidad", esConta || esAdmin);
-
   if (esProyectos) {
     switchTab("proyectos");
     return;
@@ -323,7 +299,6 @@ function configurarVistaPorRol(usuario) {
   }
   switchTab("pendientes");
 }
-
 // ==========================================
 // INICIALIZACIÓN DE LA APLICACIÓN
 // ==========================================
@@ -334,7 +309,6 @@ window.addEventListener("DOMContentLoaded", () => {
   getDBAparejadores();
   getDBVehiculos();
   purgeSyncedTasks();
-
   const formLogin = document.getElementById("loginForm") || document.getElementById("formLogin");
   if (formLogin) {
     formLogin.addEventListener("submit", (e) => {
@@ -344,7 +318,6 @@ window.addEventListener("DOMContentLoaded", () => {
       loginUser(phoneVal, pinVal);
     });
   }
-
   const btnLogout = document.getElementById("btn-logout");
   if (btnLogout) {
     btnLogout.addEventListener("click", (e) => {
@@ -353,7 +326,6 @@ window.addEventListener("DOMContentLoaded", () => {
       logoutUser();
     });
   }
-
   window.addEventListener("click", (e) => {
     const dropdown = document.getElementById("userDropdownMenu");
     const badge = document.getElementById("userBadge");
@@ -361,20 +333,16 @@ window.addEventListener("DOMContentLoaded", () => {
       dropdown.classList.add("hidden");
     }
   });
-
   const today = new Date();
   const hoyStr = obtenerFechaLocalYYYYMMDD(today);
   const firstDay = obtenerFechaLocalYYYYMMDD(new Date(today.getFullYear(), today.getMonth(), 1));
   const lastDay = obtenerFechaLocalYYYYMMDD(new Date(today.getFullYear(), today.getMonth() + 1, 0));
-
   if (document.getElementById("pdfStartDate")) document.getElementById("pdfStartDate").value = firstDay;
   if (document.getElementById("pdfEndDate")) document.getElementById("pdfEndDate").value = lastDay;
   if (document.getElementById("jornada-fecha")) document.getElementById("jornada-fecha").value = hoyStr;
   if (document.getElementById("filtro-fecha-inicio-conta")) document.getElementById("filtro-fecha-inicio-conta").value = firstDay;
   if (document.getElementById("filtro-fecha-fin-conta")) document.getElementById("filtro-fecha-fin-conta").value = lastDay;
-
   initEventListenersHoras();
-
   const usuarioActivo = JSON.parse(localStorage.getItem("usuario_activo"));
   if (usuarioActivo) {
     const loginScreen = document.getElementById("loginScreen");
@@ -386,12 +354,10 @@ window.addEventListener("DOMContentLoaded", () => {
     configurarVistaPorRol(usuarioActivo);
   }
 });
-
 function toggleUserMenu() {
   const dropdown = document.getElementById("userDropdownMenu");
   if (dropdown) dropdown.classList.toggle("hidden");
 }
-
 function verificarModoMantenimiento() {
   const enMantenimiento = false;
   const pantallaMantenimiento = document.getElementById("maintenance-screen");
@@ -405,7 +371,6 @@ function verificarModoMantenimiento() {
     pantallaMantenimiento.style.display = "none";
   }
 }
-
 function switchTab(tab) {
   const usuarioActivo = JSON.parse(localStorage.getItem("usuario_activo"));
   const rol = normalizarTexto(usuarioActivo?.role);
@@ -427,36 +392,31 @@ function switchTab(tab) {
   if (tab === "proyectos") renderMenuProyectos();
   if (tab === "admin") renderMenuAdmin();
   if (tab === "pendientes") renderTasks();
-  if (tab === "horas") renderVistaJornada();
-  if (tab === "diasRegistrados") renderListaDiasRegistrados();
-  if (tab === "historial") renderCarpetasHistorial();
+  if (tab === "horas") sincronizarJornadasDesdeNube(renderVistaJornada);
+  if (tab === "diasRegistrados") sincronizarJornadasDesdeNube(renderListaDiasRegistrados);
+  if (tab === "historial") sincronizarJornadasDesdeNube(renderCarpetasHistorial);
   if (tab === "finalizadas") filterFinalized();
-  if (tab === "contabilidad") renderReporteContabilidad();
+  if (tab === "contabilidad") sincronizarJornadasDesdeNube(renderReporteContabilidad);
 }
-
 function horaActualHHMM() {
   const ahora = new Date();
   return `${String(ahora.getHours()).padStart(2, "0")}:${String(ahora.getMinutes()).padStart(2, "0")}`;
 }
-
 function obtenerFechaLocalYYYYMMDD(dateObj = new Date()) {
   const y = dateObj.getFullYear();
   const m = String(dateObj.getMonth() + 1).padStart(2, "0");
   const d = String(dateObj.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
-
 function formatearFechaDDMMAAAA(fechaStr) {
   if (!fechaStr || !fechaStr.includes("-")) return fechaStr || "";
   const [y, m, d] = fechaStr.split("-");
   return `${d}/${m}/${y}`;
 }
-
 function obtenerClaveMes(fechaStr) {
   if (!fechaStr || fechaStr.length < 7) return obtenerFechaLocalYYYYMMDD().slice(0, 7);
   return fechaStr.slice(0, 7);
 }
-
 function formatearNombreMes(claveMes) {
   const [y, m] = claveMes.split("-").map(Number);
   const nombres = [
@@ -466,7 +426,6 @@ function formatearNombreMes(claveMes) {
   const nombreMes = nombres[(m || 1) - 1] || "Mes";
   return `${nombreMes} ${y} (${claveMes})`;
 }
-
 // ==========================================
 // ROL PROYECTOS
 // ==========================================
@@ -474,11 +433,9 @@ function renderMenuProyectos() {
   document.getElementById("grid-proyectos-menu")?.classList.remove("hidden");
   document.getElementById("subvista-proyectos-container")?.classList.add("hidden");
 }
-
 function volverMenuProyectos() {
   renderMenuProyectos();
 }
-
 function abrirFormularioCrearTarea() {
   const { code } = getNextConsecutivoGP();
   const ops = getDBOperadores().map((o) => `<option value="${o}">${o}</option>`).join("");
@@ -554,7 +511,6 @@ function abrirFormularioCrearTarea() {
     volverMenuProyectos();
   });
 }
-
 function verSubVistaProyectos(tipo) {
   document.getElementById("grid-proyectos-menu").classList.add("hidden");
   const container = document.getElementById("subvista-proyectos-container");
@@ -582,7 +538,6 @@ function verSubVistaProyectos(tipo) {
   `;
   filtrarListaSubvistaProyectos(tipo);
 }
-
 function filtrarListaSubvistaProyectos(tipo) {
   const container = document.getElementById("lista-subvista-proyectos-content");
   if (!container) return;
@@ -638,7 +593,6 @@ function filtrarListaSubvistaProyectos(tipo) {
     `;
   }).join("");
 }
-
 function cancelarTareaPorProyectos(id) {
   if (!confirm(`¿Cancelar la tarea ${id}? Al operario se le marcará como cancelada y no podrá iniciar ni registrar.`)) return;
   let tasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
@@ -647,7 +601,6 @@ function cancelarTareaPorProyectos(id) {
   alert(`Tarea ${id} marcada como cancelada.`);
   filtrarListaSubvistaProyectos("pendientes");
 }
-
 function renderInformesProyectos(container) {
   container.innerHTML = `
     <div class="form-group">
@@ -673,7 +626,6 @@ function renderInformesProyectos(container) {
     <button type="button" class="btn-primary" onclick="descargarExcelInformesProyectos()" style="background:#27ae60;">Descargar Excel (.xls)</button>
   `;
 }
-
 function descargarExcelInformesProyectos() {
   const est = document.getElementById("inf-p-estado")?.value || "todas";
   const fIni = document.getElementById("inf-p-inicio")?.value || "";
@@ -746,7 +698,6 @@ function descargarExcelInformesProyectos() {
   link.click();
   document.body.removeChild(link);
 }
-
 // ==========================================
 // ROL ADMINISTRADOR
 // ==========================================
@@ -754,11 +705,9 @@ function renderMenuAdmin() {
   document.getElementById("grid-admin-menu")?.classList.remove("hidden");
   document.getElementById("subvista-admin-container")?.classList.add("hidden");
 }
-
 function volverMenuAdmin() {
   renderMenuAdmin();
 }
-
 function verSubVistaAdmin(tipo) {
   document.getElementById("grid-admin-menu").classList.add("hidden");
   const container = document.getElementById("subvista-admin-container");
@@ -776,7 +725,6 @@ function verSubVistaAdmin(tipo) {
   if (tipo === "informes") renderAdminInformes(body);
   if (tipo === "backup") renderAdminBackup(body);
 }
-
 function renderAdminUsuarios(container) {
   const users = getDBUsers();
   container.innerHTML = `
@@ -841,7 +789,6 @@ function renderAdminUsuarios(container) {
     renderAdminUsuarios(container);
   });
 }
-
 function editarUsuarioAdmin(index) {
   const users = getDBUsers();
   const u = users[index];
@@ -867,14 +814,12 @@ function editarUsuarioAdmin(index) {
   alert("Usuario actualizado.");
   renderAdminUsuarios(document.getElementById("subvista-admin-body"));
 }
-
 function eliminarUsuarioAdmin(phone) {
   if (!confirm("¿Eliminar este usuario?")) return;
   const currentUsers = getDBUsers().filter((u) => String(u.phone) !== String(phone));
   saveDBUsers(currentUsers);
   renderAdminUsuarios(document.getElementById("subvista-admin-body"));
 }
-
 function renderAdminCatalogos(container) {
   const ops = getDBOperadores();
   const aps = getDBAparejadores();
@@ -936,7 +881,6 @@ function renderAdminCatalogos(container) {
     </div>
   `;
 }
-
 function agregarOperadorAdmin() {
   const name = document.getElementById("new-op-name")?.value.trim();
   if (!name) return;
@@ -945,7 +889,6 @@ function agregarOperadorAdmin() {
   localStorage.setItem("ayax_operadores_db", JSON.stringify(ops));
   renderAdminCatalogos(document.getElementById("subvista-admin-body"));
 }
-
 function editarOperadorAdmin(idx) {
   const ops = getDBOperadores();
   const nuevo = prompt("Editar nombre del operador:", ops[idx]);
@@ -954,13 +897,11 @@ function editarOperadorAdmin(idx) {
   localStorage.setItem("ayax_operadores_db", JSON.stringify(ops));
   renderAdminCatalogos(document.getElementById("subvista-admin-body"));
 }
-
 function eliminarOperadorAdmin(idx) {
   const ops = getDBOperadores().filter((_, i) => i !== idx);
   localStorage.setItem("ayax_operadores_db", JSON.stringify(ops));
   renderAdminCatalogos(document.getElementById("subvista-admin-body"));
 }
-
 function agregarAparejadorAdmin() {
   const name = document.getElementById("new-ap-name")?.value.trim();
   if (!name) return;
@@ -969,7 +910,6 @@ function agregarAparejadorAdmin() {
   localStorage.setItem("ayax_aparejadores_db", JSON.stringify(aps));
   renderAdminCatalogos(document.getElementById("subvista-admin-body"));
 }
-
 function editarAparejadorAdmin(idx) {
   const aps = getDBAparejadores();
   const nuevo = prompt("Editar nombre del aparejador:", aps[idx]);
@@ -978,13 +918,11 @@ function editarAparejadorAdmin(idx) {
   localStorage.setItem("ayax_aparejadores_db", JSON.stringify(aps));
   renderAdminCatalogos(document.getElementById("subvista-admin-body"));
 }
-
 function eliminarAparejadorAdmin(idx) {
   const aps = getDBAparejadores().filter((_, i) => i !== idx);
   localStorage.setItem("ayax_aparejadores_db", JSON.stringify(aps));
   renderAdminCatalogos(document.getElementById("subvista-admin-body"));
 }
-
 function agregarVehiculoAdmin() {
   const etiqueta = document.getElementById("new-veh-etiqueta")?.value.trim();
   if (!etiqueta) return;
@@ -998,7 +936,6 @@ function agregarVehiculoAdmin() {
   localStorage.setItem("ayax_vehiculos_db", JSON.stringify(vehs));
   renderAdminCatalogos(document.getElementById("subvista-admin-body"));
 }
-
 function editarVehiculoAdmin(idx) {
   const vehs = getDBVehiculos();
   const v = vehs[idx];
@@ -1011,13 +948,11 @@ function editarVehiculoAdmin(idx) {
   localStorage.setItem("ayax_vehiculos_db", JSON.stringify(vehs));
   renderAdminCatalogos(document.getElementById("subvista-admin-body"));
 }
-
 function eliminarVehiculoAdmin(idx) {
   const vehs = getDBVehiculos().filter((_, i) => i !== idx);
   localStorage.setItem("ayax_vehiculos_db", JSON.stringify(vehs));
   renderAdminCatalogos(document.getElementById("subvista-admin-body"));
 }
-
 function renderAdminInformes(container) {
   container.innerHTML = `
     <div class="form-group">
@@ -1031,7 +966,6 @@ function renderAdminInformes(container) {
     <button type="button" class="btn-primary" onclick="exportarInformePorRolAdmin()" style="background:#27ae60;">Generar Informe del Rol</button>
   `;
 }
-
 function exportarInformePorRolAdmin() {
   const rol = document.getElementById("admin-inf-rol")?.value || "proyectos";
   if (rol === "contabilidad") {
@@ -1041,14 +975,12 @@ function exportarInformePorRolAdmin() {
     descargarExcelInformesProyectos();
   }
 }
-
 function renderAdminBackup(container) {
   container.innerHTML = `
     <p class="muted" style="margin-bottom:10px;">Descarga una copia de seguridad completa en formato JSON.</p>
     <button type="button" class="btn-primary" onclick="generarBackupJSON()" style="background:#ea580c;">Descargar Copia de Seguridad</button>
   `;
 }
-
 function generarBackupJSON() {
   const data = {
     users: getDBUsers(),
@@ -1067,7 +999,6 @@ function generarBackupJSON() {
   link.click();
   document.body.removeChild(link);
 }
-
 // ==========================================
 // FLUJO DE JORNADA, DÍAS REGISTRADOS E HISTORIAL (OPERARIO HORAS)
 // ==========================================
@@ -1129,7 +1060,6 @@ function initEventListenersHoras() {
     e.target.value = "";
   });
 }
-
 function obtenerUltimaJornadaAbiertaUsuario() {
   const user = JSON.parse(localStorage.getItem("usuario_activo"));
   if (!user) return null;
@@ -1141,7 +1071,6 @@ function obtenerUltimaJornadaAbiertaUsuario() {
   }
   return abiertas.length ? abiertas[abiertas.length - 1] : null;
 }
-
 function actualizarTituloAcordeonDia() {
   const acordeon = document.getElementById("acordeon-apertura-jornada");
   const titulo = document.getElementById("titulo-acordeon-dia");
@@ -1151,7 +1080,6 @@ function actualizarTituloAcordeonDia() {
   titulo.innerText = "1. Abrir Jornada de Trabajo";
   if (btnElim) btnElim.style.display = abierta ? "inline-block" : "none";
 }
-
 function eliminarJornadaActivaDesdeAcordeon() {
   const abierta = obtenerUltimaJornadaAbiertaUsuario();
   if (!abierta) {
@@ -1174,7 +1102,6 @@ function eliminarJornadaActivaDesdeAcordeon() {
   }
   eliminarJornadaPorId(abierta.id);
 }
-
 function capturarGPSJornada(inputId) {
   const input = document.getElementById(inputId);
   if (!navigator.geolocation) {
@@ -1190,7 +1117,6 @@ function capturarGPSJornada(inputId) {
     { enableHighAccuracy: true, timeout: 7000 }
   );
 }
-
 function estamparFotoJornada(file, canvasId, lineasTexto, callback) {
   if (!file) return;
   const reader = new FileReader();
@@ -1222,13 +1148,12 @@ function estamparFotoJornada(file, canvasId, lineasTexto, callback) {
         const yPos = canvas.height - altoBanner + paddingY + idx * lineHeight;
         ctx.fillText(linea, paddingX, yPos, canvas.width - paddingX * 2);
       });
-      callback(canvas.toDataURL("image/jpeg", 0.85));
+      callback(canvas.toDataURL("image/jpeg", 0.65));
     };
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
-
 function refrescarSelloInicioJornada() {
   const file = document.getElementById("foto-inicio-file").files[0];
   if (!file) return;
@@ -1243,7 +1168,6 @@ function refrescarSelloInicioJornada() {
     `Ubicación: ${dir}`
   ], (url) => { fotoInicioStamped = url; });
 }
-
 function refrescarSelloFinJornada() {
   const file = document.getElementById("foto-fin-file").files[0];
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
@@ -1257,7 +1181,6 @@ function refrescarSelloFinJornada() {
     `Ubicación: ${jActiva.direccion}`
   ], (url) => { fotoFinStamped = url; });
 }
-
 function guardarAperturaJornada() {
   const user = JSON.parse(localStorage.getItem("usuario_activo"));
   const fecha = document.getElementById("jornada-fecha").value.trim();
@@ -1272,7 +1195,7 @@ function guardarAperturaJornada() {
   const finalizarApertura = (imgDataUrl) => {
     const nuevaId = "jrn-" + Date.now();
     const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
-    dbJornadas.push({
+    const nuevaJornada = {
       id: nuevaId,
       empleadoId: user.phone,
       empleadoNombre: user.name,
@@ -1290,8 +1213,10 @@ function guardarAperturaJornada() {
       observaciones: "",
       fotosNovedades: [],
       calculo: null
-    });
+    };
+    dbJornadas.push(nuevaJornada);
     localStorage.setItem("ayax_jornadas_db", JSON.stringify(dbJornadas));
+    guardarJornadaEnNube(nuevaJornada);
     ultimaJornadaAbiertaId = nuevaId;
     fotoInicioStamped = "";
     document.getElementById("form-inicio-jornada").reset();
@@ -1323,12 +1248,10 @@ function guardarAperturaJornada() {
     );
   }
 }
-
 function renderVistaJornada() {
   actualizarTituloAcordeonDia();
   renderJornadasAbiertas();
 }
-
 function renderJornadasAbiertas() {
   const user = JSON.parse(localStorage.getItem("usuario_activo"));
   const cont = document.getElementById("lista-jornadas-abiertas");
@@ -1353,7 +1276,6 @@ function renderJornadasAbiertas() {
     </div>
   `).join("");
 }
-
 function abrirCierreJornada(id) {
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const j = dbJornadas.find((item) => item.id === id);
@@ -1379,11 +1301,9 @@ function abrirCierreJornada(id) {
   document.getElementById("panel-cierre-jornada").classList.remove("hidden");
   document.getElementById("panel-cierre-jornada").scrollIntoView({ behavior: "smooth" });
 }
-
 function cancelarCierreJornada() {
   document.getElementById("panel-cierre-jornada").classList.add("hidden");
 }
-
 function procesarArchivosNovedad(fileList) {
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const j = dbJornadas.find((item) => item.id === document.getElementById("cierre-jornada-id").value);
@@ -1397,7 +1317,6 @@ function procesarArchivosNovedad(fileList) {
     });
   });
 }
-
 function renderThumbsNovedades() {
   const cont = document.getElementById("galeria-novedades-thumbs");
   if (!cont) return;
@@ -1408,12 +1327,10 @@ function renderThumbsNovedades() {
     </div>
   `).join("");
 }
-
 function quitarThumbNovedad(fotoId) {
   fotosNovedadesStamped = fotosNovedadesStamped.filter((f) => f.id !== fotoId);
   renderThumbsNovedades();
 }
-
 function guardarCierreJornada() {
   const id = document.getElementById("cierre-jornada-id").value.trim();
   const horaFin = document.getElementById("jornada-hora-fin").value.trim() || horaActualHHMM();
@@ -1426,7 +1343,6 @@ function guardarCierreJornada() {
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const idx = dbJornadas.findIndex((j) => j.id === id);
   if (idx === -1) return;
-
   const finalizarCierre = (imgFinUrl) => {
     const j = dbJornadas[idx];
     const [y, m, d] = j.fecha.split("-").map(Number);
@@ -1435,7 +1351,6 @@ function guardarCierreJornada() {
       almuerzoRaw !== "" && almuerzoRaw !== null && almuerzoRaw !== undefined
         ? Math.max(0, parseInt(almuerzoRaw, 10) || 0)
         : (esViernes ? 60 : 0);
-
     j.horaFin = horaFin;
     j.fotoFin = imgFinUrl;
     j.almuerzoMin = almuerzoMin;
@@ -1446,6 +1361,7 @@ function guardarCierreJornada() {
     j.calculo = calcularJornadaLaboral(j.fecha, j.horaInicio, horaFin, almuerzoMin, j.salario);
     dbJornadas[idx] = j;
     localStorage.setItem("ayax_jornadas_db", JSON.stringify(dbJornadas));
+    guardarJornadaEnNube(j);
     if (ultimaJornadaAbiertaId === id) {
       ultimaJornadaAbiertaId = null;
     }
@@ -1456,7 +1372,6 @@ function guardarCierreJornada() {
     renderVistaJornada();
     switchTab("diasRegistrados");
   };
-
   if (fotoFinStamped) {
     finalizarCierre(fotoFinStamped);
   } else {
@@ -1474,7 +1389,6 @@ function guardarCierreJornada() {
     );
   }
 }
-
 function renderTarjetaDiaCerrado(j) {
   const c = j.calculo || {};
   const fechaBonita = formatearFechaDDMMAAAA(j.fecha);
@@ -1513,7 +1427,6 @@ function renderTarjetaDiaCerrado(j) {
     </details>
   `;
 }
-
 function renderListaDiasRegistrados() {
   const user = JSON.parse(localStorage.getItem("usuario_activo"));
   const cont = document.getElementById("lista-dias-registrados-mes");
@@ -1535,7 +1448,6 @@ function renderListaDiasRegistrados() {
   }
   cont.innerHTML = diasMes.map(renderTarjetaDiaCerrado).join("");
 }
-
 function renderCarpetasHistorial() {
   const user = JSON.parse(localStorage.getItem("usuario_activo"));
   const cont = document.getElementById("carpetas-historial-meses");
@@ -1575,7 +1487,6 @@ function renderCarpetasHistorial() {
     `;
   }).join("");
 }
-
 function limpiarFiltroCalendario(inputId, fnRenderName) {
   const input = document.getElementById(inputId);
   if (input) input.value = "";
@@ -1583,7 +1494,6 @@ function limpiarFiltroCalendario(inputId, fnRenderName) {
     window[fnRenderName]();
   }
 }
-
 function eliminarJornadaPorId(id) {
   if (!confirm("¿Deseas eliminar este registro?")) return;
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
@@ -1600,7 +1510,6 @@ function eliminarJornadaPorId(id) {
   renderCarpetasHistorial();
   renderReporteContabilidad();
 }
-
 // ==========================================
 // CÁLCULO DE EXTRAS Y RECARGOS (COLOMBIA — NOVIEMBRE 2026)
 // Esquema: Lun-Jue 8.5h (sin almuerzo) | Vie 8.0h (60 min almuerzo) = 42h/sem
@@ -1610,44 +1519,29 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
   const [y, m, d] = fechaStr.split("-").map(Number);
   const [hI, minI] = horaInicioStr.split(":").map(Number);
   const [hF, minF] = horaFinStr.split(":").map(Number);
-
   const inicio = new Date(y, m - 1, d, hI, minI, 0);
   const fin = new Date(y, m - 1, d, hF, minF, 0);
   if (fin <= inicio) fin.setDate(fin.getDate() + 1);
-
   const diaSemana = inicio.getDay(); // 0=Dom, 1=Lun, ..., 5=Vie, 6=Sab
   const esDomingoOFestivo = diaSemana === 0 || FESTIVOS_COLOMBIA.has(fechaStr);
-
-  // Jornada ordinaria según día:
-  // Lun(1) a Jue(4): 8.5h | Vie(5): 8.0h | Sáb(6) y Dom(0): 0.0h
   let jornadaOrdinariaDia = 8.5;
   if (diaSemana === 5) jornadaOrdinariaDia = 8.0;
   if (diaSemana === 6 || diaSemana === 0) jornadaOrdinariaDia = 0.0;
-
-  // Tiempo de almuerzo:
-  // Si es viernes (5) y no se especifica o se envía null/undefined, aplica 60 min por defecto.
-  // Lun-Jue por defecto es 0 min a menos que se indique un número explícito.
   const descansoMinutos =
     almuerzoMinutos !== undefined && almuerzoMinutos !== null && almuerzoMinutos !== ""
       ? Math.max(0, Number(almuerzoMinutos))
       : (diaSemana === 5 ? 60 : 0);
-
   const totalBrutoHoras = (fin - inicio) / (1000 * 60 * 60);
   const horasNetas = Math.max(0, totalBrutoHoras - descansoMinutos / 60);
-
   const tramos = [];
   const pasoMs = 15 * 60 * 1000;
   let cursor = new Date(inicio);
-
   while (cursor < fin) {
     const siguiente = new Date(Math.min(cursor.getTime() + pasoMs, fin.getTime()));
     const minsTramo = (siguiente - cursor) / (1000 * 60);
     const horaDecimal = cursor.getHours() + cursor.getMinutes() / 60;
-
-    // Horario nocturno Colombia: 19:00 (7:00 p.m.) a 06:00 (6:00 a.m.)
     const esFranjaNocturna = horaDecimal >= 19 || horaDecimal < 6;
     const esVentanaAlmuerzo = horaDecimal >= 12 && horaDecimal < 14.5;
-
     tramos.push({
       minsTramo,
       minsTrabajados: minsTramo,
@@ -1656,7 +1550,6 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
     });
     cursor = siguiente;
   }
-
   let descansoPendiente = descansoMinutos;
   for (const t of tramos) {
     if (descansoPendiente <= 0) break;
@@ -1676,20 +1569,16 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
       }
     }
   }
-
-  let heDiurna = 0;       // Extra diurna hábil (+25%)
-  let heNocturna = 0;      // Extra nocturna hábil (+75%)
-  let recNocturno = 0;     // Recargo nocturno ordinario hábil (+35%)
-  let recDominical = 0;    // Recargo dominical/festivo ordinario (+90%)
-  let recNoctDom = 0;      // Recargo nocturno en domingo/festivo (+125% = +90% + 35%)
-  let hedDominical = 0;    // Extra diurna dominical/festivo (+115% = +90% + 25%)
-  let henDominical = 0;    // Extra nocturna dominical/festivo (+165% = +90% + 75%)
-
+  let heDiurna = 0;
+  let heNocturna = 0;
+  let recNocturno = 0;
+  let recDominical = 0;
+  let recNoctDom = 0;
+  let hedDominical = 0;
+  let henDominical = 0;
   let horasAcumuladas = 0;
-
   function clasificarHoras(horas, superaJornada, domFest, noct) {
     if (horas <= 0) return;
-
     if (domFest) {
       if (!superaJornada) {
         if (noct) recNoctDom += horas;
@@ -1707,11 +1596,9 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
       }
     }
   }
-
   for (const t of tramos) {
     if (t.minsTrabajados <= 0) continue;
     const horas = t.minsTrabajados / 60;
-
     if (horasAcumuladas < jornadaOrdinariaDia && horasAcumuladas + horas > jornadaOrdinariaDia) {
       const hOrdinarias = jornadaOrdinariaDia - horasAcumuladas;
       const hExtras = horas - hOrdinarias;
@@ -1723,9 +1610,7 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
     }
     horasAcumuladas += horas;
   }
-
   const valorHoraOrd = (Number(salarioMensual) || 1750905) / DIVISOR_MENSUAL;
-
   const valorExtrasYRecargos =
     heDiurna * valorHoraOrd * 0.25 +
     heNocturna * valorHoraOrd * 0.75 +
@@ -1734,11 +1619,9 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
     recNoctDom * valorHoraOrd * 1.25 +
     hedDominical * valorHoraOrd * 1.15 +
     henDominical * valorHoraOrd * 1.65;
-
   const totalHorasExtras = Number((heDiurna + heNocturna + hedDominical + henDominical).toFixed(2));
   const totalHorasRecargos = Number((recNocturno + recDominical + recNoctDom).toFixed(2));
   const totalHorasConceptos = Number((totalHorasExtras + totalHorasRecargos).toFixed(2));
-
   return {
     esDomingoOFestivo,
     jornadaOrdinariaDia,
@@ -1757,7 +1640,6 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
     valorPagar: Math.round(valorExtrasYRecargos)
   };
 }
-
 // ==========================================
 // MÓDULO CONTABILIDAD (NÓMINA Y AUDITORÍA)
 // ==========================================
@@ -1790,20 +1672,17 @@ function renderReporteContabilidad() {
     if (fechaFin && j.fecha > fechaFin) return false;
     return true;
   });
-
   const porEmpleado = {};
   filtradas.forEach((j) => {
     if (!porEmpleado[j.empleadoId]) porEmpleado[j.empleadoId] = { nombre: j.empleadoNombre, filas: [] };
     porEmpleado[j.empleadoId].filas.push(j);
   });
-
   const tbody = document.getElementById("tbody-contabilidad");
   const tfoot = document.getElementById("tfoot-contabilidad");
   if (!tbody || !tfoot) return;
   tbody.innerHTML = "";
   ultimoReporteFilasConta = [];
   let granExtras = 0, granRecargos = 0, granHoras = 0, granValor = 0;
-
   Object.values(porEmpleado).forEach((grupo) => {
     let subExtras = 0, subRecargos = 0, subHoras = 0, subValor = 0;
     grupo.filas.forEach((f) => {
@@ -1811,12 +1690,10 @@ function renderReporteContabilidad() {
       const hExtras = Number(c.totalHorasExtras ?? ((c.heDiurna || 0) + (c.heNocturna || 0) + (c.hedDominical || 0) + (c.henDominical || 0)));
       const hRecargos = Number(c.totalHorasRecargos ?? ((c.recNocturno || 0) + (c.recDominical || 0) + (c.recNoctDom || 0)));
       const hTotal = Number(c.totalHorasConceptos ?? (hExtras + hRecargos));
-
       subExtras += hExtras;
       subRecargos += hRecargos;
       subHoras += hTotal;
       subValor += c.valorPagar;
-
       ultimoReporteFilasConta.push({
         tipo: "registro",
         fecha: f.fecha,
@@ -1838,7 +1715,6 @@ function renderReporteContabilidad() {
         totalHoras: Number(hTotal.toFixed(2)),
         valorPagar: c.valorPagar
       });
-
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${f.fecha}</td>
@@ -1863,12 +1739,10 @@ function renderReporteContabilidad() {
       `;
       tbody.appendChild(tr);
     });
-
     granExtras += subExtras;
     granRecargos += subRecargos;
     granHoras += subHoras;
     granValor += subValor;
-
     ultimoReporteFilasConta.push({
       tipo: "subtotal",
       etiqueta: `Subtotal ${grupo.nombre}`,
@@ -1877,7 +1751,6 @@ function renderReporteContabilidad() {
       totalHoras: Number(subHoras.toFixed(2)),
       valorPagar: Math.round(subValor)
     });
-
     const trSub = document.createElement("tr");
     trSub.className = "subtotal-row";
     trSub.innerHTML = `
@@ -1890,14 +1763,12 @@ function renderReporteContabilidad() {
     `;
     tbody.appendChild(trSub);
   });
-
   ultimoReporteTotalesConta = {
     horasExtras: Number(granExtras.toFixed(2)),
     horasRecargos: Number(granRecargos.toFixed(2)),
     totalHoras: Number(granHoras.toFixed(2)),
     valor: Math.round(granValor)
   };
-
   const resumenBox = document.getElementById("resumen-extras-conta");
   if (resumenBox) {
     resumenBox.innerHTML = `
@@ -1911,7 +1782,6 @@ function renderReporteContabilidad() {
       </div>
     `;
   }
-
   tfoot.innerHTML = `
     <tr class="gran-total-row">
       <td colspan="8" style="text-align:right;">TOTAL GENERAL:</td>
@@ -1923,7 +1793,6 @@ function renderReporteContabilidad() {
     </tr>
   `;
 }
-
 function exportarExcelContabilidad() {
   const encabezados = [
     "Fecha", "Empleado", "Cliente", "Dirección", "Hora Inicio", "Hora Fin", "Almuerzo (min)",
@@ -1984,7 +1853,6 @@ function exportarExcelContabilidad() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
-
 function abrirModalAuditoria(id) {
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const j = dbJornadas.find((item) => item.id === id);
@@ -2026,7 +1894,6 @@ function abrirModalAuditoria(id) {
   `;
   document.getElementById("modalAuditoriaConta").classList.remove("hidden");
 }
-
 function abrirVisorFoto(titulo, src) {
   if (!src) return;
   const modal = document.getElementById("modalVisorFoto");
@@ -2036,18 +1903,15 @@ function abrirVisorFoto(titulo, src) {
   if (imgEl) imgEl.src = src;
   if (modal) modal.classList.remove("hidden");
 }
-
 function cerrarVisorFoto() {
   const modal = document.getElementById("modalVisorFoto");
   const imgEl = document.getElementById("visor-foto-img");
   if (modal) modal.classList.add("hidden");
   if (imgEl) imgEl.src = "";
 }
-
 function cerrarModalAuditoria() {
   document.getElementById("modalAuditoriaConta").classList.add("hidden");
 }
-
 // ==========================================
 // RENDERIZADO DE TAREAS PENDIENTES (OPERARIO)
 // ==========================================
@@ -2064,7 +1928,6 @@ function renderTasks() {
   const esAdmin = normalizarTexto(usuarioActivo?.role) === "admin";
   const nombreUsuario = normalizarTexto(usuarioActivo?.name);
   let countP = 0;
-
   savedTasks.forEach((task) => {
     const estado = task.estado || "pendiente";
     const asignadaAlUsuario = !task.operador || normalizarTexto(task.operador) === nombreUsuario || esAdmin;
@@ -2088,12 +1951,10 @@ function renderTasks() {
       containerPendientes.appendChild(card);
     }
   });
-
   const countPendElem = document.getElementById("countPendientes");
   if (countPendElem) countPendElem.innerText = countP;
   filterFinalized();
 }
-
 // ==========================================
 // PANEL EXCLUSIVO DE REDES (DANILO) - DESCARGA ZIP
 // ==========================================
@@ -2105,13 +1966,11 @@ function renderPanelRedesParaDanilo() {
   const searchBox = document.querySelector("#secFinalizadas .search-box");
   if (searchBox) searchBox.classList.add("hidden");
   containerFinalizadas.innerHTML = "";
-
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const headerNotice = document.createElement("div");
   headerNotice.style.cssText = "background: #e0f2fe; color: #0369a1; padding: 12px; border-radius: 6px; margin-bottom: 12px; font-weight: bold; border: 1px solid #bae6fd; font-size: 0.85rem;";
   headerNotice.innerHTML = `📥 Descargar fotos redes`;
   containerFinalizadas.appendChild(headerNotice);
-
   const tabsContainer = document.createElement("div");
   tabsContainer.style.cssText = "display: flex; gap: 8px; margin-bottom: 15px;";
   tabsContainer.innerHTML = `
@@ -2123,7 +1982,6 @@ function renderPanelRedesParaDanilo() {
     </button>
   `;
   containerFinalizadas.appendChild(tabsContainer);
-
   const tareasFiltradas = savedTasks.filter((task) => {
     let cantFotosTotal = 0;
     if (task.diasDetalle && task.diasDetalle.length > 0) {
@@ -2132,7 +1990,6 @@ function renderPanelRedesParaDanilo() {
     if (cantFotosTotal === 0) return false;
     return tabRedesActiva === "pendientes" ? !task.descargadoRedes : task.descargadoRedes === true;
   });
-
   if (tareasFiltradas.length === 0) {
     const emptyMsg = document.createElement("p");
     emptyMsg.className = "empty-msg";
@@ -2144,7 +2001,6 @@ function renderPanelRedesParaDanilo() {
     containerFinalizadas.appendChild(emptyMsg);
     return;
   }
-
   tareasFiltradas.forEach((task) => {
     const cantFotosTotal = task.diasDetalle.reduce((acc, d) => acc + (d.fotosLista ? d.fotosLista.length : 0), 0);
     const isFinalizada = task.estado === "finalizada";
@@ -2171,12 +2027,10 @@ function renderPanelRedesParaDanilo() {
     containerFinalizadas.appendChild(card);
   });
 }
-
 function cambiarTabRedes(tab) {
   tabRedesActiva = tab;
   renderPanelRedesParaDanilo();
 }
-
 async function descargarEvidenciasTarea(taskId) {
   let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const task = savedTasks.find((t) => String(t.id) === String(taskId));
@@ -2200,12 +2054,10 @@ async function descargarEvidenciasTarea(taskId) {
   });
   localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
   renderPanelRedesParaDanilo();
-
   const zip = new JSZip();
   const folderName = `Tarea_${String(task.id).replace(/[^a-zA-Z0-9]/g, "_")}_${String(task.cliente || "").replace(/[^a-zA-Z0-9]/g, "_")}`;
   const taskFolder = zip.folder(folderName);
   let fotosAgregadas = 0;
-
   task.diasDetalle.forEach((day) => {
     if (day.fotosLista && day.fotosLista.length > 0) {
       day.fotosLista.forEach((fotoObj, index) => {
@@ -2223,12 +2075,10 @@ async function descargarEvidenciasTarea(taskId) {
       });
     }
   });
-
   if (fotosAgregadas === 0) {
     alert("No se encontraron archivos de imagen adjuntos en esta tarea.");
     return;
   }
-
   try {
     const content = await zip.generateAsync({ type: "blob" });
     const link = document.createElement("a");
@@ -2241,7 +2091,6 @@ async function descargarEvidenciasTarea(taskId) {
     console.error("Error al generar el ZIP:", err);
   }
 }
-
 // ==========================================
 // FILTRADO DE TAREAS FINALIZADAS
 // ==========================================
@@ -2255,20 +2104,17 @@ function filterFinalized() {
   if (pdfBox) pdfBox.classList.remove("hidden");
   const searchBox = document.querySelector("#secFinalizadas .search-box");
   if (searchBox) searchBox.classList.remove("hidden");
-
   const textQuery = document.getElementById("searchInput") ? document.getElementById("searchInput").value.toLowerCase().trim() : "";
   const dateQuery = document.getElementById("searchDate") ? document.getElementById("searchDate").value : "";
   const containerFinalizadas = document.getElementById("listFinalizadas");
   if (!containerFinalizadas) return;
   containerFinalizadas.innerHTML = "";
-
   const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
   let matchCount = 0;
   let totalFinalizedCount = 0;
-
   savedTasks.forEach((task) => {
     if (task.estado === "finalizada") {
       const taskDateObj = new Date(task.fechaFinalizacion || task.fechaCreacion || Date.now());
@@ -2297,7 +2143,6 @@ function filterFinalized() {
       }
     }
   });
-
   const countElem = document.getElementById("countFinalizadas");
   if (countElem) countElem.innerText = totalFinalizedCount;
   const btnPdfContainer = document.getElementById("pdfButtonContainer");
@@ -2308,7 +2153,6 @@ function filterFinalized() {
     if (btnPdfContainer) btnPdfContainer.classList.remove("hidden");
   }
 }
-
 // ==========================================
 // CONTROL DEL WIZARD DE TAREAS (OPERARIOS / ADMIN)
 // ==========================================
@@ -2325,7 +2169,6 @@ function openTask(id) {
     ? { ...t, estado: "en_proceso", fechaInicioEjecucion: new Date().toISOString() }
     : t);
   localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
-
   currentActiveTaskId = id;
   document.getElementById("mainNavTabs").classList.add("hidden");
   document.getElementById("secPendientes").classList.add("hidden");
@@ -2337,7 +2180,6 @@ function openTask(id) {
   const daysListContainer = document.getElementById("daysListContainer");
   if (daysListContainer) daysListContainer.innerHTML = "";
   totalDaysCreated = 0;
-
   if (task.diasDetalle && task.diasDetalle.length > 0) {
     currentDaysData = [...task.diasDetalle];
     totalDaysCreated = currentDaysData.length;
@@ -2347,7 +2189,6 @@ function openTask(id) {
   }
   addNewDay();
 }
-
 function closeWizard() {
   document.getElementById("secWizard").classList.add("hidden");
   document.getElementById("secSignatures").classList.add("hidden");
@@ -2356,7 +2197,6 @@ function closeWizard() {
   document.getElementById("secPendientes").classList.remove("hidden");
   renderTasks();
 }
-
 // ==========================================
 // GESTIÓN DE DÍAS Y MÚLTIPLES FOTOS
 // ==========================================
@@ -2374,7 +2214,6 @@ function addNewDay() {
     const sel = currentTask.maquinaria && normalizarTexto(currentTask.maquinaria) === normalizarTexto(v.etiqueta) ? "selected" : "";
     return `<option value="${v.etiqueta}" ${sel}>${v.etiqueta}</option>`;
   }).join("");
-
   const container = document.getElementById("daysContainer");
   const dayCard = document.createElement("div");
   dayCard.className = "day-card";
@@ -2484,7 +2323,6 @@ function addNewDay() {
   `;
   container.appendChild(dayCard);
 }
-
 function procesarFotoMulti(event, dayNum) {
   const file = event.target.files[0];
   if (!file) return;
@@ -2502,7 +2340,6 @@ function procesarFotoMulti(event, dayNum) {
       ctx.fillRect(0, img.height, canvas.width, footerHeight);
       ctx.fillStyle = "#BF956E";
       ctx.fillRect(0, img.height, canvas.width, 6);
-
       const savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
       const currentTask = savedTasks.find((t) => String(t.id) === String(currentActiveTaskId)) || {};
       const clienteNombre = currentTask.cliente || "CLIENTE GENERAL";
@@ -2515,11 +2352,9 @@ function procesarFotoMulti(event, dayNum) {
       const ahora = new Date();
       const fechaActual = ahora.toLocaleDateString();
       const horaActual = ahora.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
       const colIzquierdaX = Math.max(15, Math.floor(canvas.width * 0.025));
       const colDerechaX = Math.floor(canvas.width * 0.52);
       const fontSize = Math.max(12, Math.floor(canvas.width * 0.021));
-
       ctx.fillStyle = "#FFFFFF";
       ctx.font = `bold ${fontSize + 2}px sans-serif`;
       ctx.fillText(`AYAX | ${numTarea}`, colIzquierdaX, img.height + 32);
@@ -2529,7 +2364,6 @@ function procesarFotoMulti(event, dayNum) {
       ctx.fillText(`Fecha: ${fechaActual}`, colDerechaX, img.height + 64);
       ctx.fillText(`Ciudad: ${ciudadTexto}`, colIzquierdaX, img.height + 96);
       ctx.fillText(`Hora: ${horaActual}`, colDerechaX, img.height + 96);
-
       const fotoSelladaBase64 = canvas.toDataURL("image/jpeg", 0.9);
       fotosDiaTemporal.push({
         data: fotoSelladaBase64,
@@ -2543,7 +2377,6 @@ function procesarFotoMulti(event, dayNum) {
   };
   reader.readAsDataURL(file);
 }
-
 function renderGaleriaMiniaturas(dayNum) {
   const galeria = document.getElementById(`galeria-fotos-${dayNum}`);
   if (!galeria) return;
@@ -2559,16 +2392,13 @@ function renderGaleriaMiniaturas(dayNum) {
     galeria.appendChild(contenedorMini);
   });
 }
-
 function verFotoGrande(base64Url) {
   abrirVisorFoto("Vista Previa de Evidencia", base64Url);
 }
-
 function eliminarFotoTemporal(dayNum, index) {
   fotosDiaTemporal.splice(index, 1);
   renderGaleriaMiniaturas(dayNum);
 }
-
 function setNow(fieldId) {
   const now = new Date();
   const hours = String(now.getHours()).padStart(2, "0");
@@ -2582,7 +2412,6 @@ function setNow(fieldId) {
     }
   }
 }
-
 function calculateHours(dayNum) {
   const hini = document.getElementById(`hini-day-${dayNum}`).value;
   const hfin = document.getElementById(`hfin-day-${dayNum}`).value;
@@ -2600,7 +2429,6 @@ function calculateHours(dayNum) {
     display.innerText = `${hours} Horas`;
   }
 }
-
 function saveDayRecord(dayNum) {
   const savedTasksCheck = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const tareaActual = savedTasksCheck.find((t) => String(t.id) === String(currentActiveTaskId));
@@ -2609,7 +2437,6 @@ function saveDayRecord(dayNum) {
     closeWizard();
     return;
   }
-
   const dir = document.getElementById(`dir-day-${dayNum}`).value;
   const desc = document.getElementById(`desc-day-${dayNum}`).value;
   const grua = document.getElementById(`grua-day-${dayNum}`).value;
@@ -2624,7 +2451,6 @@ function saveDayRecord(dayNum) {
   const ureai = document.getElementById(`ureai-day-${dayNum}`)?.value || "";
   const ureaf = document.getElementById(`ureaf-day-${dayNum}`)?.value || "";
   const observaciones = document.getElementById(`obs-day-${dayNum}`).value || "Sin novedades";
-
   if (!dir || !desc || !grua || !op || !ap || !hini || !hfin || !kmini || !kmfin) {
     alert("Por favor complete todos los campos obligatorios (*)");
     return;
@@ -2633,7 +2459,6 @@ function saveDayRecord(dayNum) {
     alert("⚠️ ¡Atención! Debe tomar o adjuntar al menos una foto de evidencia para este día.");
     return;
   }
-
   const hoursDisplay = document.getElementById(`hours-display-${dayNum}`);
   const hoursWorked = hoursDisplay && hoursDisplay.dataset.hours ? parseFloat(hoursDisplay.dataset.hours) : 0.0;
   const dayData = {
@@ -2664,7 +2489,6 @@ function saveDayRecord(dayNum) {
   alert(`Día #${dayNum} guardado correctamente con ${fotosDiaTemporal.length} foto(s) de evidencia.`);
   fotosDiaTemporal = [];
 }
-
 function sincronizarAvanceEnSegundoPlano() {
   let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const totalHoursSum = currentDaysData.reduce((acc, day) => acc + (day.horasTrabajadas || 0), 0);
@@ -2683,7 +2507,6 @@ function sincronizarAvanceEnSegundoPlano() {
   });
   localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
 }
-
 function renderDaysAccordion() {
   const container = document.getElementById("daysListContainer");
   if (!container) return;
@@ -2709,7 +2532,6 @@ function renderDaysAccordion() {
     container.appendChild(details);
   });
 }
-
 // ==========================================
 // FIRMAS, CIERRE Y REPORTE PDF DE TAREAS
 // ==========================================
@@ -2728,12 +2550,10 @@ async function goToSignSection() {
   initSignCanvas("canvasOperador");
   initSignCanvas("canvasCliente");
 }
-
 function backToWizardDays() {
   document.getElementById("secSignatures").classList.add("hidden");
   document.getElementById("secWizard").classList.remove("hidden");
 }
-
 function initSignCanvas(canvasId) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
@@ -2767,14 +2587,12 @@ function initSignCanvas(canvasId) {
   canvas.ontouchend = (e) => { endPosition(); e.preventDefault(); };
   canvas.ontouchmove = (e) => { draw(e); e.preventDefault(); };
 }
-
 function clearCanvas(canvasId) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
-
 function finalizeTask() {
   const totalHoursSum = currentDaysData.reduce((acc, day) => acc + (day.horasTrabajadas || 0), 0);
   let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
@@ -2796,7 +2614,6 @@ function finalizeTask() {
   alert(`¡Tarea ${currentActiveTaskId} finalizada con éxito! Quedó disponible en Tareas Finalizadas y en el panel de Redes.`);
   showReportView(currentActiveTaskId);
 }
-
 function showReportView(id) {
   document.getElementById("secSignatures").classList.add("hidden");
   const secReporte = document.getElementById("secReporte");
@@ -2817,7 +2634,6 @@ function showReportView(id) {
   }
   document.getElementById("reportContent").innerHTML = htmlDetails;
 }
-
 function descargarReportePDF() {
   const startDate = document.getElementById("pdfStartDate").value;
   const endDate = document.getElementById("pdfEndDate").value;
@@ -2835,7 +2651,6 @@ function descargarReportePDF() {
     alert(`No hay tareas finalizadas en el rango del ${startDate} al ${endDate}.`);
     return;
   }
-
   const printWindow = window.open("", "_blank");
   let htmlContent = `
     <html>
@@ -2857,7 +2672,6 @@ function descargarReportePDF() {
     <div class="subtitle">Reporte Consolidado de Operaciones | Desde: ${startDate} Hasta: ${endDate}</div>
     <hr style="border: 0; border-top: 2px solid #BF956E; margin: 15px 0;">
   `;
-
   let totalGeneralHoras = 0;
   filteredTasks.forEach((task) => {
     const fecha = new Date(task.fechaFinalizacion || task.fechaCierre || task.fechaCreacion || Date.now()).toLocaleDateString();
@@ -2887,7 +2701,6 @@ function descargarReportePDF() {
       </div>
     `;
   });
-
   htmlContent += `
     <div class="total-general">
       Total Horas Acumuladas en el Periodo: ${totalGeneralHoras.toFixed(1)} Horas
@@ -2899,7 +2712,6 @@ function descargarReportePDF() {
   printWindow.document.write(htmlContent);
   printWindow.document.close();
 }
-
 // ==========================================
 // LIMPIEZA DE TAREAS SINCRONIZADAS
 // ==========================================
@@ -2943,7 +2755,6 @@ function normalizarJornadaDesdeDB(row) {
     calculo: calc
   };
 }
-
 async function guardarJornadaEnNube(jornada) {
   if (!jornada || !navigator.onLine) return;
   try {
@@ -2960,7 +2771,6 @@ async function guardarJornadaEnNube(jornada) {
     console.warn("Sin conexión o error de red al guardar en Neon:", err);
   }
 }
-
 async function sincronizarJornadasDesdeNube(renderCallback) {
   if (!navigator.onLine) {
     if (typeof renderCallback === "function") renderCallback();
