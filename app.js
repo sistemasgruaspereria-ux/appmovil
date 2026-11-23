@@ -2908,4 +2908,81 @@ function purgeSyncedTasks() {
   const cleanedTasks = savedTasks.filter((task) => task.estado !== "sincronizada");
   localStorage.setItem("ayax_tasks_db", JSON.stringify(cleanedTasks));
 }
+// ==========================================
+// SINCRONIZACIÓN DE JORNADAS CON NEON (/api/jornadas)
+// ==========================================
+function normalizarJornadaDesdeDB(row) {
+  let fotosNov = row.fotos_novedades || row.fotosNovedades || [];
+  if (typeof fotosNov === "string") {
+    try { fotosNov = JSON.parse(fotosNov); } catch { fotosNov = []; }
+  }
+  let calc = row.calculo || null;
+  if (typeof calc === "string") {
+    try { calc = JSON.parse(calc); } catch { calc = null; }
+  }
+  const fechaStr = String(row.fecha || "").slice(0, 10);
+  return {
+    id: String(row.id),
+    empleadoId: String(row.empleado_id || row.empleadoId || ""),
+    empleadoNombre: String(row.empleado_nombre || row.empleadoNombre || ""),
+    salario: Number(row.salario || 1750905),
+    fecha: fechaStr,
+    mesClave: String(row.mes_clave || row.mesClave || fechaStr.slice(0, 7)),
+    cliente: String(row.cliente || ""),
+    direccion: String(row.direccion || ""),
+    horaInicio: String(row.hora_inicio || row.horaInicio || ""),
+    fotoInicio: row.foto_inicio || row.fotoInicio || null,
+    estado: String(row.estado || "abierta"),
+    horaFin: row.hora_fin || row.horaFin || null,
+    fotoFin: row.foto_fin || row.fotoFin || null,
+    almuerzoMin: (row.almuerzo_min !== null && row.almuerzo_min !== undefined)
+      ? Number(row.almuerzo_min)
+      : (row.almuerzoMin ?? null),
+    observaciones: String(row.observaciones || ""),
+    fotosNovedades: Array.isArray(fotosNov) ? fotosNov : [],
+    calculo: calc
+  };
+}
+
+async function guardarJornadaEnNube(jornada) {
+  if (!jornada || !navigator.onLine) return;
+  try {
+    const resp = await fetch("/api/jornadas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(jornada)
+    });
+    if (!resp.ok) {
+      const errTxt = await resp.text();
+      console.warn("No se pudo guardar en Neon:", errTxt);
+    }
+  } catch (err) {
+    console.warn("Sin conexión o error de red al guardar en Neon:", err);
+  }
+}
+
+async function sincronizarJornadasDesdeNube(renderCallback) {
+  if (!navigator.onLine) {
+    if (typeof renderCallback === "function") renderCallback();
+    return;
+  }
+  try {
+    const resp = await fetch("/api/jornadas");
+    if (!resp.ok) {
+      if (typeof renderCallback === "function") renderCallback();
+      return;
+    }
+    const rows = await resp.json();
+    if (Array.isArray(rows)) {
+      const jornadasNube = rows.map(normalizarJornadaDesdeDB);
+      localStorage.setItem("ayax_jornadas_db", JSON.stringify(jornadasNube));
+    }
+  } catch (err) {
+    console.warn("No se pudo sincronizar desde Neon:", err);
+  } finally {
+    if (typeof renderCallback === "function") renderCallback();
+  }
+}
+
+
 
