@@ -8,7 +8,7 @@
   "theme_color": "#040B5D",
   "icons": [
     {
-      "src": "logo.png",
+      "src": "isologo.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
@@ -21,3 +21,4 @@
     }
   ]
 }
+
