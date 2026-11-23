@@ -1,8 +1,7 @@
 // ==========================================
 // SERVICE WORKER — PORTAL DE OPERARIOS (AYAX - GRÚAS PEREIRA)
 // ==========================================
-const CACHE_NAME = 'ayax-gruas-cache-v12'; // <-- Cambia este número cada vez que actualices la app
-
+const CACHE_NAME = 'ayax-gruas-cache-v13'; // <-- Cambia este número cada vez que actualices la app
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -11,7 +10,6 @@ const ASSETS_TO_CACHE = [
   './manifest.json',
   './logo.png'
 ];
-
 // Instalación: guarda los archivos estáticos en la nueva caché
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -21,7 +19,6 @@ self.addEventListener('install', (event) => {
   );
   self.skipWaiting();
 });
-
 // Activación: elimina cachés antiguas que no coincidan con CACHE_NAME
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -35,32 +32,28 @@ self.addEventListener('activate', (event) => {
   );
   self.clients.claim();
 });
-
-// Interceptación de peticiones: responde desde caché si está disponible o va a red
+// Interceptación de peticiones: Network First para archivos estáticos, sin caché en /api/
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-
+  const url = new URL(event.request.url);
+  if (url.pathname.startsWith('/api/')) {
+    return;
+  }
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
+    fetch(event.request)
+      .then((networkResponse) => {
         if (
-          !networkResponse ||
-          networkResponse.status !== 200 ||
-          networkResponse.type !== 'basic'
+          networkResponse &&
+          networkResponse.status === 200 &&
+          networkResponse.type === 'basic'
         ) {
-          return networkResponse;
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
         return networkResponse;
-      }).catch(() => cachedResponse);
-    })
+      })
+      .catch(() => caches.match(event.request))
   );
 });
-
-
