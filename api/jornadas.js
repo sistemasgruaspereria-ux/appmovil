@@ -20,6 +20,7 @@ export default async function handler(req, res) {
         params.push(String(empleadoId));
         query += ` AND empleado_id = $${params.length}`;
       }
+
       if (estado) {
         params.push(String(estado));
         query += ` AND estado = $${params.length}`;
@@ -35,6 +36,10 @@ export default async function handler(req, res) {
       if (!j.id || !j.empleadoId || !j.fecha || !j.cliente || !j.direccion || !j.horaInicio) {
         return res.status(400).json({ error: "Faltan campos obligatorios de la jornada" });
       }
+
+      const fotosNovNormalizadas = Array.isArray(j.fotosNovedades) ? j.fotosNovedades : [];
+      const calculoNormalizado =
+        j.calculo && typeof j.calculo === "object" ? JSON.stringify(j.calculo) : null;
 
       const sql = `
         INSERT INTO jornadas (
@@ -85,8 +90,8 @@ export default async function handler(req, res) {
         j.fotoFin || null,
         j.almuerzoMin === null || j.almuerzoMin === undefined ? null : Number(j.almuerzoMin),
         String(j.observaciones || ""),
-        JSON.stringify(Array.isArray(j.fotosNovedades) ? j.fotosNovedades : []),
-        j.calculo ? JSON.stringify(j.calculo) : null,
+        JSON.stringify(fotosNovNormalizadas),
+        calculoNormalizado,
       ];
 
       const result = await pool.query(sql, values);
