@@ -1,7 +1,7 @@
 // ==========================================
 // SERVICE WORKER — PORTAL DE OPERARIOS (AYAX - GRÚAS PEREIRA)
 // ==========================================
-const CACHE_NAME = 'ayax-gruas-cache-v17'; // <-- Cambia este número cada vez que actualices la app
+const CACHE_NAME = 'ayax-gruas-cache-v19'; // <-- Cambia este número cada vez que actualices la app
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const ASSETS_TO_CACHE = [
   './manifest.json',
   './isologo.png'
 ];
+
 // Instalación: guarda los archivos estáticos en la nueva caché
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -19,6 +20,7 @@ self.addEventListener('install', (event) => {
   );
   self.skipWaiting();
 });
+
 // Activación: elimina cachés antiguas que no coincidan con CACHE_NAME
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -32,6 +34,7 @@ self.addEventListener('activate', (event) => {
   );
   self.clients.claim();
 });
+
 // Interceptación de peticiones: Network First para archivos estáticos, sin caché en /api/
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
@@ -39,6 +42,7 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/api/')) {
     return;
   }
+
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
