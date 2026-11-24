@@ -14,6 +14,7 @@ let defaultUsers = [
   { phone: "3000000000", pin: "2034", name: "Liliana Guzmán", role: "contabilidad", salary: 0 },
   { phone: "3218468761", pin: "1118", name: "Danilo", role: "redes", salary: 0 },
   { phone: "3100000000", pin: "1234", name: "Coordinación Proyectos", role: "proyectos", salary: 0 },
+  { phone: "3201020801", pin: "1034", name: "Usuario prueba",role:"opereario_horas",salary:1753000},
   { phone: "3005051958", pin: "1934", name: "Didier Roberto Orejuela Henao", role: "operario_horas", salary: 1753000 },
   { phone: "3233928131", pin: "1782", name: "Lina Sofia Tobar Erazo", role: "operario_horas", salary: 1845000 },
   { phone: "3117659089", pin: "3819", name: "Natalia Correa Rodriguez", role: "operario_horas", salary: 1845000 },
