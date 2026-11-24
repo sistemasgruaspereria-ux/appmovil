@@ -81,7 +81,7 @@
                 Finalizadas (<span id="countFinalizadas">0</span>)
             </button>
             <button type="button" id="btnTabContabilidad" class="tab-btn hidden" onclick="switchTab('contabilidad')">
-                📊 Nómina
+                📊 Nómina y Control
             </button>
         </nav>
 
@@ -176,12 +176,11 @@
             <div class="cards-list" id="listPendientes"></div>
         </section>
 
-        <!-- VISTA MÓVIL: REGISTRO DE JORNADA (OPERADOR) -->
+        <!-- VISTA MÓVIL: REGISTRO DE JORNADA (OPERADOR HORAS) -->
         <section id="secHoras" class="tab-content hidden">
             <div style="background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 12px; font-size: 0.8rem; margin-bottom: 12px;">
                 Las evidencias fotográficas de jornada y novedades se estampan, respaldan en Google Drive y quedan vinculadas al registro.
             </div>
-
             <details id="acordeon-apertura-jornada" class="card" open>
                 <summary style="cursor: pointer; font-weight: 700; font-size: 1.02rem; color: #040B5D; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                     <span id="titulo-acordeon-dia">1. Abrir Jornada de Trabajo</span>
@@ -216,12 +215,10 @@
                     <button type="submit" class="btn-primary" style="margin-top: 10px;">Guardar Apertura de Día</button>
                 </form>
             </details>
-
             <div class="card">
                 <h2>Jornadas en Curso (Pendientes de Cierre)</h2>
                 <div id="lista-jornadas-abiertas" class="stack"></div>
             </div>
-
             <div id="panel-cierre-jornada" class="card hidden">
                 <h2 style="color: #c2410c;">Completar y Cerrar Jornada</h2>
                 <p id="cierre-resumen-txt" class="muted" style="margin-bottom: 12px;"></p>
@@ -314,60 +311,45 @@
             </div>
         </section>
 
-        <!-- VISTA EXCLUSIVA CONTABILIDAD (NÓMINA Y AUDITORÍA) -->
+        <!-- VISTA EXCLUSIVA CONTABILIDAD (NÓMINA, JORNADAS Y AUDITORÍA) -->
         <section id="secContabilidad" class="tab-content hidden">
             <div class="card">
-                <h2>Módulo de Contabilidad y Nómina</h2>
+                <h2>Módulo de Contabilidad, Nómina y Jornadas</h2>
                 <p class="muted" style="font-size: 0.78rem; margin-bottom: 10px;">
                     Esquema 42h/sem · Lun–Jue: 8.5h (sin almuerzo) · Vie: 8.0h (60 min almuerzo) · Divisor mensual: 210h
                 </p>
                 <div class="form-group">
+                    <label for="tipo-reporte-conta">Tipo de Reporte a Generar</label>
+                    <select id="tipo-reporte-conta" class="form-control" onchange="renderReporteContabilidad()">
+                        <option value="horarios">📅 Reporte de Horarios Cumplidos (Jornadas Laboradas)</option>
+                        <option value="nomina">💰 Reporte de Liquidación de Nómina (Extras y Recargos)</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label for="filtro-emp-conta">Filtrar por Empleado</label>
-                    <select id="filtro-emp-conta" class="form-control"></select>
+                    <select id="filtro-emp-conta" class="form-control" onchange="renderReporteContabilidad()"></select>
                 </div>
                 <div class="form-row">
                     <div class="form-group" style="flex:1;">
                         <label for="filtro-fecha-inicio-conta">Fecha Inicio</label>
-                        <input type="date" id="filtro-fecha-inicio-conta" class="form-control">
+                        <input type="date" id="filtro-fecha-inicio-conta" class="form-control" onchange="renderReporteContabilidad()">
                     </div>
                     <div class="form-group" style="flex:1;">
                         <label for="filtro-fecha-fin-conta">Fecha Finalización</label>
-                        <input type="date" id="filtro-fecha-fin-conta" class="form-control">
+                        <input type="date" id="filtro-fecha-fin-conta" class="form-control" onchange="renderReporteContabilidad()">
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px; margin-top: 10px;">
                     <button type="button" onclick="renderReporteContabilidad()" class="btn-primary" style="flex:1;">Aplicar Filtros</button>
-                    <button type="button" onclick="exportarExcelContabilidad()" class="btn-primary" style="flex:1; background-color: #27ae60;">Excel (.xls)</button>
+                    <button type="button" onclick="exportarExcelContabilidad()" class="btn-primary" style="flex:1; background-color: #27ae60;">Exportar Excel (.xls)</button>
                 </div>
                 <p id="txt-rango-activo" class="muted" style="margin-top: 10px; font-size: 0.8rem;"></p>
-                <div id="resumen-extras-conta" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px;"></div>
+                <div id="resumen-dinamico-conta" style="margin-top: 10px;"></div>
             </div>
             <div class="card">
                 <div class="table-wrap">
                     <table id="tabla-contabilidad">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Empleado</th>
-                                <th>Cliente</th>
-                                <th>Dirección</th>
-                                <th>Inicio</th>
-                                <th>Fin</th>
-                                <th>Almuerzo</th>
-                                <th>Auditoría</th>
-                                <th>Total H. Extras</th>
-                                <th>Total Recargos</th>
-                                <th>H.E.D (25%)</th>
-                                <th>H.E.N (75%)</th>
-                                <th>Rec.N (35%)</th>
-                                <th>Rec.Dom (90%)</th>
-                                <th>Rec.N.Dom (125%)</th>
-                                <th>HED.Dom (115%)</th>
-                                <th>HEN.Dom (165%)</th>
-                                <th>Total Conceptos</th>
-                                <th>Valor a Pagar</th>
-                            </tr>
-                        </thead>
+                        <thead id="thead-contabilidad"></thead>
                         <tbody id="tbody-contabilidad"></tbody>
                         <tfoot id="tfoot-contabilidad"></tfoot>
                     </table>
@@ -375,7 +357,7 @@
             </div>
         </section>
 
-        <!-- VISTA 3: ASISTENTE MULTI-DÍA (WIZARD DE SERVICIOS) -->
+        <!-- VISTA 3: ASISTENTE MULTI-DÍA (WIZARD DE SERVICIOS - ROL OPERARIO Y PROYECTOS) -->
         <section id="secWizard" class="tab-content hidden">
             <div class="wizard-header-top">
                 <button type="button" class="btn-back" onclick="closeWizard()">Volver</button>
@@ -389,7 +371,7 @@
             </div>
         </section>
 
-        <!-- VISTA 4: FIRMAS Y FINALIZACIÓN -->
+        <!-- VISTA 4: FIRMAS Y FINALIZACIÓN (OPERARIO) -->
         <section id="secSignatures" class="tab-content hidden">
             <div class="wizard-header-top">
                 <button type="button" class="btn-back" onclick="backToWizardDays()">Volver a Días</button>
