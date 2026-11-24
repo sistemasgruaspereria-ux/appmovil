@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="isologo.png">
-    <link rel="apple-touch-icon" href="isologo.png"
+    <link rel="apple-touch-icon" href="isologo.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -27,11 +27,11 @@
             <form id="loginForm">
                 <div class="form-group">
                     <label for="loginPhone">Número de Teléfono</label>
-                    <input type="tel" id="loginPhone" placeholder="Ej: 3217293985" required>
+                    <input type="tel" id="loginPhone" placeholder="Ej: 3217293985" autocomplete="tel" required>
                 </div>
                 <div class="form-group">
                     <label for="loginPin">PIN de Acceso (4 dígitos)</label>
-                    <input type="password" id="loginPin" maxlength="4" placeholder="...." required>
+                    <input type="password" id="loginPin" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" placeholder="...." autocomplete="current-password" required>
                 </div>
                 <button type="submit" class="btn-primary">Ingresar al Sistema</button>
             </form>
@@ -178,6 +178,10 @@
 
         <!-- VISTA MÓVIL: REGISTRO DE JORNADA (OPERADOR) -->
         <section id="secHoras" class="tab-content hidden">
+            <div style="background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 12px; font-size: 0.8rem; margin-bottom: 12px;">
+                Las evidencias fotográficas de jornada y novedades se estampan, respaldan en Google Drive y quedan vinculadas al registro.
+            </div>
+
             <details id="acordeon-apertura-jornada" class="card" open>
                 <summary style="cursor: pointer; font-weight: 700; font-size: 1.02rem; color: #040B5D; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                     <span id="titulo-acordeon-dia">1. Abrir Jornada de Trabajo</span>
@@ -232,7 +236,7 @@
                     </div>
                     <div class="form-group">
                         <label for="jornada-almuerzo-min">Tiempo tomado para almuerzo / descanso (minutos) *</label>
-                        <input type="number" id="jornada-almuerzo-min" min="0" max="360" value="0" placeholder="Ej. 0 (Lun-Jue) o 60 (Vie)" required>
+                        <input type="number" id="jornada-almuerzo-min" min="0" max="360" step="1" value="0" placeholder="Ej. 0 (Lun-Jue) o 60 (Vie)" required>
                     </div>
                     <div class="form-group">
                         <label for="jornada-observaciones">Observaciones / Novedades / Extensión de Jornada</label>
@@ -462,4 +466,3 @@
     </script>
 </body>
 </html>
-
