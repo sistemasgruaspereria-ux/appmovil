@@ -2,29 +2,28 @@
 // CONFIGURACIÓN, ROLES Y LEGISLACIÓN COLOMBIA
 // ==========================================
 const DIVISOR_MENSUAL = 210; // Divisor legal Colombia (42 horas semanales)
-
 const FESTIVOS_COLOMBIA = new Set([
   // --- LO QUE RESTA DE 2026 ---
-  "2026-12-08", "2026-12-25",
-
+  "2026-12-08","2026-12-25",
   // --- AÑO 2027 ---
   "2027-01-01", "2027-01-11", "2027-03-22", "2027-03-25", "2027-03-26",
   "2027-05-01", "2027-05-10", "2027-05-31", "2027-06-07", "2027-07-05",
   "2027-07-12", "2027-07-20", "2027-08-07", "2027-08-16", "2027-10-18",
   "2027-11-01", "2027-11-15", "2027-12-08", "2027-12-25",
-
   // --- AÑO 2028 ---
   "2028-01-01", "2028-01-10", "2028-03-20", "2028-04-13", "2028-04-14",
   "2028-05-01", "2028-05-29", "2028-06-19", "2028-06-26", "2028-07-03",
   "2028-07-10", "2028-07-20", "2028-08-07", "2028-08-21", "2028-10-16",
   "2028-11-06", "2028-11-13", "2028-12-08", "2028-12-25",
-
   // --- AÑO 2029 ---
   "2029-01-01", "2029-01-08", "2029-03-19", "2029-03-29", "2029-03-30",
   "2029-05-01", "2029-05-14", "2029-06-04", "2029-06-11", "2029-07-02",
   "2029-07-09", "2029-07-20", "2029-08-07", "2029-08-20", "2029-10-15",
   "2029-11-05", "2029-11-12", "2029-12-08", "2029-12-25"
 ]);
+
+// URL de Google Apps Script para subir evidencias fotográficas a Google Drive
+const GOOGLE_DRIVE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxB3dWKSBCKLzWoS9se7b3ay4DVJhtIN7ZxtogGD5L34SqXuEculHUOayDcDBY2SGY_/exec";
 
 // Usuarios y roles base (se pueden crear, editar y eliminar desde Admin)
 let defaultUsers = [
@@ -64,6 +63,7 @@ let defaultUsers = [
   { phone: "3105385889", pin: "7841", name: "Wilmar Diovany Muñoz Giraldo", role: "operario", salary: 1750905 },
   { phone: "3102276487", pin: "7926", name: "Yeison Alberson Morales Uribe", role: "operario", salary: 1750905 }
 ];
+
 // Listados desplegables de Operadores y Aparejadores
 let defaultOperadores = [
   "Cristian Camilo Rodas Grajales", "Daniel Antonio Rodas Jaramillo", "Diógenes Marín Franco",
@@ -83,6 +83,7 @@ let defaultAparejadores = [
   "Jhonathan Arredondo Ossa", "Jonathan Steven Trujillo Taborda", "Juan Daniel Gómez Morales",
   "Juan José Arango Gallego", "Luis Fernando Tangarife Moncada"
 ];
+
 // Vehículos / Equipos
 let defaultVehiculos = [
   { categoria: "Grúa", etiqueta: "#29 TADANO 70 TON", modelo: "TADANO/TADANO 70 TON", combustible: "Eléctrico" },
@@ -130,6 +131,7 @@ let defaultVehiculos = [
   { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN # 8", modelo: "Foton/4612 Aumark", combustible: "Gasolina" },
   { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN #9", modelo: "Foton/Tractocamión AUMAN EST 6x4", combustible: "Diésel" }
 ];
+
 // Variables globales de estado
 let totalDaysCreated = 0;
 let currentActiveTaskId = null;
@@ -142,6 +144,116 @@ let ultimoReporteFilasConta = [];
 let ultimoReporteTotalesConta = { horasExtras: 0, horasRecargos: 0, totalHoras: 0, valor: 0 };
 let ultimaJornadaAbiertaId = null;
 let tabRedesActiva = "pendientes";
+
+// ==========================================
+// SUBIDA DIRECTA DE FOTOS A GOOGLE DRIVE
+// ==========================================
+function esUrlImagenValida(valor) {
+  if (!valor || typeof valor !== "string") return false;
+  const v = valor.trim();
+  return v.startsWith("data:image/") || v.startsWith("http://") || v.startsWith("https://");
+}
+
+async function subirImagenADrive(imagenBase64, nombreArchivo) {
+  if (!imagenBase64 || typeof imagenBase64 !== "string") return null;
+  if (imagenBase64.startsWith("http://") || imagenBase64.startsWith("https://")) {
+    return imagenBase64;
+  }
+  if (!imagenBase64.startsWith("data:image")) return null;
+  if (!navigator.onLine) return null;
+
+  try {
+    const resp = await fetch(GOOGLE_DRIVE_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        base64: imagenBase64,
+        fileName: nombreArchivo || `Evidencia_Ayax_${Date.now()}.jpg`,
+        mimeType: "image/jpeg"
+      })
+    });
+    const data = await resp.json();
+    if (data && data.status === "success" && data.url) {
+      return data.url;
+    }
+    console.warn("Respuesta inesperada de Google Drive:", data);
+    return null;
+  } catch (err) {
+    console.warn("Error al subir imagen a Google Drive:", err);
+    return null;
+  }
+}
+
+async function resolverFotosJornadaParaDrive(jornada) {
+  const copia = { ...jornada };
+  const slugEmpleado = String(copia.empleadoNombre || copia.empleadoId || "Operario")
+    .replace(/[^a-zA-Z0-9_-]/g, "_");
+  const fechaTag = copia.fecha || obtenerFechaLocalYYYYMMDD();
+
+  if (copia.fotoInicio && copia.fotoInicio.startsWith("data:image")) {
+    const urlInicio = await subirImagenADrive(
+      copia.fotoInicio,
+      `Inicio_${slugEmpleado}_${fechaTag}_${copia.id}.jpg`
+    );
+    if (urlInicio) {
+      copia.fotoInicio = urlInicio;
+    }
+  }
+
+  if (copia.fotoFin && copia.fotoFin.startsWith("data:image")) {
+    const urlFin = await subirImagenADrive(
+      copia.fotoFin,
+      `Cierre_${slugEmpleado}_${fechaTag}_${copia.id}.jpg`
+    );
+    if (urlFin) {
+      copia.fotoFin = urlFin;
+    }
+  }
+
+  if (Array.isArray(copia.fotosNovedades) && copia.fotosNovedades.length > 0) {
+    const nuevasNov = [];
+    for (let i = 0; i < copia.fotosNovedades.length; i++) {
+      const item = copia.fotosNovedades[i];
+      if (typeof item === "string" && item.startsWith("data:image")) {
+        const urlNov = await subirImagenADrive(
+          item,
+          `Novedad_${slugEmpleado}_${fechaTag}_${copia.id}_${i + 1}.jpg`
+        );
+        nuevasNov.push(urlNov || item);
+      } else {
+        nuevasNov.push(item);
+      }
+    }
+    copia.fotosNovedades = nuevasNov;
+  }
+
+  return copia;
+}
+
+function prepararPayloadLigeroParaNeon(jornada) {
+  // Evita enviar cadenas Base64 pesadas a Neon; si aún no subió a Drive por falta de red, envía null
+  const fotoInicioNeon =
+    jornada.fotoInicio && (jornada.fotoInicio.startsWith("http://") || jornada.fotoInicio.startsWith("https://"))
+      ? jornada.fotoInicio
+      : null;
+
+  const fotoFinNeon =
+    jornada.fotoFin && (jornada.fotoFin.startsWith("http://") || jornada.fotoFin.startsWith("https://"))
+      ? jornada.fotoFin
+      : null;
+
+  const novedadesNeon = Array.isArray(jornada.fotosNovedades)
+    ? jornada.fotosNovedades.filter((f) => typeof f === "string" && (f.startsWith("http://") || f.startsWith("https://")))
+    : [];
+
+  return {
+    ...jornada,
+    fotoInicio: fotoInicioNeon,
+    fotoFin: fotoFinNeon,
+    fotosNovedades: novedadesNeon
+  };
+}
+
 // ==========================================
 // PERSISTENCIA Y CATÁLOGOS
 // ==========================================
@@ -189,6 +301,7 @@ function incrementConsecutivoGP() {
   const seq = parseInt(localStorage.getItem("ayax_consecutivo_gp") || "1", 10);
   localStorage.setItem("ayax_consecutivo_gp", String(seq + 1));
 }
+
 // ==========================================
 // CONTROL DE CONECTIVIDAD Y COLA OFFLINE REAL
 // ==========================================
@@ -223,6 +336,7 @@ function desmarcarJornadaPendienteSync(id) {
   const ids = obtenerPendientesSyncIds().filter((item) => String(item) !== String(id));
   guardarPendientesSyncIds(ids);
 }
+
 // ==========================================
 // AUTENTICACIÓN, SESIÓN Y CONTROL POR ROL
 // ==========================================
@@ -336,6 +450,7 @@ function configurarVistaPorRol(usuario) {
   }
   switchTab("pendientes");
 }
+
 // ==========================================
 // INICIALIZACIÓN DE LA APLICACIÓN
 // ==========================================
@@ -466,6 +581,7 @@ function formatearNombreMes(claveMes) {
   const nombreMes = nombres[(m || 1) - 1] || "Mes";
   return `${nombreMes} ${y} (${claveMes})`;
 }
+
 // ==========================================
 // ROL PROYECTOS
 // ==========================================
@@ -738,6 +854,7 @@ function descargarExcelInformesProyectos() {
   link.click();
   document.body.removeChild(link);
 }
+
 // ==========================================
 // ROL ADMINISTRADOR
 // ==========================================
@@ -1039,6 +1156,7 @@ function generarBackupJSON() {
   link.click();
   document.body.removeChild(link);
 }
+
 // ==========================================
 // FLUJO DE JORNADA, DÍAS REGISTRADOS E HISTORIAL (OPERARIO HORAS)
 // ==========================================
@@ -1432,10 +1550,12 @@ function guardarCierreJornada() {
 function renderTarjetaDiaCerrado(j) {
   const c = normalizarCalculoJornada(j, j.calculo || {});
   const fechaBonita = formatearFechaDDMMAAAA(j.fecha);
+  const tieneInicio = esUrlImagenValida(j.fotoInicio);
+  const tieneFin = esUrlImagenValida(j.fotoFin);
   const fotosHtml = `
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
-      ${j.fotoInicio ? `<div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; background: #fff;"><div style="font-size: 0.72rem; font-weight: 700; color: #040B5D; margin-bottom: 4px;">Foto Inicio</div><img src="${j.fotoInicio}" alt="Inicio" style="width: 100%; height: auto; border-radius: 4px; display: block;"></div>` : ""}
-      ${j.fotoFin ? `<div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; background: #fff;"><div style="font-size: 0.72rem; font-weight: 700; color: #c2410c; margin-bottom: 4px;">Foto Cierre</div><img src="${j.fotoFin}" alt="Cierre" style="width: 100%; height: auto; border-radius: 4px; display: block;"></div>` : ""}
+      ${tieneInicio ? `<div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; background: #fff;"><div style="font-size: 0.72rem; font-weight: 700; color: #040B5D; margin-bottom: 4px;">Foto Inicio</div><img src="${j.fotoInicio}" alt="Inicio" style="width: 100%; height: auto; border-radius: 4px; display: block;"></div>` : ""}
+      ${tieneFin ? `<div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; background: #fff;"><div style="font-size: 0.72rem; font-weight: 700; color: #c2410c; margin-bottom: 4px;">Foto Cierre</div><img src="${j.fotoFin}" alt="Cierre" style="width: 100%; height: auto; border-radius: 4px; display: block;"></div>` : ""}
     </div>
   `;
   return `
@@ -1557,6 +1677,7 @@ function eliminarJornadaPorId(id) {
   renderCarpetasHistorial();
   renderReporteContabilidad();
 }
+
 // ==========================================
 // CÁLCULO DE EXTRAS Y RECARGOS (COLOMBIA — NOVIEMBRE 2026)
 // Esquema: Lun-Jue 8.5h (sin almuerzo) | Vie 8.0h (60 min almuerzo) = 42h/sem
@@ -1594,12 +1715,10 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
   const [hF, minF] = String(horaFinStr || "00:00").split(":").map(Number);
   const inicio = new Date(y, (m || 1) - 1, d || 1, hI || 0, minI || 0, 0);
   const fin = new Date(y, (m || 1) - 1, d || 1, hF || 0, minF || 0, 0);
-  // Solo suma 1 día si la hora de fin es estrictamente menor que la de inicio (cruce de medianoche).
-  // Si son iguales (ej. 10:21 y 10:21), queda en 0 horas.
   if (fin < inicio) {
     fin.setDate(fin.getDate() + 1);
   }
-  const diaSemana = inicio.getDay(); // 0=Dom, 1=Lun, ..., 5=Vie, 6=Sab
+  const diaSemana = inicio.getDay();
   const festivosSet = typeof FESTIVOS_COLOMBIA !== "undefined" && FESTIVOS_COLOMBIA ? FESTIVOS_COLOMBIA : new Set();
   const esDomingoOFestivo = diaSemana === 0 || festivosSet.has(fechaStr);
   let jornadaOrdinariaDia = 8.5;
@@ -1719,6 +1838,7 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
     valorPagar: Math.round(valorExtrasYRecargos)
   };
 }
+
 // ==========================================
 // MÓDULO CONTABILIDAD (NÓMINA Y AUDITORÍA)
 // ==========================================
@@ -1940,8 +2060,9 @@ function abrirModalAuditoria(id) {
   const c = normalizarCalculoJornada(j, j.calculo);
   const valorPagar = Number(c.valorPagar || 0);
   document.getElementById("auditoria-titulo-txt").innerText = `Auditoría · ${j.empleadoNombre}`;
-  const novHtml = j.fotosNovedades && j.fotosNovedades.length
-    ? `<div class="audit-grid">${j.fotosNovedades.map((f, i) => `
+  const novValidas = Array.isArray(j.fotosNovedades) ? j.fotosNovedades.filter(esUrlImagenValida) : [];
+  const novHtml = novValidas.length
+    ? `<div class="audit-grid">${novValidas.map((f, i) => `
         <div class="audit-photo-card">
           <strong>Evidencia Novedad #${i + 1}</strong>
           <img src="${f}" alt="Novedad" onclick="abrirVisorFoto('Evidencia Novedad #${i + 1} · ${j.empleadoNombre}', this.src)">
@@ -1949,6 +2070,20 @@ function abrirModalAuditoria(id) {
         </div>
       `).join("")}</div>`
     : `<p class="muted">Sin fotos adicionales de novedad.</p>`;
+  const inicioCardHtml = esUrlImagenValida(j.fotoInicio)
+    ? `<div class="audit-photo-card">
+        <strong>Foto de Inicio (Apertura)</strong>
+        <img src="${j.fotoInicio}" alt="Foto Inicio" onclick="abrirVisorFoto('Foto de Inicio · ${j.empleadoNombre}', this.src)">
+        <button type="button" class="btn-secondary-small" style="width: 100%; margin-top: 6px;" onclick="abrirVisorFoto('Foto de Inicio · ${j.empleadoNombre}', this.previousElementSibling.src)">🔍 Ver completa</button>
+      </div>`
+    : `<div class="audit-photo-card"><strong>Foto de Inicio (Apertura)</strong><p class="muted" style="margin-top:8px;">Respaldada en Google Drive</p></div>`;
+  const finCardHtml = esUrlImagenValida(j.fotoFin)
+    ? `<div class="audit-photo-card">
+        <strong>Foto de Cierre (Finalización)</strong>
+        <img src="${j.fotoFin}" alt="Foto Fin" onclick="abrirVisorFoto('Foto de Cierre · ${j.empleadoNombre}', this.src)">
+        <button type="button" class="btn-secondary-small" style="width: 100%; margin-top: 6px;" onclick="abrirVisorFoto('Foto de Cierre · ${j.empleadoNombre}', this.previousElementSibling.src)">🔍 Ver completa</button>
+      </div>`
+    : `<div class="audit-photo-card"><strong>Foto de Cierre (Finalización)</strong><p class="muted" style="margin-top:8px;">Respaldada en Google Drive</p></div>`;
   document.getElementById("auditoria-body-content").innerHTML = `
     <div class="audit-summary">
       <strong>Cliente:</strong> ${j.cliente}<br>
@@ -1959,16 +2094,8 @@ function abrirModalAuditoria(id) {
       <strong>Total H. Extras:</strong> ${c.totalHorasExtras ?? 0} h · <strong>Total Recargos:</strong> ${c.totalHorasRecargos ?? 0} h · <strong>A Pagar:</strong> $${valorPagar.toLocaleString("es-CO")}
     </div>
     <div class="audit-grid">
-      <div class="audit-photo-card">
-        <strong>Foto de Inicio (Apertura)</strong>
-        <img src="${j.fotoInicio}" alt="Foto Inicio" onclick="abrirVisorFoto('Foto de Inicio · ${j.empleadoNombre}', this.src)">
-        <button type="button" class="btn-secondary-small" style="width: 100%; margin-top: 6px;" onclick="abrirVisorFoto('Foto de Inicio · ${j.empleadoNombre}', this.previousElementSibling.src)">🔍 Ver completa</button>
-      </div>
-      <div class="audit-photo-card">
-        <strong>Foto de Cierre (Finalización)</strong>
-        <img src="${j.fotoFin}" alt="Foto Fin" onclick="abrirVisorFoto('Foto de Cierre · ${j.empleadoNombre}', this.src)">
-        <button type="button" class="btn-secondary-small" style="width: 100%; margin-top: 6px;" onclick="abrirVisorFoto('Foto de Cierre · ${j.empleadoNombre}', this.previousElementSibling.src)">🔍 Ver completa</button>
-      </div>
+      ${inicioCardHtml}
+      ${finCardHtml}
     </div>
     <h4 style="margin-top: 15px; color: #040B5D;">Evidencias de Novedades</h4>
     ${novHtml}
@@ -1993,6 +2120,7 @@ function cerrarVisorFoto() {
 function cerrarModalAuditoria() {
   document.getElementById("modalAuditoriaConta").classList.add("hidden");
 }
+
 // ==========================================
 // RENDERIZADO DE TAREAS PENDIENTES (OPERARIO)
 // ==========================================
@@ -2036,6 +2164,7 @@ function renderTasks() {
   if (countPendElem) countPendElem.innerText = countP;
   filterFinalized();
 }
+
 // ==========================================
 // PANEL EXCLUSIVO DE REDES (DANILO) - DESCARGA ZIP
 // ==========================================
@@ -2172,6 +2301,7 @@ async function descargarEvidenciasTarea(taskId) {
     console.error("Error al generar el ZIP:", err);
   }
 }
+
 // ==========================================
 // FILTRADO DE TAREAS FINALIZADAS
 // ==========================================
@@ -2234,6 +2364,7 @@ function filterFinalized() {
     if (btnPdfContainer) btnPdfContainer.classList.remove("hidden");
   }
 }
+
 // ==========================================
 // CONTROL DEL WIZARD DE TAREAS (OPERARIOS / ADMIN)
 // ==========================================
@@ -2278,6 +2409,7 @@ function closeWizard() {
   document.getElementById("secPendientes").classList.remove("hidden");
   renderTasks();
 }
+
 // ==========================================
 // GESTIÓN DE DÍAS Y MÚLTIPLES FOTOS
 // ==========================================
@@ -2613,6 +2745,7 @@ function renderDaysAccordion() {
     container.appendChild(details);
   });
 }
+
 // ==========================================
 // FIRMAS, CIERRE Y REPORTE PDF DE TAREAS
 // ==========================================
@@ -2793,6 +2926,7 @@ function descargarReportePDF() {
   printWindow.document.write(htmlContent);
   printWindow.document.close();
 }
+
 // ==========================================
 // LIMPIEZA DE TAREAS SINCRONIZADAS
 // ==========================================
@@ -2801,8 +2935,9 @@ function purgeSyncedTasks() {
   const cleanedTasks = savedTasks.filter((task) => task.estado !== "sincronizada");
   localStorage.setItem("ayax_tasks_db", JSON.stringify(cleanedTasks));
 }
+
 // ==========================================
-// SINCRONIZACIÓN DE JORNADAS CON NEON (/api/jornadas)
+// SINCRONIZACIÓN DE JORNADAS CON NEON (/api/jornadas) Y GOOGLE DRIVE
 // ==========================================
 function normalizarJornadaDesdeDB(row) {
   let fotosNov = row.fotos_novedades || row.fotosNovedades || [];
@@ -2843,20 +2978,31 @@ async function guardarJornadaEnNube(jornada) {
     return false;
   }
   try {
+    // 1. Subir fotos a Google Drive y obtener URLs de respaldo
+    const jornadaConDrive = await resolverFotosJornadaParaDrive(jornada);
+    const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
+    const idx = dbJornadas.findIndex((item) => String(item.id) === String(jornadaConDrive.id));
+    if (idx !== -1) {
+      dbJornadas[idx] = jornadaConDrive;
+      localStorage.setItem("ayax_jornadas_db", JSON.stringify(dbJornadas));
+    }
+
+    // 2. Enviar solo datos de texto + URLs (sin Base64 pesado) hacia Neon
+    const payloadNeon = prepararPayloadLigeroParaNeon(jornadaConDrive);
     const resp = await fetch("/api/jornadas", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(jornada)
+      body: JSON.stringify(payloadNeon)
     });
     if (!resp.ok) {
       const errTxt = await resp.text();
       console.warn("No se pudo guardar en Neon:", errTxt);
       return false;
     }
-    desmarcarJornadaPendienteSync(jornada.id);
+    desmarcarJornadaPendienteSync(jornadaConDrive.id);
     return true;
   } catch (err) {
-    console.warn("Sin conexión o error de red al guardar en Neon:", err);
+    console.warn("Sin conexión o error de red al guardar en Drive/Neon:", err);
     return false;
   }
 }
@@ -2911,7 +3057,3 @@ async function sincronizarJornadasDesdeNube(renderCallback) {
 async function sincronizarJornadasConNube(renderCallback) {
   await sincronizarJornadasDesdeNube(renderCallback);
 }
-
-
-
-
