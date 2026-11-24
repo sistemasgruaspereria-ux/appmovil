@@ -5,7 +5,7 @@ const DIVISOR_MENSUAL = 210; // Divisor legal Colombia (42 horas semanales)
 
 const FESTIVOS_COLOMBIA = new Set([
   // --- LO QUE RESTA DE 2026 ---
-  "2026-11-02", "2026-11-16", "2026-12-08", "2026-12-25",
+  "2026-12-08", "2026-12-25",
 
   // --- AÑO 2027 ---
   "2027-01-01", "2027-01-11", "2027-03-22", "2027-03-25", "2027-03-26",
