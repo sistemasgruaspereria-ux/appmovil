@@ -20,7 +20,6 @@ export default async function handler(req, res) {
         params.push(String(empleadoId));
         query += ` AND empleado_id = $${params.length}`;
       }
-
       if (estado) {
         params.push(String(estado));
         query += ` AND estado = $${params.length}`;
@@ -40,6 +39,7 @@ export default async function handler(req, res) {
       const fotosNovNormalizadas = Array.isArray(j.fotosNovedades) ? j.fotosNovedades : [];
       const calculoNormalizado =
         j.calculo && typeof j.calculo === "object" ? JSON.stringify(j.calculo) : null;
+      const salarioGuardar = Number(j.salario) > 0 ? Number(j.salario) : 1753000;
 
       const sql = `
         INSERT INTO jornadas (
@@ -78,7 +78,7 @@ export default async function handler(req, res) {
         String(j.id),
         String(j.empleadoId),
         String(j.empleadoNombre || ""),
-        Number(j.salario || 1750905),
+        salarioGuardar,
         String(j.fecha),
         String(j.mesClave || String(j.fecha).slice(0, 7)),
         String(j.cliente),
@@ -88,7 +88,7 @@ export default async function handler(req, res) {
         String(j.estado || "abierta"),
         j.horaFin || null,
         j.fotoFin || null,
-        j.almuerzoMin === null || j.almuerzoMin === undefined ? null : Number(j.almuerzoMin),
+        j.almuerzoMin === null || j.almuerzoMin === undefined ? 0 : Number(j.almuerzoMin),
         String(j.observaciones || ""),
         JSON.stringify(fotosNovNormalizadas),
         calculoNormalizado,
@@ -96,6 +96,15 @@ export default async function handler(req, res) {
 
       const result = await pool.query(sql, values);
       return res.status(200).json({ ok: true, jornada: result.rows[0] });
+    }
+
+    if (req.method === "DELETE") {
+      const id = req.query?.id || req.body?.id;
+      if (!id) {
+        return res.status(400).json({ error: "Falta el id de la jornada a eliminar" });
+      }
+      await pool.query("DELETE FROM jornadas WHERE id = $1", [String(id)]);
+      return res.status(200).json({ ok: true, deletedId: String(id) });
     }
 
     return res.status(405).json({ error: "Método no permitido" });
