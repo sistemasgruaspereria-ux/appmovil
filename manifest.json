@@ -14,11 +14,10 @@
       "purpose": "any"
     },
     {
-      "src": "logo.png",
+      "src": "isologo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     }
   ]
 }
-
