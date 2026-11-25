@@ -1,7 +1,7 @@
 // ==========================================
 // SERVICE WORKER — PORTAL DE OPERARIOS (AYAX - GRÚAS PEREIRA)
 // ==========================================
-const CACHE_NAME = 'ayax-gruas-cache-v20'; // <-- Cambia este número cada vez que actualices la app
+const CACHE_NAME = 'ayax-gruas-cache-v21'; // <-- Cambia este número cada vez que actualices la app
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
