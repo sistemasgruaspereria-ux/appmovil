@@ -2,9 +2,10 @@
 // CONFIGURACIÓN, ROLES Y LEGISLACIÓN COLOMBIA
 // ==========================================
 const DIVISOR_MENSUAL = 210; // Divisor legal Colombia (42 horas semanales)
+const SALARIO_BASE_DEFAULT = 1753000;
 const FESTIVOS_COLOMBIA = new Set([
   // --- LO QUE RESTA DE 2026 ---
-  "2026-12-08","2026-12-25",
+  "2026-12-08", "2026-12-25",
   // --- AÑO 2027 ---
   "2027-01-01", "2027-01-11", "2027-03-22", "2027-03-25", "2027-03-26",
   "2027-05-01", "2027-05-10", "2027-05-31", "2027-06-07", "2027-07-05",
@@ -23,7 +24,6 @@ const FESTIVOS_COLOMBIA = new Set([
 ]);
 // URL de Google Apps Script para subir evidencias fotográficas a Google Drive
 const GOOGLE_DRIVE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxB3dWKSBCKLzWoS9se7b3ay4DVJhtIN7ZxtogGD5L34SqXuEculHUOayDcDBY2SGY_/exec";
-
 // Usuarios y roles base
 let defaultUsers = [
   { phone: "3217293985", pin: "1834", name: "Carolina Valencia Motato", role: "admin", salary: 0 },
@@ -62,7 +62,6 @@ let defaultUsers = [
   { phone: "3105385889", pin: "7841", name: "Wilmar Diovany Muñoz Giraldo", role: "operario", salary: 1750905 },
   { phone: "3102276487", pin: "7926", name: "Yeison Alberson Morales Uribe", role: "operario", salary: 1750905 }
 ];
-
 let defaultOperadores = [
   "Cristian Camilo Rodas Grajales", "Daniel Antonio Rodas Jaramillo", "Diógenes Marín Franco",
   "Duban Alberto Rodriguez Castañeda", "Edixon Giovanni Alvarado Villada", "Giovanni Antonio Ocampo Cano",
@@ -74,7 +73,6 @@ let defaultOperadores = [
   "Uriel González Ocampo", "Víctor Fernando Ocampo Amaya", "Wilfer Alberto Sepulveda Restrepo",
   "Willer Alexis Quintero Hurtado", "Wilmar Diovany Muñoz Giraldo", "Yeison Alberson Morales Uribe"
 ];
-
 let defaultAparejadores = [
   "Andrés Camilo Montes Alzate", "Andrés Felipe Gonzalez Ruiz", "Andrés Felipe Ospina Zapata",
   "Arley Cano Vergara", "Brandon Estiven Tapasco Piñeros", "Didier Roberto Orejuela Henao",
@@ -82,7 +80,6 @@ let defaultAparejadores = [
   "Jhonathan Arredondo Ossa", "Jonathan Steven Trujillo Taborda", "Juan Daniel Gómez Morales",
   "Juan José Arango Gallego", "Luis Fernando Tangarife Moncada"
 ];
-
 let defaultVehiculos = [
   { categoria: "Grúa", etiqueta: "#29 TADANO 70 TON", modelo: "TADANO/TADANO 70 TON", combustible: "Eléctrico" },
   { categoria: "Alquiladas", etiqueta: "ALQUILADAS #45", modelo: "Foton/4612 Aumark", combustible: "Gasolina" },
@@ -129,7 +126,6 @@ let defaultVehiculos = [
   { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN # 8", modelo: "Foton/4612 Aumark", combustible: "Gasolina" },
   { categoria: "Tractocamión", etiqueta: "TRACTOCAMIÓN #9", modelo: "Foton/Tractocamión AUMAN EST 6x4", combustible: "Diésel" }
 ];
-
 // Variables globales de estado
 let totalDaysCreated = 0;
 let currentActiveTaskId = null;
@@ -142,7 +138,6 @@ let ultimoReporteFilasConta = [];
 let ultimoReporteTipoConta = "horarios";
 let ultimaJornadaAbiertaId = null;
 let tabRedesActiva = "pendientes";
-
 // ==========================================
 // SUBIDA DIRECTA DE FOTOS A GOOGLE DRIVE
 // ==========================================
@@ -151,7 +146,6 @@ function esUrlImagenValida(valor) {
   const v = valor.trim();
   return v.startsWith("data:image/") || v.startsWith("http://") || v.startsWith("https://");
 }
-
 async function subirImagenADrive(imagenBase64, nombreArchivo) {
   if (!imagenBase64 || typeof imagenBase64 !== "string") return null;
   if (imagenBase64.startsWith("http://") || imagenBase64.startsWith("https://")) {
@@ -180,7 +174,6 @@ async function subirImagenADrive(imagenBase64, nombreArchivo) {
     return null;
   }
 }
-
 async function resolverFotosJornadaParaDrive(jornada) {
   const copia = { ...jornada };
   const slugEmpleado = String(copia.empleadoNombre || copia.empleadoId || "Operario")
@@ -222,7 +215,6 @@ async function resolverFotosJornadaParaDrive(jornada) {
   }
   return copia;
 }
-
 function prepararPayloadLigeroParaNeon(jornada) {
   const fotoInicioNeon =
     jornada.fotoInicio && (jornada.fotoInicio.startsWith("http://") || jornada.fotoInicio.startsWith("https://"))
@@ -242,7 +234,6 @@ function prepararPayloadLigeroParaNeon(jornada) {
     fotosNovedades: novedadesNeon
   };
 }
-
 // ==========================================
 // PERSISTENCIA Y CATÁLOGOS
 // ==========================================
@@ -254,11 +245,9 @@ function getDBUsers() {
   }
   return local;
 }
-
 function saveDBUsers(users) {
   localStorage.setItem("ayax_users_db", JSON.stringify(users));
 }
-
 function getDBOperadores() {
   const local = JSON.parse(localStorage.getItem("ayax_operadores_db"));
   if (!local || !local.length) {
@@ -267,7 +256,6 @@ function getDBOperadores() {
   }
   return local;
 }
-
 function getDBAparejadores() {
   const local = JSON.parse(localStorage.getItem("ayax_aparejadores_db"));
   if (!local || !local.length) {
@@ -276,7 +264,6 @@ function getDBAparejadores() {
   }
   return local;
 }
-
 function getDBVehiculos() {
   const local = JSON.parse(localStorage.getItem("ayax_vehiculos_db"));
   if (!local || !local.length) {
@@ -285,18 +272,15 @@ function getDBVehiculos() {
   }
   return local;
 }
-
 function getNextConsecutivoGP() {
   const seq = parseInt(localStorage.getItem("ayax_consecutivo_gp") || "1", 10);
   const code = "GP " + String(seq).padStart(4, "0");
   return { code, seq };
 }
-
 function incrementConsecutivoGP() {
   const seq = parseInt(localStorage.getItem("ayax_consecutivo_gp") || "1", 10);
   localStorage.setItem("ayax_consecutivo_gp", String(seq + 1));
 }
-
 // ==========================================
 // CONTROL DE CONECTIVIDAD Y COLA OFFLINE
 // ==========================================
@@ -306,7 +290,6 @@ window.addEventListener("online", () => {
 window.addEventListener("offline", () => {
   console.warn("Sin conexión a internet: los registros se guardan localmente.");
 });
-
 function obtenerPendientesSyncIds() {
   try {
     const raw = JSON.parse(localStorage.getItem("ayax_pending_jornadas_ids") || "[]");
@@ -315,12 +298,10 @@ function obtenerPendientesSyncIds() {
     return [];
   }
 }
-
 function guardarPendientesSyncIds(ids) {
   const unicos = Array.from(new Set((ids || []).map(String)));
   localStorage.setItem("ayax_pending_jornadas_ids", JSON.stringify(unicos));
 }
-
 function marcarJornadaPendienteSync(id) {
   if (!id) return;
   const ids = obtenerPendientesSyncIds();
@@ -329,13 +310,11 @@ function marcarJornadaPendienteSync(id) {
     guardarPendientesSyncIds(ids);
   }
 }
-
 function desmarcarJornadaPendienteSync(id) {
   if (!id) return;
   const ids = obtenerPendientesSyncIds().filter((item) => String(item) !== String(id));
   guardarPendientesSyncIds(ids);
 }
-
 // ==========================================
 // AUTENTICACIÓN, SESIÓN Y CONTROL POR ROL
 // ==========================================
@@ -346,12 +325,10 @@ function normalizarTexto(valor) {
     .toLowerCase()
     .trim();
 }
-
 function esUsuarioOperarioHoras(usuario) {
   if (!usuario) return false;
   return normalizarTexto(usuario.role) === "operario_horas";
 }
-
 function loginUser(phone, pin) {
   const cleanPhone = String(phone || "").trim();
   const cleanPin = String(pin || "").trim();
@@ -372,7 +349,6 @@ function loginUser(phone, pin) {
   configurarVistaPorRol(operador);
   return operador;
 }
-
 function logoutUser() {
   localStorage.removeItem("usuario_activo");
   localStorage.removeItem("token_sesion");
@@ -395,7 +371,6 @@ function logoutUser() {
   if (appContainer) appContainer.classList.add("hidden");
   if (loginScreen) loginScreen.classList.remove("hidden");
 }
-
 function setVisibilidadTab(tabKey, visible) {
   const cap = tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
   const btn = document.getElementById(`btnTab${cap}`);
@@ -409,7 +384,6 @@ function setVisibilidadTab(tabKey, visible) {
     sec.classList.remove("active");
   }
 }
-
 function configurarVistaPorRol(usuario) {
   if (!usuario) return;
   const rol = normalizarTexto(usuario.role);
@@ -454,7 +428,6 @@ function configurarVistaPorRol(usuario) {
   }
   switchTab("pendientes");
 }
-
 // ==========================================
 // INICIALIZACIÓN DE LA APLICACIÓN
 // ==========================================
@@ -513,12 +486,10 @@ window.addEventListener("DOMContentLoaded", () => {
     configurarVistaPorRol(usuarioActivo);
   }
 });
-
 function toggleUserMenu() {
   const dropdown = document.getElementById("userDropdownMenu");
   if (dropdown) dropdown.classList.toggle("hidden");
 }
-
 function verificarModoMantenimiento() {
   const enMantenimiento = false;
   const pantallaMantenimiento = document.getElementById("maintenance-screen");
@@ -532,7 +503,6 @@ function verificarModoMantenimiento() {
     pantallaMantenimiento.style.display = "none";
   }
 }
-
 function switchTab(tab) {
   const usuarioActivo = JSON.parse(localStorage.getItem("usuario_activo"));
   const rol = normalizarTexto(usuarioActivo?.role);
@@ -560,30 +530,25 @@ function switchTab(tab) {
   if (tab === "finalizadas") filterFinalized();
   if (tab === "contabilidad") sincronizarJornadasDesdeNube(renderReporteContabilidad);
 }
-
 function horaActualHHMM() {
   const ahora = new Date();
   return `${String(ahora.getHours()).padStart(2, "0")}:${String(ahora.getMinutes()).padStart(2, "0")}`;
 }
-
 function obtenerFechaLocalYYYYMMDD(dateObj = new Date()) {
   const y = dateObj.getFullYear();
   const m = String(dateObj.getMonth() + 1).padStart(2, "0");
   const d = String(dateObj.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
-
 function formatearFechaDDMMAAAA(fechaStr) {
   if (!fechaStr || !fechaStr.includes("-")) return fechaStr || "";
   const [y, m, d] = fechaStr.split("-");
   return `${d}/${m}/${y}`;
 }
-
 function obtenerClaveMes(fechaStr) {
   if (!fechaStr || fechaStr.length < 7) return obtenerFechaLocalYYYYMMDD().slice(0, 7);
   return fechaStr.slice(0, 7);
 }
-
 function formatearNombreMes(claveMes) {
   const [y, m] = claveMes.split("-").map(Number);
   const nombres = [
@@ -593,7 +558,6 @@ function formatearNombreMes(claveMes) {
   const nombreMes = nombres[(m || 1) - 1] || "Mes";
   return `${nombreMes} ${y} (${claveMes})`;
 }
-
 // ==========================================
 // ROL PROYECTOS
 // ==========================================
@@ -604,7 +568,6 @@ function renderMenuProyectos() {
 function volverMenuProyectos() {
   renderMenuProyectos();
 }
-
 function abrirFormularioCrearTarea() {
   const { code } = getNextConsecutivoGP();
   const ops = getDBOperadores().map((o) => `<option value="${o}">${o}</option>`).join("");
@@ -680,7 +643,6 @@ function abrirFormularioCrearTarea() {
     volverMenuProyectos();
   });
 }
-
 function verSubVistaProyectos(tipo) {
   document.getElementById("grid-proyectos-menu").classList.add("hidden");
   const container = document.getElementById("subvista-proyectos-container");
@@ -708,7 +670,6 @@ function verSubVistaProyectos(tipo) {
   `;
   filtrarListaSubvistaProyectos(tipo);
 }
-
 function filtrarListaSubvistaProyectos(tipo) {
   const container = document.getElementById("lista-subvista-proyectos-content");
   if (!container) return;
@@ -764,7 +725,6 @@ function filtrarListaSubvistaProyectos(tipo) {
     `;
   }).join("");
 }
-
 function cancelarTareaPorProyectos(id) {
   if (!confirm(`¿Cancelar la tarea ${id}? Al operario se le marcará como cancelada y no podrá iniciar ni registrar.`)) return;
   let tasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
@@ -773,7 +733,6 @@ function cancelarTareaPorProyectos(id) {
   alert(`Tarea ${id} marcada como cancelada.`);
   filtrarListaSubvistaProyectos("pendientes");
 }
-
 function renderInformesProyectos(container) {
   container.innerHTML = `
     <div class="form-group">
@@ -799,7 +758,6 @@ function renderInformesProyectos(container) {
     <button type="button" class="btn-primary" onclick="descargarExcelInformesProyectos()" style="background:#27ae60;">Descargar Excel (.xls)</button>
   `;
 }
-
 function descargarExcelInformesProyectos() {
   const est = document.getElementById("inf-p-estado")?.value || "todas";
   const fIni = document.getElementById("inf-p-inicio")?.value || "";
@@ -872,7 +830,6 @@ function descargarExcelInformesProyectos() {
   link.click();
   document.body.removeChild(link);
 }
-
 // ==========================================
 // ROL ADMINISTRADOR
 // ==========================================
@@ -883,7 +840,6 @@ function renderMenuAdmin() {
 function volverMenuAdmin() {
   renderMenuAdmin();
 }
-
 function verSubVistaAdmin(tipo) {
   document.getElementById("grid-admin-menu").classList.add("hidden");
   const container = document.getElementById("subvista-admin-container");
@@ -901,7 +857,6 @@ function verSubVistaAdmin(tipo) {
   if (tipo === "informes") renderAdminInformes(body);
   if (tipo === "backup") renderAdminBackup(body);
 }
-
 function renderAdminUsuarios(container) {
   const users = getDBUsers();
   container.innerHTML = `
@@ -966,7 +921,6 @@ function renderAdminUsuarios(container) {
     renderAdminUsuarios(container);
   });
 }
-
 function editarUsuarioAdmin(index) {
   const users = getDBUsers();
   const u = users[index];
@@ -992,14 +946,12 @@ function editarUsuarioAdmin(index) {
   alert("Usuario actualizado.");
   renderAdminUsuarios(document.getElementById("subvista-admin-body"));
 }
-
 function eliminarUsuarioAdmin(phone) {
   if (!confirm("¿Eliminar este usuario?")) return;
   const currentUsers = getDBUsers().filter((u) => String(u.phone) !== String(phone));
   saveDBUsers(currentUsers);
   renderAdminUsuarios(document.getElementById("subvista-admin-body"));
 }
-
 function renderAdminCatalogos(container) {
   const ops = getDBOperadores();
   const aps = getDBAparejadores();
@@ -1061,7 +1013,6 @@ function renderAdminCatalogos(container) {
     </div>
   `;
 }
-
 function agregarOperadorAdmin() {
   const name = document.getElementById("new-op-name")?.value.trim();
   if (!name) return;
@@ -1083,7 +1034,6 @@ function eliminarOperadorAdmin(idx) {
   localStorage.setItem("ayax_operadores_db", JSON.stringify(ops));
   renderAdminCatalogos(document.getElementById("subvista-admin-body"));
 }
-
 function agregarAparejadorAdmin() {
   const name = document.getElementById("new-ap-name")?.value.trim();
   if (!name) return;
@@ -1105,7 +1055,6 @@ function eliminarAparejadorAdmin(idx) {
   localStorage.setItem("ayax_aparejadores_db", JSON.stringify(aps));
   renderAdminCatalogos(document.getElementById("subvista-admin-body"));
 }
-
 function agregarVehiculoAdmin() {
   const etiqueta = document.getElementById("new-veh-etiqueta")?.value.trim();
   if (!etiqueta) return;
@@ -1136,7 +1085,6 @@ function eliminarVehiculoAdmin(idx) {
   localStorage.setItem("ayax_vehiculos_db", JSON.stringify(vehs));
   renderAdminCatalogos(document.getElementById("subvista-admin-body"));
 }
-
 function renderAdminInformes(container) {
   container.innerHTML = `
     <div class="form-group">
@@ -1150,7 +1098,6 @@ function renderAdminInformes(container) {
     <button type="button" class="btn-primary" onclick="exportarInformePorRolAdmin()" style="background:#27ae60;">Generar Informe del Rol</button>
   `;
 }
-
 function exportarInformePorRolAdmin() {
   const rol = document.getElementById("admin-inf-rol")?.value || "proyectos";
   if (rol === "contabilidad") {
@@ -1160,14 +1107,12 @@ function exportarInformePorRolAdmin() {
     descargarExcelInformesProyectos();
   }
 }
-
 function renderAdminBackup(container) {
   container.innerHTML = `
     <p class="muted" style="margin-bottom:10px;">Descarga una copia de seguridad completa en formato JSON.</p>
     <button type="button" class="btn-primary" onclick="generarBackupJSON()" style="background:#ea580c;">Descargar Copia de Seguridad</button>
   `;
 }
-
 function generarBackupJSON() {
   const data = {
     users: getDBUsers(),
@@ -1186,7 +1131,6 @@ function generarBackupJSON() {
   link.click();
   document.body.removeChild(link);
 }
-
 // ==========================================
 // FLUJO DE JORNADA, DÍAS REGISTRADOS E HISTORIAL (OPERARIO HORAS)
 // ==========================================
@@ -1248,7 +1192,6 @@ function initEventListenersHoras() {
     e.target.value = "";
   });
 }
-
 function obtenerUltimaJornadaAbiertaUsuario() {
   const user = JSON.parse(localStorage.getItem("usuario_activo"));
   if (!user) return null;
@@ -1260,17 +1203,14 @@ function obtenerUltimaJornadaAbiertaUsuario() {
   }
   return abiertas.length ? abiertas[abiertas.length - 1] : null;
 }
-
 function actualizarTituloAcordeonDia() {
-  const acordeon = document.getElementById("acordeon-apertura-jornada");
   const titulo = document.getElementById("titulo-acordeon-dia");
   const btnElim = document.getElementById("btn-eliminar-apertura-activa");
-  if (!acordeon || !titulo) return;
+  if (!titulo) return;
   const abierta = obtenerUltimaJornadaAbiertaUsuario();
-  titulo.innerText = "1. Abrir Jornada de Trabajo";
+  titulo.innerText = abierta ? "1. Abrir Jornada de Trabajo (Jornada abierta)" : "1. Abrir Jornada de Trabajo";
   if (btnElim) btnElim.style.display = abierta ? "inline-block" : "none";
 }
-
 function eliminarJornadaActivaDesdeAcordeon() {
   const abierta = obtenerUltimaJornadaAbiertaUsuario();
   if (!abierta) {
@@ -1293,7 +1233,6 @@ function eliminarJornadaActivaDesdeAcordeon() {
   }
   eliminarJornadaPorId(abierta.id);
 }
-
 function capturarGPSJornada(inputId) {
   const input = document.getElementById(inputId);
   if (!navigator.geolocation) {
@@ -1309,7 +1248,6 @@ function capturarGPSJornada(inputId) {
     { enableHighAccuracy: true, timeout: 7000 }
   );
 }
-
 function estamparFotoJornada(file, canvasId, lineasTexto, callback) {
   if (!file) return;
   const reader = new FileReader();
@@ -1347,7 +1285,6 @@ function estamparFotoJornada(file, canvasId, lineasTexto, callback) {
   };
   reader.readAsDataURL(file);
 }
-
 function refrescarSelloInicioJornada() {
   const file = document.getElementById("foto-inicio-file").files[0];
   if (!file) return;
@@ -1362,7 +1299,6 @@ function refrescarSelloInicioJornada() {
     `Ubicación: ${dir}`
   ], (url) => { fotoInicioStamped = url; });
 }
-
 function refrescarSelloFinJornada() {
   const file = document.getElementById("foto-fin-file").files[0];
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
@@ -1376,7 +1312,6 @@ function refrescarSelloFinJornada() {
     `Ubicación: ${jActiva.direccion}`
   ], (url) => { fotoFinStamped = url; });
 }
-
 function guardarAperturaJornada() {
   const user = JSON.parse(localStorage.getItem("usuario_activo"));
   const fecha = document.getElementById("jornada-fecha").value.trim();
@@ -1395,7 +1330,7 @@ function guardarAperturaJornada() {
       id: nuevaId,
       empleadoId: user.phone,
       empleadoNombre: user.name,
-      salario: user.salary || 1750905,
+      salario: Number(user.salary) > 0 ? Number(user.salary) : SALARIO_BASE_DEFAULT,
       fecha,
       mesClave: obtenerClaveMes(fecha),
       cliente,
@@ -1405,7 +1340,7 @@ function guardarAperturaJornada() {
       estado: "abierta",
       horaFin: null,
       fotoFin: null,
-      almuerzoMin: null,
+      almuerzoMin: 0,
       observaciones: "",
       fotosNovedades: [],
       calculo: null
@@ -1444,12 +1379,10 @@ function guardarAperturaJornada() {
     );
   }
 }
-
 function renderVistaJornada() {
   actualizarTituloAcordeonDia();
   renderJornadasAbiertas();
 }
-
 function renderJornadasAbiertas() {
   const user = JSON.parse(localStorage.getItem("usuario_activo"));
   const cont = document.getElementById("lista-jornadas-abiertas");
@@ -1474,21 +1407,19 @@ function renderJornadasAbiertas() {
     </div>
   `).join("");
 }
-
 function abrirCierreJornada(id) {
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const j = dbJornadas.find((item) => item.id === id);
   if (!j) return;
   fotoFinStamped = "";
   fotosNovedadesStamped = [];
-  const [y, m, d] = (j.fecha || obtenerFechaLocalYYYYMMDD()).split("-").map(Number);
-  const esViernes = new Date(y, (m || 1) - 1, d || 1).getDay() === 5;
   document.getElementById("cierre-jornada-id").value = j.id;
   document.getElementById("cierre-resumen-txt").innerText = `${j.cliente} | Fecha: ${formatearFechaDDMMAAAA(j.fecha)} | Entrada: ${j.horaInicio}`;
   document.getElementById("foto-fin-file").value = "";
   document.getElementById("jornada-hora-fin").value = "";
   document.getElementById("hora-fin-badge").innerText = "";
-  document.getElementById("jornada-almuerzo-min").value = esViernes ? "60" : "0";
+  const almuerzoInput = document.getElementById("jornada-almuerzo-min");
+  if (almuerzoInput) almuerzoInput.value = "0";
   document.getElementById("jornada-observaciones").value = "";
   document.getElementById("galeria-novedades-thumbs").innerHTML = "";
   const canvas = document.getElementById("canvas-fin-preview");
@@ -1500,11 +1431,9 @@ function abrirCierreJornada(id) {
   document.getElementById("panel-cierre-jornada").classList.remove("hidden");
   document.getElementById("panel-cierre-jornada").scrollIntoView({ behavior: "smooth" });
 }
-
 function cancelarCierreJornada() {
   document.getElementById("panel-cierre-jornada").classList.add("hidden");
 }
-
 function procesarArchivosNovedad(fileList) {
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const j = dbJornadas.find((item) => item.id === document.getElementById("cierre-jornada-id").value);
@@ -1518,7 +1447,6 @@ function procesarArchivosNovedad(fileList) {
     });
   });
 }
-
 function renderThumbsNovedades() {
   const cont = document.getElementById("galeria-novedades-thumbs");
   if (!cont) return;
@@ -1529,16 +1457,13 @@ function renderThumbsNovedades() {
     </div>
   `).join("");
 }
-
 function quitarThumbNovedad(fotoId) {
   fotosNovedadesStamped = fotosNovedadesStamped.filter((f) => f.id !== fotoId);
   renderThumbsNovedades();
 }
-
 function guardarCierreJornada() {
   const id = document.getElementById("cierre-jornada-id").value.trim();
   const horaFin = document.getElementById("jornada-hora-fin").value.trim() || horaActualHHMM();
-  const almuerzoRaw = document.getElementById("jornada-almuerzo-min").value;
   const fileFin = document.getElementById("foto-fin-file").files[0];
   if (!id || !fileFin) {
     alert("Debes adjuntar la foto de finalización.");
@@ -1549,12 +1474,7 @@ function guardarCierreJornada() {
   if (idx === -1) return;
   const finalizarCierre = (imgFinUrl) => {
     const j = dbJornadas[idx];
-    const [y, m, d] = j.fecha.split("-").map(Number);
-    const esViernes = new Date(y, m - 1, d).getDay() === 5;
-    const almuerzoMin =
-      almuerzoRaw !== "" && almuerzoRaw !== null && almuerzoRaw !== undefined
-        ? Math.max(0, parseInt(almuerzoRaw, 10) || 0)
-        : (esViernes ? 60 : 0);
+    const almuerzoMin = 0; // Sin descuento de descanso en esta fase
     j.horaFin = horaFin;
     j.fotoFin = imgFinUrl;
     j.almuerzoMin = almuerzoMin;
@@ -1593,7 +1513,6 @@ function guardarCierreJornada() {
     );
   }
 }
-
 function renderTarjetaDiaCerrado(j) {
   const c = normalizarCalculoJornada(j, j.calculo || {});
   const fechaBonita = formatearFechaDDMMAAAA(j.fecha);
@@ -1634,7 +1553,6 @@ function renderTarjetaDiaCerrado(j) {
     </details>
   `;
 }
-
 function renderListaDiasRegistrados() {
   const user = JSON.parse(localStorage.getItem("usuario_activo"));
   const cont = document.getElementById("lista-dias-registrados-mes");
@@ -1656,7 +1574,6 @@ function renderListaDiasRegistrados() {
   }
   cont.innerHTML = diasMes.map(renderTarjetaDiaCerrado).join("");
 }
-
 function renderCarpetasHistorial() {
   const user = JSON.parse(localStorage.getItem("usuario_activo"));
   const cont = document.getElementById("carpetas-historial-meses");
@@ -1702,7 +1619,6 @@ function renderCarpetasHistorial() {
     `;
   }).join("");
 }
-
 function limpiarFiltroCalendario(inputId, fnRenderName) {
   const input = document.getElementById(inputId);
   if (input) input.value = "";
@@ -1710,11 +1626,10 @@ function limpiarFiltroCalendario(inputId, fnRenderName) {
     window[fnRenderName]();
   }
 }
-
-function eliminarJornadaPorId(id) {
+async function eliminarJornadaPorId(id) {
   if (!confirm("¿Deseas eliminar este registro?")) return;
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
-  const filtradas = dbJornadas.filter((j) => j.id !== id);
+  const filtradas = dbJornadas.filter((j) => String(j.id) !== String(id));
   localStorage.setItem("ayax_jornadas_db", JSON.stringify(filtradas));
   desmarcarJornadaPendienteSync(id);
   if (ultimaJornadaAbiertaId === id) {
@@ -1723,16 +1638,23 @@ function eliminarJornadaPorId(id) {
   if (document.getElementById("cierre-jornada-id")?.value === id) {
     cancelarCierreJornada();
   }
+  if (navigator.onLine) {
+    try {
+      await fetch(`/api/jornadas?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    } catch (err) {
+      console.warn("No se pudo eliminar remotamente en /api/jornadas:", err);
+    }
+  }
   renderVistaJornada();
   renderListaDiasRegistrados();
   renderCarpetasHistorial();
   renderReporteContabilidad();
 }
-
 // ==========================================
-// CÁLCULO DE EXTRAS Y RECARGOS (COLOMBIA — NOVIEMBRE 2026)
-// Esquema: Lun-Jue 8.5h (sin almuerzo) | Vie 8.0h (60 min almuerzo) = 42h/sem
-// Divisor: 210h/mes | Nocturno: 19:00-06:00 | Dom/Fest: 90%
+// CÁLCULO DE EXTRAS Y RECARGOS (COLOMBIA — 42h/SEM)
+// Esquema: Lun-Jue 8.5h | Vie 8.0h | Sáb 8.5h (Habilitado ordinario)
+// Precisión: 1 Minuto | Divisor: 210h/mes | Nocturno: 19:00-06:00
+// Extras completas (1.25 / 1.75) + Recargos (0.35 / 0.90 / 1.25 / 1.75)
 // ==========================================
 function normalizarCalculoJornada(jornada, calculoRaw) {
   const base = calculoRaw || {};
@@ -1760,8 +1682,7 @@ function normalizarCalculoJornada(jornada, calculoRaw) {
   }
   return base;
 }
-
-function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMinutos, salarioMensual) {
+function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, _almuerzoMinutos, salarioMensual) {
   const [y, m, d] = String(fechaStr || "").split("-").map(Number);
   const [hI, minI] = String(horaInicioStr || "00:00").split(":").map(Number);
   const [hF, minF] = String(horaFinStr || "00:00").split(":").map(Number);
@@ -1770,54 +1691,17 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
   if (fin < inicio) {
     fin.setDate(fin.getDate() + 1);
   }
-  const diaSemana = inicio.getDay();
-  const festivosSet = typeof FESTIVOS_COLOMBIA !== "undefined" && FESTIVOS_COLOMBIA ? FESTIVOS_COLOMBIA : new Set();
-  const esDomingoOFestivo = diaSemana === 0 || festivosSet.has(fechaStr);
+  const diaSemanaInicio = inicio.getDay(); // 0 = Dom, 1 = Lun, ..., 5 = Vie, 6 = Sáb
+  // Definición de jornada ordinaria del día de inicio:
+  // Lun-Jue: 8.5h | Vie: 8.0h | Sáb: 8.5h (Permite trabajar sábado si descansó entre semana) | Dom: 0.0h
   let jornadaOrdinariaDia = 8.5;
-  if (diaSemana === 5) jornadaOrdinariaDia = 8.0;
-  if (diaSemana === 6 || diaSemana === 0) jornadaOrdinariaDia = 0.0;
-  const descansoMinutos =
-    almuerzoMinutos !== undefined && almuerzoMinutos !== null && almuerzoMinutos !== ""
-      ? Math.max(0, Number(almuerzoMinutos))
-      : (diaSemana === 5 ? 60 : 0);
+  if (diaSemanaInicio === 5) jornadaOrdinariaDia = 8.0;
+  if (diaSemanaInicio === 6) jornadaOrdinariaDia = 8.5;
+  if (diaSemanaInicio === 0) jornadaOrdinariaDia = 0.0;
   const totalBrutoHoras = Math.max(0, (fin - inicio) / (1000 * 60 * 60));
-  const horasNetas = Math.max(0, totalBrutoHoras - descansoMinutos / 60);
-  const tramos = [];
-  const pasoMs = 15 * 60 * 1000;
-  let cursor = new Date(inicio);
-  while (cursor < fin) {
-    const siguiente = new Date(Math.min(cursor.getTime() + pasoMs, fin.getTime()));
-    const minsTramo = (siguiente - cursor) / (1000 * 60);
-    const horaDecimal = cursor.getHours() + cursor.getMinutes() / 60;
-    const esFranjaNocturna = horaDecimal >= 19 || horaDecimal < 6;
-    const esVentanaAlmuerzo = horaDecimal >= 12 && horaDecimal < 14.5;
-    tramos.push({
-      minsTramo,
-      minsTrabajados: minsTramo,
-      esFranjaNocturna,
-      esVentanaAlmuerzo
-    });
-    cursor = siguiente;
-  }
-  let descansoPendiente = descansoMinutos;
-  for (const t of tramos) {
-    if (descansoPendiente <= 0) break;
-    if (t.esVentanaAlmuerzo && t.minsTrabajados > 0) {
-      const descontado = Math.min(descansoPendiente, t.minsTrabajados);
-      t.minsTrabajados -= descontado;
-      descansoPendiente -= descontado;
-    }
-  }
-  if (descansoPendiente > 0) {
-    for (let i = tramos.length - 1; i >= 0 && descansoPendiente > 0; i--) {
-      const t = tramos[i];
-      if (t.minsTrabajados > 0) {
-        const descontado = Math.min(descansoPendiente, t.minsTrabajados);
-        t.minsTrabajados -= descontado;
-        descansoPendiente -= descontado;
-      }
-    }
-  }
+  const horasNetas = totalBrutoHoras;
+  const festivosSet =
+    typeof FESTIVOS_COLOMBIA !== "undefined" && FESTIVOS_COLOMBIA ? FESTIVOS_COLOMBIA : new Set();
   let heDiurna = 0;
   let heNocturna = 0;
   let recNocturno = 0;
@@ -1826,56 +1710,59 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
   let hedDominical = 0;
   let henDominical = 0;
   let horasAcumuladas = 0;
-  function clasificarHoras(horas, superaJornada, domFest, noct) {
-    if (horas <= 0) return;
-    if (domFest) {
+  const pasoMs = 60 * 1000;
+  let cursor = new Date(inicio);
+  while (cursor < fin) {
+    const siguiente = new Date(Math.min(cursor.getTime() + pasoMs, fin.getTime()));
+    const duracionMin = (siguiente - cursor) / (1000 * 60);
+    const duracionHoras = duracionMin / 60;
+    const diaSemanaCursor = cursor.getDay();
+    const yC = cursor.getFullYear();
+    const mC = String(cursor.getMonth() + 1).padStart(2, "0");
+    const dC = String(cursor.getDate()).padStart(2, "0");
+    const fechaCursorStr = `${yC}-${mC}-${dC}`;
+    const esDomFest = diaSemanaCursor === 0 || festivosSet.has(fechaCursorStr);
+    const horaDecimal = cursor.getHours() + cursor.getMinutes() / 60;
+    const esNocturna = horaDecimal >= 19 || horaDecimal < 6;
+    const superaJornada = horasAcumuladas + 1e-9 >= jornadaOrdinariaDia;
+    if (esDomFest) {
       if (!superaJornada) {
-        if (noct) recNoctDom += horas;
-        else recDominical += horas;
+        if (esNocturna) recNoctDom += duracionHoras;
+        else recDominical += duracionHoras;
       } else {
-        if (noct) henDominical += horas;
-        else hedDominical += horas;
+        if (esNocturna) henDominical += duracionHoras;
+        else hedDominical += duracionHoras;
       }
     } else {
       if (superaJornada) {
-        if (noct) heNocturna += horas;
-        else heDiurna += horas;
-      } else if (noct) {
-        recNocturno += horas;
+        if (esNocturna) heNocturna += duracionHoras;
+        else heDiurna += duracionHoras;
+      } else if (esNocturna) {
+        recNocturno += duracionHoras;
       }
     }
+    horasAcumuladas += duracionHoras;
+    cursor = siguiente;
   }
-  for (const t of tramos) {
-    if (t.minsTrabajados <= 0) continue;
-    const horas = t.minsTrabajados / 60;
-    if (horasAcumuladas < jornadaOrdinariaDia && horasAcumuladas + horas > jornadaOrdinariaDia) {
-      const hOrdinarias = jornadaOrdinariaDia - horasAcumuladas;
-      const hExtras = horas - hOrdinarias;
-      clasificarHoras(hOrdinarias, false, esDomingoOFestivo, t.esFranjaNocturna);
-      clasificarHoras(hExtras, true, esDomingoOFestivo, t.esFranjaNocturna);
-    } else {
-      const supera = horasAcumuladas + 1e-9 >= jornadaOrdinariaDia;
-      clasificarHoras(horas, supera, esDomingoOFestivo, t.esFranjaNocturna);
-    }
-    horasAcumuladas += horas;
-  }
-  const divisor = typeof DIVISOR_MENSUAL === "number" && DIVISOR_MENSUAL > 0 ? DIVISOR_MENSUAL : 210;
-  const valorHoraOrd = (Number(salarioMensual) || 1750905) / divisor;
+  const divisor =
+    typeof DIVISOR_MENSUAL === "number" && DIVISOR_MENSUAL > 0 ? DIVISOR_MENSUAL : 210;
+  const salarioBase = Number(salarioMensual) > 0 ? Number(salarioMensual) : SALARIO_BASE_DEFAULT;
+  const valorHoraOrd = salarioBase / divisor;
   const valorExtrasYRecargos =
-    heDiurna * valorHoraOrd * 0.25 +
-    heNocturna * valorHoraOrd * 0.75 +
+    heDiurna * valorHoraOrd * 1.25 +
+    heNocturna * valorHoraOrd * 1.75 +
     recNocturno * valorHoraOrd * 0.35 +
     recDominical * valorHoraOrd * 0.90 +
     recNoctDom * valorHoraOrd * 1.25 +
-    hedDominical * valorHoraOrd * 1.15 +
-    henDominical * valorHoraOrd * 1.65;
+    hedDominical * valorHoraOrd * 1.25 +
+    henDominical * valorHoraOrd * 1.75;
   const totalHorasExtras = Number((heDiurna + heNocturna + hedDominical + henDominical).toFixed(2));
   const totalHorasRecargos = Number((recNocturno + recDominical + recNoctDom).toFixed(2));
   const totalHorasConceptos = Number((totalHorasExtras + totalHorasRecargos).toFixed(2));
   return {
-    esDomingoOFestivo,
+    esDomingoOFestivo: diaSemanaInicio === 0 || festivosSet.has(fechaStr),
     jornadaOrdinariaDia,
-    descansoMinutos,
+    descansoMinutos: 0,
     horasNetas: Number(horasNetas.toFixed(2)),
     heDiurna: Number(heDiurna.toFixed(2)),
     heNocturna: Number(heNocturna.toFixed(2)),
@@ -1890,7 +1777,6 @@ function calcularJornadaLaboral(fechaStr, horaInicioStr, horaFinStr, almuerzoMin
     valorPagar: Math.round(valorExtrasYRecargos)
   };
 }
-
 // ==========================================
 // MÓDULO CONTABILIDAD (REPORTE DE HORARIOS CUMPLIDOS Y NÓMINA)
 // ==========================================
@@ -1905,7 +1791,6 @@ function renderReporteContabilidad() {
   const fechaFin = document.getElementById("filtro-fecha-fin-conta")?.value || "";
   const tipoReporte = document.getElementById("tipo-reporte-conta")?.value || "horarios";
   ultimoReporteTipoConta = tipoReporte;
-
   const txtRango = document.getElementById("txt-rango-activo");
   if (txtRango) {
     let rangoStr = "Filtro activo: ";
@@ -1916,36 +1801,30 @@ function renderReporteContabilidad() {
     rangoStr += ` · Modo: ${tipoReporte === "horarios" ? "Horarios Cumplidos" : "Liquidación de Nómina"}`;
     txtRango.innerText = rangoStr;
   }
-
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const filtradas = dbJornadas.filter((j) => {
     if (j.estado !== "cerrada" || !j.calculo) return false;
-    if (empFiltro !== "todos" && j.empleadoId !== empFiltro) return false;
+    if (empFiltro !== "todos" && String(j.empleadoId) !== String(empFiltro)) return false;
     if (fechaInicio && j.fecha < fechaInicio) return false;
     if (fechaFin && j.fecha > fechaFin) return false;
     return true;
   }).sort((a, b) => a.fecha.localeCompare(b.fecha));
-
   const porEmpleado = {};
   filtradas.forEach((j) => {
     if (!porEmpleado[j.empleadoId]) porEmpleado[j.empleadoId] = { nombre: j.empleadoNombre, filas: [] };
     porEmpleado[j.empleadoId].filas.push(j);
   });
-
   const thead = document.getElementById("thead-contabilidad");
   const tbody = document.getElementById("tbody-contabilidad");
   const tfoot = document.getElementById("tfoot-contabilidad");
   if (!thead || !tbody || !tfoot) return;
-
   tbody.innerHTML = "";
   ultimoReporteFilasConta = [];
-
   let totalJornadasGlobal = 0;
   let totalHorasNetasGlobal = 0;
   let totalExtrasGlobal = 0;
   let totalRecargosGlobal = 0;
   let totalPagarGlobal = 0;
-
   if (tipoReporte === "horarios") {
     thead.innerHTML = `
       <tr>
@@ -1962,7 +1841,6 @@ function renderReporteContabilidad() {
         <th>Auditoría</th>
       </tr>
     `;
-
     Object.values(porEmpleado).forEach((grupo) => {
       let subJornadas = 0, subHorasNetas = 0;
       grupo.filas.forEach((f) => {
@@ -1971,7 +1849,6 @@ function renderReporteContabilidad() {
         const jBase = Number(c.jornadaOrdinariaDia || 8.5);
         subJornadas++;
         subHorasNetas += hNetas;
-
         let estadoTxt = "Normal";
         let estadoColor = "#0f172a";
         if (c.totalHorasExtras > 0) {
@@ -1981,7 +1858,6 @@ function renderReporteContabilidad() {
           estadoTxt = `Parcial (${hNetas}h / ${jBase}h)`;
           estadoColor = "#d97706";
         }
-
         ultimoReporteFilasConta.push({
           tipo: "registro",
           fecha: f.fecha,
@@ -1995,7 +1871,6 @@ function renderReporteContabilidad() {
           jornadaBase: jBase,
           estadoTxt
         });
-
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${f.fecha}</td>
@@ -2012,17 +1887,14 @@ function renderReporteContabilidad() {
         `;
         tbody.appendChild(tr);
       });
-
       totalJornadasGlobal += subJornadas;
       totalHorasNetasGlobal += subHorasNetas;
-
       ultimoReporteFilasConta.push({
         tipo: "subtotal",
         etiqueta: `Subtotal ${grupo.nombre}`,
         jornadas: subJornadas,
         horasNetas: Number(subHorasNetas.toFixed(2))
       });
-
       const trSub = document.createElement("tr");
       trSub.className = "subtotal-row";
       trSub.innerHTML = `
@@ -2032,7 +1904,6 @@ function renderReporteContabilidad() {
       `;
       tbody.appendChild(trSub);
     });
-
     tfoot.innerHTML = `
       <tr class="gran-total-row">
         <td colspan="7" style="text-align:right;">TOTAL GENERAL (${totalJornadasGlobal} jornadas):</td>
@@ -2040,9 +1911,7 @@ function renderReporteContabilidad() {
         <td colspan="3"></td>
       </tr>
     `;
-
   } else {
-    // TIPO REPORTE === 'nomina'
     thead.innerHTML = `
       <tr>
         <th>Fecha</th>
@@ -2055,18 +1924,17 @@ function renderReporteContabilidad() {
         <th>Auditoría</th>
         <th>Total H. Extras</th>
         <th>Total Recargos</th>
-        <th>H.E.D (25%)</th>
-        <th>H.E.N (75%)</th>
+        <th>H.E.D (125%)</th>
+        <th>H.E.N (175%)</th>
         <th>Rec.N (35%)</th>
         <th>Rec.Dom (90%)</th>
         <th>Rec.N.Dom (125%)</th>
-        <th>HED.Dom (115%)</th>
-        <th>HEN.Dom (165%)</th>
+        <th>HED.Dom (125%)</th>
+        <th>HEN.Dom (175%)</th>
         <th>Total Conceptos</th>
         <th>Valor a Pagar</th>
       </tr>
     `;
-
     Object.values(porEmpleado).forEach((grupo) => {
       let subExtras = 0, subRecargos = 0, subHoras = 0, subValor = 0;
       grupo.filas.forEach((f) => {
@@ -2075,12 +1943,10 @@ function renderReporteContabilidad() {
         const hRecargos = Number(c.totalHorasRecargos ?? 0);
         const hTotal = Number(c.totalHorasConceptos ?? (hExtras + hRecargos));
         const valorFila = Number(c.valorPagar || 0);
-
         subExtras += hExtras;
         subRecargos += hRecargos;
         subHoras += hTotal;
         subValor += valorFila;
-
         ultimoReporteFilasConta.push({
           tipo: "registro",
           fecha: f.fecha,
@@ -2102,7 +1968,6 @@ function renderReporteContabilidad() {
           totalHoras: Number(hTotal.toFixed(2)),
           valorPagar: valorFila
         });
-
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${f.fecha}</td>
@@ -2127,11 +1992,9 @@ function renderReporteContabilidad() {
         `;
         tbody.appendChild(tr);
       });
-
       totalExtrasGlobal += subExtras;
       totalRecargosGlobal += subRecargos;
       totalPagarGlobal += subValor;
-
       ultimoReporteFilasConta.push({
         tipo: "subtotal",
         etiqueta: `Subtotal ${grupo.nombre}`,
@@ -2140,7 +2003,6 @@ function renderReporteContabilidad() {
         totalHoras: Number(subHoras.toFixed(2)),
         valorPagar: Math.round(subValor)
       });
-
       const trSub = document.createElement("tr");
       trSub.className = "subtotal-row";
       trSub.innerHTML = `
@@ -2153,7 +2015,6 @@ function renderReporteContabilidad() {
       `;
       tbody.appendChild(trSub);
     });
-
     tfoot.innerHTML = `
       <tr class="gran-total-row">
         <td colspan="8" style="text-align:right;">TOTAL GENERAL EXTRAS/RECARGOS:</td>
@@ -2165,8 +2026,6 @@ function renderReporteContabilidad() {
       </tr>
     `;
   }
-
-  // Tarjeta dinámica informativa
   const resumenBox = document.getElementById("resumen-dinamico-conta");
   if (resumenBox) {
     if (empFiltro !== "todos" && porEmpleado[empFiltro]) {
@@ -2175,7 +2034,6 @@ function renderReporteContabilidad() {
       const hNetasEmp = g.filas.reduce((acc, item) => acc + (normalizarCalculoJornada(item, item.calculo).horasNetas || 0), 0);
       const valEmp = g.filas.reduce((acc, item) => acc + (normalizarCalculoJornada(item, item.calculo).valorPagar || 0), 0);
       const extEmp = g.filas.reduce((acc, item) => acc + (normalizarCalculoJornada(item, item.calculo).totalHorasExtras || 0), 0);
-      
       resumenBox.innerHTML = `
         <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; font-size: 0.85rem;">
           <strong style="color: #040B5D; font-size: 0.95rem;">Resumen de ${g.nombre}</strong><br>
@@ -2192,18 +2050,15 @@ function renderReporteContabilidad() {
     }
   }
 }
-
 function exportarExcelContabilidad() {
   const tipoReporte = ultimoReporteTipoConta;
   let encabezados = [];
   let filasHtml = "";
-
   if (tipoReporte === "horarios") {
     encabezados = [
-      "Fecha", "Empleado", "Cliente", "Dirección", "Hora Entrada", "Hora Salida", 
+      "Fecha", "Empleado", "Cliente", "Dirección", "Hora Entrada", "Hora Salida",
       "Descanso (min)", "Horas Netas Cumplidas", "Jornada Base", "Estado Cumplimiento"
     ];
-
     ultimoReporteFilasConta.forEach((item) => {
       if (item.tipo === "registro") {
         filasHtml += `
@@ -2221,16 +2076,14 @@ function exportarExcelContabilidad() {
           </tr>`;
       }
     });
-
   } else {
     encabezados = [
       "Fecha", "Empleado", "Cliente", "Dirección", "Hora Inicio", "Hora Fin", "Almuerzo (min)",
       "Total Horas Extras", "Total Horas Recargos",
-      "H.E. Diurna (25%)", "H.E. Nocturna (75%)", "Rec. Nocturno (35%)", "Rec. Dominical (90%)",
-      "Rec. Noct. Dom/Fest (125%)", "H.E.D. Dom/Fest (115%)", "H.E.N. Dom/Fest (165%)",
+      "H.E. Diurna (125%)", "H.E. Nocturna (175%)", "Rec. Nocturno (35%)", "Rec. Dominical (90%)",
+      "Rec. Noct. Dom/Fest (125%)", "H.E.D. Dom/Fest (125%)", "H.E.N. Dom/Fest (175%)",
       "Total Conceptos", "Valor a Pagar"
     ];
-
     ultimoReporteFilasConta.forEach((item) => {
       if (item.tipo === "registro") {
         filasHtml += `
@@ -2253,7 +2106,6 @@ function exportarExcelContabilidad() {
       }
     });
   }
-
   const htmlExcel = `
     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
     <head><meta charset="UTF-8"></head>
@@ -2264,7 +2116,6 @@ function exportarExcelContabilidad() {
       </table>
     </body>
     </html>`;
-
   const blob = new Blob([htmlExcel], { type: "application/vnd.ms-excel;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -2275,7 +2126,6 @@ function exportarExcelContabilidad() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
-
 function abrirModalAuditoria(id) {
   const dbJornadas = JSON.parse(localStorage.getItem("ayax_jornadas_db") || "[]");
   const j = dbJornadas.find((item) => item.id === id);
@@ -2326,7 +2176,6 @@ function abrirModalAuditoria(id) {
   `;
   document.getElementById("modalAuditoriaConta").classList.remove("hidden");
 }
-
 function abrirVisorFoto(titulo, src) {
   if (!src) return;
   const modal = document.getElementById("modalVisorFoto");
@@ -2336,18 +2185,15 @@ function abrirVisorFoto(titulo, src) {
   if (imgEl) imgEl.src = src;
   if (modal) modal.classList.remove("hidden");
 }
-
 function cerrarVisorFoto() {
   const modal = document.getElementById("modalVisorFoto");
   const imgEl = document.getElementById("visor-foto-img");
   if (modal) modal.classList.add("hidden");
   if (imgEl) imgEl.src = "";
 }
-
 function cerrarModalAuditoria() {
   document.getElementById("modalAuditoriaConta").classList.add("hidden");
 }
-
 // ==========================================
 // RENDERIZADO DE TAREAS PENDIENTES (OPERARIO Y PROYECTOS)
 // ==========================================
@@ -2391,7 +2237,6 @@ function renderTasks() {
   if (countPendElem) countPendElem.innerText = countP;
   filterFinalized();
 }
-
 // ==========================================
 // PANEL EXCLUSIVO DE REDES (DANILO) - DESCARGA ZIP
 // ==========================================
@@ -2464,12 +2309,10 @@ function renderPanelRedesParaDanilo() {
     containerFinalizadas.appendChild(card);
   });
 }
-
 function cambiarTabRedes(tab) {
   tabRedesActiva = tab;
   renderPanelRedesParaDanilo();
 }
-
 async function descargarEvidenciasTarea(taskId) {
   let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const task = savedTasks.find((t) => String(t.id) === String(taskId));
@@ -2530,7 +2373,6 @@ async function descargarEvidenciasTarea(taskId) {
     console.error("Error al generar el ZIP:", err);
   }
 }
-
 // ==========================================
 // FILTRADO DE TAREAS FINALIZADAS
 // ==========================================
@@ -2593,7 +2435,6 @@ function filterFinalized() {
     if (btnPdfContainer) btnPdfContainer.classList.remove("hidden");
   }
 }
-
 // ==========================================
 // CONTROL DEL WIZARD DE TAREAS (OPERARIOS / ADMIN)
 // ==========================================
@@ -2630,7 +2471,6 @@ function openTask(id) {
   }
   addNewDay();
 }
-
 function closeWizard() {
   document.getElementById("secWizard").classList.add("hidden");
   document.getElementById("secSignatures").classList.add("hidden");
@@ -2639,7 +2479,6 @@ function closeWizard() {
   document.getElementById("secPendientes").classList.remove("hidden");
   renderTasks();
 }
-
 // ==========================================
 // GESTIÓN DE DÍAS Y MÚLTIPLES FOTOS
 // ==========================================
@@ -2766,7 +2605,6 @@ function addNewDay() {
   `;
   container.appendChild(dayCard);
 }
-
 function procesarFotoMulti(event, dayNum) {
   const file = event.target.files[0];
   if (!file) return;
@@ -2821,7 +2659,6 @@ function procesarFotoMulti(event, dayNum) {
   };
   reader.readAsDataURL(file);
 }
-
 function renderGaleriaMiniaturas(dayNum) {
   const galeria = document.getElementById(`galeria-fotos-${dayNum}`);
   if (!galeria) return;
@@ -2837,16 +2674,13 @@ function renderGaleriaMiniaturas(dayNum) {
     galeria.appendChild(contenedorMini);
   });
 }
-
 function verFotoGrande(base64Url) {
   abrirVisorFoto("Vista Previa de Evidencia", base64Url);
 }
-
 function eliminarFotoTemporal(dayNum, index) {
   fotosDiaTemporal.splice(index, 1);
   renderGaleriaMiniaturas(dayNum);
 }
-
 function setNow(fieldId) {
   const now = new Date();
   const hours = String(now.getHours()).padStart(2, "0");
@@ -2860,7 +2694,6 @@ function setNow(fieldId) {
     }
   }
 }
-
 function calculateHours(dayNum) {
   const hini = document.getElementById(`hini-day-${dayNum}`).value;
   const hfin = document.getElementById(`hfin-day-${dayNum}`).value;
@@ -2878,7 +2711,6 @@ function calculateHours(dayNum) {
     display.innerText = `${hours} Horas`;
   }
 }
-
 function saveDayRecord(dayNum) {
   const savedTasksCheck = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const tareaActual = savedTasksCheck.find((t) => String(t.id) === String(currentActiveTaskId));
@@ -2939,7 +2771,6 @@ function saveDayRecord(dayNum) {
   alert(`Día #${dayNum} guardado correctamente con ${fotosDiaTemporal.length} foto(s) de evidencia.`);
   fotosDiaTemporal = [];
 }
-
 function sincronizarAvanceEnSegundoPlano() {
   let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
   const totalHoursSum = currentDaysData.reduce((acc, day) => acc + (day.horasTrabajadas || 0), 0);
@@ -2958,7 +2789,6 @@ function sincronizarAvanceEnSegundoPlano() {
   });
   localStorage.setItem("ayax_tasks_db", JSON.stringify(savedTasks));
 }
-
 function renderDaysAccordion() {
   const container = document.getElementById("daysListContainer");
   if (!container) return;
@@ -2984,7 +2814,6 @@ function renderDaysAccordion() {
     container.appendChild(details);
   });
 }
-
 // ==========================================
 // FIRMAS, CIERRE Y REPORTE PDF DE TAREAS
 // ==========================================
@@ -3003,12 +2832,10 @@ async function goToSignSection() {
   initSignCanvas("canvasOperador");
   initSignCanvas("canvasCliente");
 }
-
 function backToWizardDays() {
   document.getElementById("secSignatures").classList.add("hidden");
   document.getElementById("secWizard").classList.remove("hidden");
 }
-
 function initSignCanvas(canvasId) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
@@ -3042,14 +2869,12 @@ function initSignCanvas(canvasId) {
   canvas.ontouchend = (e) => { endPosition(); e.preventDefault(); };
   canvas.ontouchmove = (e) => { draw(e); e.preventDefault(); };
 }
-
 function clearCanvas(canvasId) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
-
 function finalizeTask() {
   const totalHoursSum = currentDaysData.reduce((acc, day) => acc + (day.horasTrabajadas || 0), 0);
   let savedTasks = JSON.parse(localStorage.getItem("ayax_tasks_db") || "[]");
@@ -3071,7 +2896,6 @@ function finalizeTask() {
   alert(`¡Tarea ${currentActiveTaskId} finalizada con éxito! Quedó disponible en Tareas Finalizadas y en el panel de Redes.`);
   showReportView(currentActiveTaskId);
 }
-
 function showReportView(id) {
   document.getElementById("secSignatures").classList.add("hidden");
   const secReporte = document.getElementById("secReporte");
@@ -3092,7 +2916,6 @@ function showReportView(id) {
   }
   document.getElementById("reportContent").innerHTML = htmlDetails;
 }
-
 function descargarReportePDF() {
   const startDate = document.getElementById("pdfStartDate").value;
   const endDate = document.getElementById("pdfEndDate").value;
@@ -3171,7 +2994,6 @@ function descargarReportePDF() {
   printWindow.document.write(htmlContent);
   printWindow.document.close();
 }
-
 // ==========================================
 // LIMPIEZA DE TAREAS SINCRONIZADAS
 // ==========================================
@@ -3180,7 +3002,6 @@ function purgeSyncedTasks() {
   const cleanedTasks = savedTasks.filter((task) => task.estado !== "sincronizada");
   localStorage.setItem("ayax_tasks_db", JSON.stringify(cleanedTasks));
 }
-
 // ==========================================
 // SINCRONIZACIÓN DE JORNADAS CON NEON (/api/jornadas) Y GOOGLE DRIVE
 // ==========================================
@@ -3194,11 +3015,18 @@ function normalizarJornadaDesdeDB(row) {
     try { calc = JSON.parse(calc); } catch { calc = null; }
   }
   const fechaStr = String(row.fecha || "").slice(0, 10);
+  const empId = String(row.empleado_id || row.empleadoId || "");
+  const users = typeof getDBUsers === "function" ? getDBUsers() : [];
+  const userMatch = users.find((u) => String(u.phone) === empId);
+  const salarioResuelto =
+    Number(row.salario) > 0
+      ? Number(row.salario)
+      : (userMatch && Number(userMatch.salary) > 0 ? Number(userMatch.salary) : SALARIO_BASE_DEFAULT);
   return {
     id: String(row.id),
-    empleadoId: String(row.empleado_id || row.empleadoId || ""),
-    empleadoNombre: String(row.empleado_nombre || row.empleadoNombre || ""),
-    salario: Number(row.salario || 1750905),
+    empleadoId: empId,
+    empleadoNombre: String(row.empleado_nombre || row.empleadoNombre || userMatch?.name || ""),
+    salario: salarioResuelto,
     fecha: fechaStr,
     mesClave: String(row.mes_clave || row.mesClave || fechaStr.slice(0, 7)),
     cliente: String(row.cliente || ""),
@@ -3208,15 +3036,12 @@ function normalizarJornadaDesdeDB(row) {
     estado: String(row.estado || "abierta"),
     horaFin: row.hora_fin || row.horaFin || null,
     fotoFin: row.foto_fin || row.fotoFin || null,
-    almuerzoMin: (row.almuerzo_min !== null && row.almuerzo_min !== undefined)
-      ? Number(row.almuerzo_min)
-      : (row.almuerzoMin ?? null),
+    almuerzoMin: 0,
     observaciones: String(row.observaciones || ""),
     fotosNovedades: Array.isArray(fotosNov) ? fotosNov : [],
     calculo: calc
   };
 }
-
 async function guardarJornadaEnNube(jornada) {
   if (!jornada || !jornada.id) return false;
   marcarJornadaPendienteSync(jornada.id);
@@ -3249,7 +3074,6 @@ async function guardarJornadaEnNube(jornada) {
     return false;
   }
 }
-
 async function subirJornadasPendientes() {
   if (!navigator.onLine) return;
   const pendientesIds = obtenerPendientesSyncIds();
@@ -3264,7 +3088,6 @@ async function subirJornadasPendientes() {
     await guardarJornadaEnNube(jornadaLocal);
   }
 }
-
 async function sincronizarJornadasDesdeNube(renderCallback) {
   if (!navigator.onLine) {
     if (typeof renderCallback === "function") renderCallback();
@@ -3299,7 +3122,7 @@ async function sincronizarJornadasDesdeNube(renderCallback) {
     if (typeof renderCallback === "function") renderCallback();
   }
 }
-
 async function sincronizarJornadasConNube(renderCallback) {
   await sincronizarJornadasDesdeNube(renderCallback);
 }
+
