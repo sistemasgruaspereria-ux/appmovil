@@ -212,10 +212,12 @@
                     <button type="submit" class="btn-primary" style="margin-top: 10px;">Guardar Apertura de Día</button>
                 </form>
             </details>
+
             <div class="card">
                 <h2>Jornadas en Curso (Pendientes de Cierre)</h2>
                 <div id="lista-jornadas-abiertas" class="stack"></div>
             </div>
+
             <div id="panel-cierre-jornada" class="card hidden">
                 <h2 style="color: #c2410c;">Completar y Cerrar Jornada</h2>
                 <p id="cierre-resumen-txt" class="muted" style="margin-bottom: 12px;"></p>
@@ -230,7 +232,7 @@
                     </div>
                     <div class="form-group">
                         <label for="jornada-almuerzo-min">Tiempo tomado para almuerzo / descanso (minutos) *</label>
-                        <input type="number" id="jornada-almuerzo-min" min="0" max="360" step="1" value="0" placeholder="Ej. 0 (Lun-Jue) o 60 (Vie)" required>
+                        <input type="number" id="jornada-almuerzo-min" min="0" max="360" step="1" value="0" placeholder="0" required>
                     </div>
                     <div class="form-group">
                         <label for="jornada-observaciones">Observaciones / Novedades / Extensión de Jornada</label>
@@ -313,7 +315,7 @@
             <div class="card">
                 <h2>Módulo de Contabilidad, Nómina y Jornadas</h2>
                 <p class="muted" style="font-size: 0.78rem; margin-bottom: 10px;">
-                    Esquema 42h/sem · Lun–Jue: 8.5h (sin almuerzo) · Vie: 8.0h (60 min almuerzo) · Divisor mensual: 210h
+                    Esquema 42h/sem · Lun–Jue y Sáb: 8.5h · Vie: 8.0h · Sin descuento de almuerzo · Divisor mensual: 210h
                 </p>
                 <div class="form-group">
                     <label for="tipo-reporte-conta">Tipo de Reporte a Generar</label>
