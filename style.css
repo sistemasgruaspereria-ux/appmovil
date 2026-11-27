@@ -80,12 +80,37 @@ body {
 textarea,
 select {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
+    margin-top: 5px;
+    margin-bottom: 10px;
     border: 1px solid #DDC9B8;
-    border-radius: 6px;
-    font-size: 0.9rem;
+    border-radius: 7px;
+    font-size: 0.92rem;
+    line-height: 1.5;
     outline: none;
     background-color: #ffffff;
+    box-sizing: border-box;
+}
+
+.form-group {
+    margin-bottom: 14px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.form-control:focus,
+textarea:focus,
+select:focus {
+    border-color: #B58A55;
 }
 
 .form-group input:focus,
@@ -679,5 +704,6 @@ th {
     background-color: #000000;
     border-color: #bf956e;
 }
+
 
 
