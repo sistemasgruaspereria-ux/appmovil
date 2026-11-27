@@ -4222,3 +4222,4 @@ async function sincronizarJornadasConNube(renderCallback) {
   await sincronizarJornadasDesdeNube(renderCallback);
 }
 
+
