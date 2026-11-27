@@ -83,7 +83,21 @@
             <button type="button" id="btnTabContabilidad" class="tab-btn hidden" onclick="switchTab('contabilidad')">
                 📊 Nómina y Control
             </button>
+            <button type="button" id="btnTabCapacitaciones" class="tab-btn" onclick="switchTab('capacitaciones')">
+                🎓 Capacitaciones
+            </button>
         </nav>
+
+        <!-- MÓDULO DE CAPACITACIONES -->
+        <section id="secCapacitaciones" class="tab-content hidden">
+            <div id="capacitaciones-root">
+                <div class="card">
+                    <h2>🎓 Capacitaciones AYAX</h2>
+                    <p>Aquí estarán las capacitaciones asignadas y las herramientas de gestión para el responsable de capacitaciones.</p>
+                    <p class="empty-msg">Módulo en configuración.</p>
+                </div>
+            </div>
+        </section>
 
         <!-- VISTA ROL PROYECTOS -->
         <section id="secProyectos" class="tab-content hidden">
@@ -170,8 +184,7 @@
                 <div id="subvista-admin-body"></div>
             </div>
         </section>
-
-        <!-- VISTA 1: PENDIENTES DE SERVICIOS -->
+                <!-- VISTA 1: PENDIENTES DE SERVICIOS -->
         <section id="secPendientes" class="tab-content active">
             <div class="cards-list" id="listPendientes"></div>
         </section>
@@ -309,8 +322,7 @@
                 <button type="button" class="btn-primary" onclick="descargarReportePDF()" style="background-color: #040B5D;">Descargar Reporte PDF</button>
             </div>
         </section>
-
-        <!-- VISTA EXCLUSIVA CONTABILIDAD (NÓMINA, JORNADAS Y AUDITORÍA) -->
+                <!-- VISTA EXCLUSIVA CONTABILIDAD (NÓMINA, JORNADAS Y AUDITORÍA) -->
         <section id="secContabilidad" class="tab-content hidden">
             <div class="card">
                 <h2>Módulo de Contabilidad, Nómina y Jornadas</h2>
