@@ -275,21 +275,58 @@ select:focus {
     padding: 16px 8px;
 }
 
+
 /* TARJETAS Y COMPONENTES */
 .card {
     background: #ffffff;
     border: 1px solid #DDC9B8;
     border-radius: 10px;
-    padding: 14px;
-    margin-bottom: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
     box-shadow: 0 2px 6px rgba(4, 11, 93, 0.05);
+    box-sizing: border-box;
 }
 
 .card h2 {
     font-size: 1rem;
     color: #040B5D;
-    margin-bottom: 10px;
+    margin-top: 4px;
+    margin-bottom: 12px;
+    line-height: 1.5;
 }
+
+/* ESPACIADO DEL MODULO DE CAPACITACIONES */
+#capacitaciones-root .card {
+    padding: 16px;
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+
+#capacitaciones-root h3,
+#capacitaciones-root h4 {
+    margin-top: 8px;
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+#capacitaciones-root .opciones-pregunta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+#capacitaciones-root .opciones-pregunta > div {
+    padding: 10px;
+    margin-bottom: 5px;
+    background: #faf8f5;
+    border-radius: 8px;
+}
+
+#capacitaciones-root button {
+    margin: 5px 4px 5px 0;
+}
+
 
 details summary .flecha-acordeon {
     display: inline-block;
@@ -706,4 +743,33 @@ th {
 }
 
 
+/* ENCABEZADO PRINCIPAL DE CAPACITACIONES */
+
+#capacitaciones-root {
+    padding: 12px;
+}
+
+#capacitaciones-root h2 {
+    margin-top: 8px;
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+
+#capacitaciones-root p {
+    line-height: 1.6;
+    margin-top: 8px;
+    margin-bottom: 14px;
+}
+
+#capacitaciones-root .btn-primary {
+    display: inline-block;
+    margin-top: 12px;
+    margin-bottom: 18px;
+    padding: 11px 18px;
+    line-height: 1.5;
+}
+
+#capacitaciones-root > * {
+    margin-bottom: 12px;
+}
 
