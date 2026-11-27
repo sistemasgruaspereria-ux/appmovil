@@ -1091,10 +1091,21 @@ async function cargarModuloCapacitaciones() {
             ${escapar(c.fecha_evaluacion)}
           </p>
           ${
-            c.estado_empleado
-              ? `<p><strong>Estado:</strong> ${escapar(c.estado_empleado)}</p>`
-              : ""
-          }
+  c.estado_empleado
+    ? `<p><strong>Estado:</strong> ${escapar(c.estado_empleado)}</p>`
+    : ""
+}
+${
+  c.estado_empleado !== "completada"
+    ? `<button
+        type="button"
+        class="btn-primary"
+        onclick="abrirCapacitacion('${c.id}', '${c.destinatario_id}')"
+      >
+        ▶ Iniciar capacitación
+      </button>`
+    : `<p>✅ Capacitación completada</p>`
+}
         </div>
       `).join("");
     }
@@ -1114,6 +1125,201 @@ async function cargarModuloCapacitaciones() {
   }
 }
 
+
+async function abrirCapacitacion(capacitacionId, destinatarioId) {
+  const root = document.getElementById("capacitaciones-root");
+
+  if (!root) return;
+
+  root.innerHTML = `
+    <div class="card">
+      <h2>🎓 Cargando capacitación...</h2>
+    </div>
+  `;
+
+  try {
+    const respuesta = await fetch(
+      `/api/capacitaciones?id=${encodeURIComponent(capacitacionId)}`
+    );
+
+    if (!respuesta.ok) {
+      throw new Error("No fue posible abrir la capacitación.");
+    }
+
+    const datos = await respuesta.json();
+
+    const escapar = (valor) =>
+      String(valor ?? "").replace(/[&<>"']/g, (caracter) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[caracter]);
+
+    const capacitacion = datos.capacitacion;
+    const preguntas = datos.preguntas || [];
+    const archivos = datos.archivos || [];
+
+    if (!preguntas.length) {
+      throw new Error("Esta capacitación todavía no tiene preguntas.");
+    }
+
+    let contenido = `
+      <div class="card">
+        <h2>🎓 ${escapar(capacitacion.titulo)}</h2>
+        <p>${escapar(capacitacion.descripcion || "")}</p>
+        <div>${escapar(capacitacion.contenido || "")}</div>
+      </div>
+    `;
+
+    archivos.forEach((archivo) => {
+      if (archivo.tipo === "imagen") {
+        contenido += `
+          <div class="card">
+            <img src="${escapar(archivo.url)}"
+                 alt="${escapar(archivo.nombre || "Imagen")}"
+                 style="max-width:100%;height:auto;">
+          </div>
+        `;
+      } else if (archivo.tipo === "video") {
+        contenido += `
+          <div class="card">
+            <video controls style="max-width:100%;width:100%;">
+              <source src="${escapar(archivo.url)}">
+            </video>
+          </div>
+        `;
+      }
+    });
+
+    contenido += `
+      <div class="card">
+        <h3>📝 Evaluación</h3>
+        <form id="formulario-evaluacion">
+    `;
+
+    preguntas.forEach((pregunta, indice) => {
+      contenido += `
+        <div class="form-group" style="margin-bottom:20px;">
+          <p><strong>${indice + 1}. ${escapar(pregunta.pregunta)}</strong></p>
+      `;
+
+      pregunta.opciones.forEach((opcion) => {
+        contenido += `
+          <label style="display:block;margin:10px 0;">
+            <input
+              type="radio"
+              name="pregunta-${escapar(pregunta.id)}"
+              value="${escapar(opcion.id)}"
+              required
+            >
+            ${escapar(opcion.opcion)}
+          </label>
+        `;
+      });
+
+      contenido += `</div>`;
+    });
+
+    contenido += `
+          <button type="submit" class="btn-primary">
+            Enviar evaluación
+          </button>
+        </form>
+        <button type="button" class="btn-secondary"
+          onclick="cargarModuloCapacitaciones()">
+          Volver a capacitaciones
+        </button>
+      </div>
+    `;
+
+    root.innerHTML = contenido;
+
+    document.getElementById("formulario-evaluacion")
+      .addEventListener("submit", async (evento) => {
+        evento.preventDefault();
+
+        const respuestas = preguntas.map((pregunta) => {
+          const seleccionada = document.querySelector(
+            `input[name="pregunta-${pregunta.id}"]:checked`
+          );
+
+          return {
+            preguntaId: pregunta.id,
+            opcionId: seleccionada ? seleccionada.value : null
+          };
+        });
+
+        if (respuestas.some((r) => !r.opcionId)) {
+          alert("Debes responder todas las preguntas.");
+          return;
+        }
+
+        const boton = evento.target.querySelector(
+          'button[type="submit"]'
+        );
+
+        boton.disabled = true;
+        boton.textContent = "Enviando evaluación...";
+
+        try {
+          const envio = await fetch("/api/capacitaciones", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              accion: "responder",
+              destinatarioId,
+              respuestas
+            })
+          });
+
+          const resultado = await envio.json();
+
+          if (!envio.ok) {
+            throw new Error(
+              resultado.error || "No se pudo enviar la evaluación."
+            );
+          }
+
+          const porcentaje = Number(
+            resultado.resultado.porcentaje
+          );
+
+          root.innerHTML = `
+            <div class="card">
+              <h2>✅ Evaluación enviada</h2>
+              <h3>Resultado: ${porcentaje.toFixed(1)}%</h3>
+              <p>Respuestas guardadas correctamente.</p>
+              <button type="button" class="btn-primary"
+                onclick="cargarModuloCapacitaciones()">
+                Volver a capacitaciones
+              </button>
+            </div>
+          `;
+        } catch (error) {
+          alert(error.message);
+          boton.disabled = false;
+          boton.textContent = "Enviar evaluación";
+        }
+      });
+
+  } catch (error) {
+    console.error("Error abriendo capacitación:", error);
+
+    root.innerHTML = `
+      <div class="card">
+        <p>${error.message}</p>
+        <button type="button" class="btn-primary"
+          onclick="cargarModuloCapacitaciones()">
+          Volver
+        </button>
+      </div>
+    `;
+  }
+}
 
 function mostrarFormularioCapacitacion() {
   const contenedor = document.getElementById("formulario-capacitacion");
@@ -4229,6 +4435,8 @@ async function sincronizarJornadasDesdeNube(renderCallback) {
 async function sincronizarJornadasConNube(renderCallback) {
   await sincronizarJornadasDesdeNube(renderCallback);
 }
+
+
 
 
 
