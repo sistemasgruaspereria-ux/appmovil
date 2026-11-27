@@ -1058,7 +1058,7 @@ async function cargarModuloCapacitaciones() {
       contenido += `
         <div class="card">
           <h3>Gestión de capacitaciones</h3>
-          <p>Desde aquí podrás crear, asignar y consultar capacitaciones.</p>
+          <p>Crear, asigna y consulta capacitaciones.</p>
 
           <button
             type="button"
