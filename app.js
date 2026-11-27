@@ -25,43 +25,299 @@ const FESTIVOS_COLOMBIA = new Set([
 // URL de Google Apps Script para subir evidencias fotográficas a Google Drive
 const GOOGLE_DRIVE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxB3dWKSBCKLzWoS9se7b3ay4DVJhtIN7ZxtogGD5L34SqXuEculHUOayDcDBY2SGY_/exec";
 // Usuarios y roles base
+
 let defaultUsers = [
-  { phone: "3217293985", pin: "1834", name: "Carolina Valencia Motato", role: "admin", salary: 0 },
-  { phone: "3000000000", pin: "2034", name: "Liliana Guzmán", role: "contabilidad", salary: 0 },
-  { phone: "3218468761", pin: "1118", name: "Danilo", role: "redes", salary: 0 },
-  { phone: "3100000000", pin: "1234", name: "Coordinación Proyectos", role: "proyectos", salary: 0 },
-  { phone: "3201020801", pin: "1034", name: "Didier Roberto", role: "operario_horas", salary: 1753000 },
-  { phone: "3005051958", pin: "1934", name: "Didier Roberto Orejuela Henao", role: "operario_horas", salary: 1753000 },
-  { phone: "3233928131", pin: "1782", name: "Lina Sofia Tobar Erazo", role: "operario_horas", salary: 1845000 },
-  { phone: "3117659089", pin: "3819", name: "Natalia Correa Rodriguez", role: "operario_horas", salary: 1845000 },
-  { phone: "3215617856", pin: "1824", name: "Cristian Camilo Rodas Grajales", role: "operario", salary: 1750905 },
-  { phone: "3224032093", pin: "8752", name: "Daniel Antonio Rodas Jaramillo", role: "operario", salary: 1750905 },
-  { phone: "3153722857", pin: "7629", name: "Diógenes Marín Franco", role: "operario", salary: 1750905 },
-  { phone: "3107630014", pin: "1278", name: "Duban Alberto Rodriguez Castañeda", role: "operario", salary: 1750905 },
-  { phone: "3122686744", pin: "3468", name: "Edixon Giovanni Alvarado Villada", role: "operario", salary: 1750905 },
-  { phone: "3113099973", pin: "6936", name: "Giovanni Antonio Ocampo Cano", role: "operario", salary: 1750905 },
-  { phone: "3102369528", pin: "1472", name: "Héctor Augusto Cardona Arboleda", role: "operario", salary: 1750905 },
-  { phone: "3213676599", pin: "2936", name: "Jhon Edwin Botero Rodas", role: "operario", salary: 1750905 },
-  { phone: "3137374691", pin: "3427", name: "Jair Antonio Ramirez García", role: "operario", salary: 1750905 },
-  { phone: "3145299065", pin: "2509", name: "Javier de Jesús Restrepo Ladino", role: "operario", salary: 1750905 },
-  { phone: "3206499919", pin: "6358", name: "Jhon Edier Castrillon Gallego", role: "operario", salary: 1750905 },
-  { phone: "3053534019", pin: "9351", name: "Jhon Ever Orejuela Ríos", role: "operario", salary: 1750905 },
-  { phone: "3209363345", pin: "8261", name: "Jhonathan Arredondo Ossa", role: "operario", salary: 1750905 },
-  { phone: "3043488345", pin: "3067", name: "Jonathan Alexander Martínez Betancourt", role: "operario", salary: 1750905 },
-  { phone: "3218986200", pin: "1682", name: "Jorge Miguel Gonzáles Vásquez", role: "operario", salary: 1750905 },
-  { phone: "3146105449", pin: "5941", name: "Juan Daniel Gómez Morales", role: "operario", salary: 1750905 },
-  { phone: "3145749402", pin: "4736", name: "Juan José Arango Gallego", role: "operario", salary: 1750905 },
-  { phone: "3147861372", pin: "3195", name: "Luis Fernando Tangarife Moncada", role: "operario", salary: 1750905 },
-  { phone: "3138098395", pin: "1028", name: "Maico Andrey Trejos Chaves", role: "operario", salary: 1750905 },
-  { phone: "3115653390", pin: "8950", name: "Milton Andrés Pérez Neva", role: "operario", salary: 1750905 },
-  { phone: "3027507045", pin: "9760", name: "Santiago Rivera Marin", role: "operario", salary: 1750905 },
-  { phone: "3148643257", pin: "3268", name: "Uriel González Ocampo", role: "operario", salary: 1750905 },
-  { phone: "319200041", pin: "7780", name: "Víctor Fernando Ocampo Amaya", role: "operario", salary: 1750905 },
-  { phone: "3228241425", pin: "1520", name: "Wilfer Alberto Sepulveda Restrepo", role: "operario", salary: 1750905 },
-  { phone: "3206311945", pin: "1764", name: "Willer Alexis Quintero Hurtado", role: "operario", salary: 1750905 },
-  { phone: "3105385889", pin: "7841", name: "Wilmar Diovany Muñoz Giraldo", role: "operario", salary: 1750905 },
-  { phone: "3102276487", pin: "7926", name: "Yeison Alberson Morales Uribe", role: "operario", salary: 1750905 }
+  {
+    phone: "3217293985",
+    pin: "1834",
+    name: "Carolina Valencia Motato",
+    role: "admin",
+    cargo: "Administradora",
+    salary: 0
+  },
+  {
+    phone: "3000000000",
+    pin: "2034",
+    name: "Liliana Guzmán",
+    role: "contabilidad",
+    cargo: "Contabilidad",
+    salary: 0
+  },
+  {
+    phone: "3218468761",
+    pin: "1118",
+    name: "Danilo",
+    role: "redes",
+    cargo: "Redes",
+    salary: 0
+  },
+  {
+    phone: "3102351020",
+    pin: "1020",
+    name: "Angela Caicedo",
+    role: "capacitaciones",
+    cargo: "Gestora de Capacitaciones",
+    salary: 0
+  },
+  {
+    phone: "3100000000",
+    pin: "1234",
+    name: "Coordinación Proyectos",
+    role: "proyectos",
+    cargo: "Proyectos",
+    salary: 0
+  },
+  {
+    phone: "3201020801",
+    pin: "1034",
+    name: "Didier Roberto",
+    role: "operario_horas",
+    cargo: "Operarios",
+    salary: 1753000
+  },
+  {
+    phone: "3005051958",
+    pin: "1934",
+    name: "Didier Roberto Orejuela Henao",
+    role: "operario_horas",
+    cargo: "Operarios",
+    salary: 1753000
+  },
+  {
+    phone: "3233928131",
+    pin: "1782",
+    name: "Lina Sofia Tobar Erazo",
+    role: "operario_horas",
+    cargo: "Operarios",
+    salary: 1845000
+  },
+  {
+    phone: "3117659089",
+    pin: "3819",
+    name: "Natalia Correa Rodriguez",
+    role: "operario_horas",
+    cargo: "Operarios",
+    salary: 1845000
+  },
+  {
+    phone: "3215617856",
+    pin: "1824",
+    name: "Cristian Camilo Rodas Grajales",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3224032093",
+    pin: "8752",
+    name: "Daniel Antonio Rodas Jaramillo",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3153722857",
+    pin: "7629",
+    name: "Diógenes Marín Franco",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3107630014",
+    pin: "1278",
+    name: "Duban Alberto Rodriguez Castañeda",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3122686744",
+    pin: "3468",
+    name: "Edixon Giovanni Alvarado Villada",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3113099973",
+    pin: "6936",
+    name: "Giovanni Antonio Ocampo Cano",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3102369528",
+    pin: "1472",
+    name: "Héctor Augusto Cardona Arboleda",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3213676599",
+    pin: "2936",
+    name: "Jhon Edwin Botero Rodas",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3137374691",
+    pin: "3427",
+    name: "Jair Antonio Ramirez García",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3145299065",
+    pin: "2509",
+    name: "Javier de Jesús Restrepo Ladino",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3206499919",
+    pin: "6358",
+    name: "Jhon Edier Castrillon Gallego",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3053534019",
+    pin: "9351",
+    name: "Jhon Ever Orejuela Ríos",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3209363345",
+    pin: "8261",
+    name: "Jhonathan Arredondo Ossa",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3043488345",
+    pin: "3067",
+    name: "Jonathan Alexander Martínez Betancourt",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3218986200",
+    pin: "1682",
+    name: "Jorge Miguel Gonzáles Vásquez",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3146105449",
+    pin: "5941",
+    name: "Juan Daniel Gómez Morales",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3145749402",
+    pin: "4736",
+    name: "Juan José Arango Gallego",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3147861372",
+    pin: "3195",
+    name: "Luis Fernando Tangarife Moncada",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3138098395",
+    pin: "1028",
+    name: "Maico Andrey Trejos Chaves",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3115653390",
+    pin: "8950",
+    name: "Milton Andrés Pérez Neva",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3027507045",
+    pin: "9760",
+    name: "Santiago Rivera Marin",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3148643257",
+    pin: "3268",
+    name: "Uriel González Ocampo",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "319200041",
+    pin: "7780",
+    name: "Víctor Fernando Ocampo Amaya",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3228241425",
+    pin: "1520",
+    name: "Wilfer Alberto Sepulveda Restrepo",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3206311945",
+    pin: "1764",
+    name: "Willer Alexis Quintero Hurtado",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3105385889",
+    pin: "7841",
+    name: "Wilmar Diovany Muñoz Giraldo",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  },
+  {
+    phone: "3102276487",
+    pin: "7926",
+    name: "Yeison Alberson Morales Uribe",
+    role: "operario",
+    cargo: "Operarios",
+    salary: 1750905
+  }
 ];
+
+
 let defaultOperadores = [
   "Cristian Camilo Rodas Grajales", "Daniel Antonio Rodas Jaramillo", "Diógenes Marín Franco",
   "Duban Alberto Rodriguez Castañeda", "Edixon Giovanni Alvarado Villada", "Giovanni Antonio Ocampo Cano",
@@ -141,39 +397,130 @@ let tabRedesActiva = "pendientes";
 // ==========================================
 // SUBIDA DIRECTA DE FOTOS A GOOGLE DRIVE
 // ==========================================
+
 function esUrlImagenValida(valor) {
-  if (!valor || typeof valor !== "string") return false;
-  const v = valor.trim();
-  return v.startsWith("data:image/") || v.startsWith("http://") || v.startsWith("https://");
+    if (!valor || typeof valor !== "string") return false;
+
+    const v = valor.trim();
+
+    return v.startsWith("data:image/") ||
+           v.startsWith("http://") ||
+           v.startsWith("https://");
 }
-async function subirImagenADrive(imagenBase64, nombreArchivo) {
-  if (!imagenBase64 || typeof imagenBase64 !== "string") return null;
-  if (imagenBase64.startsWith("http://") || imagenBase64.startsWith("https://")) {
-    return imagenBase64;
-  }
-  if (!imagenBase64.startsWith("data:image")) return null;
-  if (!navigator.onLine) return null;
-  try {
-    const resp = await fetch(GOOGLE_DRIVE_SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        base64: imagenBase64,
-        fileName: nombreArchivo || `Evidencia_Ayax_${Date.now()}.jpg`,
-        mimeType: "image/jpeg"
-      })
-    });
-    const data = await resp.json();
-    if (data && data.status === "success" && data.url) {
-      return data.url;
+
+// ==========================================
+// SUBIDA DE IMAGENES Y VIDEOS A GOOGLE DRIVE
+// ==========================================
+
+async function subirArchivoADrive(
+    archivoBase64,
+    nombreArchivo,
+    mimeTypeOpcional
+) {
+    if (!archivoBase64 || typeof archivoBase64 !== "string") {
+        return null;
     }
-    console.warn("Respuesta inesperada de Google Drive:", data);
-    return null;
-  } catch (err) {
-    console.warn("Error al subir imagen a Google Drive:", err);
-    return null;
-  }
+
+    // Si ya es una URL, no volver a subir
+    if (
+        archivoBase64.startsWith("http://") ||
+        archivoBase64.startsWith("https://")
+    ) {
+        return archivoBase64;
+    }
+
+    if (!navigator.onLine) {
+        console.warn("No hay conexión para subir el archivo.");
+        return null;
+    }
+
+    // Detectar MIME desde el Data URL
+    const coincidencia = archivoBase64.match(
+        /^data:([^;,]+);base64,/
+    );
+
+    const mimeType =
+        coincidencia?.[1] ||
+        mimeTypeOpcional ||
+        "";
+
+    const tiposPermitidos = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+        "video/mp4",
+        "video/webm",
+        "video/quicktime"
+    ];
+
+    if (!tiposPermitidos.includes(mimeType)) {
+        console.warn("Tipo de archivo no permitido:", mimeType);
+        return null;
+    }
+
+    // Validar que sea un Data URL Base64
+    if (!archivoBase64.startsWith("data:")) {
+        console.warn("El archivo no tiene formato Data URL.");
+        return null;
+    }
+
+    try {
+        const respuesta = await fetch(GOOGLE_DRIVE_SCRIPT_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8"
+            },
+            body: JSON.stringify({
+                base64: archivoBase64,
+                fileName: nombreArchivo ||
+                    `Archivo_Ayax_${Date.now()}`,
+                mimeType: mimeType
+            })
+        });
+
+        const data = await respuesta.json();
+
+        if (
+            data &&
+            data.status === "success" &&
+            data.url
+        ) {
+            return data.url;
+        }
+
+        console.warn(
+            "Error de respuesta de Google Drive:",
+            data
+        );
+
+        return null;
+
+    } catch (error) {
+        console.error(
+            "Error al subir archivo a Google Drive:",
+            error
+        );
+
+        return null;
+    }
 }
+
+// Mantener compatibilidad con las jornadas actuales
+async function subirImagenADrive(imagenBase64, nombreArchivo) {
+    if (
+        typeof imagenBase64 !== "string" ||
+        !imagenBase64.startsWith("data:image/")
+    ) {
+        return null;
+    }
+
+    return await subirArchivoADrive(
+        imagenBase64,
+        nombreArchivo
+    );
+}
+
 async function resolverFotosJornadaParaDrive(jornada) {
   const copia = { ...jornada };
   const slugEmpleado = String(copia.empleadoNombre || copia.empleadoId || "Operario")
@@ -237,14 +584,38 @@ function prepararPayloadLigeroParaNeon(jornada) {
 // ==========================================
 // PERSISTENCIA Y CATÁLOGOS
 // ==========================================
+
 function getDBUsers() {
   const local = JSON.parse(localStorage.getItem("ayax_users_db"));
-  if (!local || !local.length) {
-    localStorage.setItem("ayax_users_db", JSON.stringify(defaultUsers));
-    return [...defaultUsers];
-  }
-  return local;
+
+  // Si no existen usuarios guardados, utiliza los usuarios iniciales.
+  const usuarios = (!local || !local.length)
+    ? defaultUsers
+    : local;
+
+  // Asignar cargo automáticamente según el rol.
+  const usuariosActualizados = usuarios.map((u) => ({
+    ...u,
+    cargo:
+      u.cargo ||
+      (
+        ["operario", "operario_horas"].includes(
+          String(u.role || "").toLowerCase()
+        )
+          ? "Operarios"
+          : "Administrativo"
+      )
+  }));
+
+  // Guardar los cargos también para los usuarios que ya existían.
+  localStorage.setItem(
+    "ayax_users_db",
+    JSON.stringify(usuariosActualizados)
+  );
+
+  return usuariosActualizados;
 }
+
 function saveDBUsers(users) {
   localStorage.setItem("ayax_users_db", JSON.stringify(users));
 }
@@ -384,50 +755,83 @@ function setVisibilidadTab(tabKey, visible) {
     sec.classList.remove("active");
   }
 }
+
+
 function configurarVistaPorRol(usuario) {
   if (!usuario) return;
+
   const rol = normalizarTexto(usuario.role);
+
   const esHoras = rol === "operario_horas";
   const esProyectos = rol === "proyectos";
   const esRedes = rol === "redes";
   const esConta = rol === "contabilidad";
+  const esCapacitaciones = rol === "capacitaciones";
   const esAdmin = rol === "admin" || rol === "administrador";
+
   const navTabs = document.getElementById("mainNavTabs");
+
   if (navTabs) {
     navTabs.classList.toggle("hidden", esProyectos);
     navTabs.style.display = esProyectos ? "none" : "";
   }
+
   setVisibilidadTab("proyectos", esProyectos || esAdmin);
   setVisibilidadTab("admin", esAdmin);
+
   setVisibilidadTab("horas", esHoras || esAdmin);
   setVisibilidadTab("diasRegistrados", esHoras || esAdmin);
   setVisibilidadTab("historial", esHoras || esAdmin);
-  setVisibilidadTab("pendientes", !esHoras && !esProyectos && !esConta && !esRedes);
-  setVisibilidadTab("finalizadas", !esHoras && !esProyectos && !esConta);
+
+  setVisibilidadTab(
+    "pendientes",
+    !esHoras && !esProyectos && !esConta && !esRedes && !esCapacitaciones
+  );
+
+  setVisibilidadTab(
+    "finalizadas",
+    !esHoras && !esProyectos && !esConta && !esCapacitaciones
+  );
+
   setVisibilidadTab("contabilidad", esConta || esAdmin);
+
+  // La pestaña de capacitaciones estará disponible para todos.
+  setVisibilidadTab("capacitaciones", true);
+
+  if (esCapacitaciones) {
+    switchTab("capacitaciones");
+    return;
+  }
+
   if (esProyectos) {
     switchTab("proyectos");
     return;
   }
+
   if (esAdmin) {
     switchTab("admin");
     return;
   }
+
   if (esHoras) {
     switchTab("horas");
     return;
   }
+
   if (esConta) {
     switchTab("contabilidad");
     return;
   }
+
   if (esRedes) {
     switchTab("finalizadas");
     renderPanelRedesParaDanilo();
     return;
   }
+
   switchTab("pendientes");
 }
+
 // ==========================================
 // INICIALIZACIÓN DE LA APLICACIÓN
 // ==========================================
@@ -503,33 +907,564 @@ function verificarModoMantenimiento() {
     pantallaMantenimiento.style.display = "none";
   }
 }
+
 function switchTab(tab) {
-  const usuarioActivo = JSON.parse(localStorage.getItem("usuario_activo"));
-  const rol = normalizarTexto(usuarioActivo?.role);
-  const tabsSoloHoras = ["horas", "diasRegistrados", "historial"];
-  if (tabsSoloHoras.includes(tab) && !esUsuarioOperarioHoras(usuarioActivo) && rol !== "admin") {
-    tab = "pendientes";
-  }
-  const tabs = ["proyectos", "admin", "pendientes", "horas", "diasRegistrados", "historial", "finalizadas", "contabilidad"];
-  tabs.forEach((t) => {
-    const cap = t.charAt(0).toUpperCase() + t.slice(1);
-    const btn = document.getElementById(`btnTab${cap}`);
-    const sec = document.getElementById(`sec${cap}`);
-    if (btn) btn.classList.toggle("active", t === tab);
-    if (sec) {
-      sec.classList.toggle("hidden", t !== tab);
-      sec.classList.toggle("active", t === tab);
+
+    const usuarioActivo = JSON.parse(
+        localStorage.getItem("usuario_activo")
+    );
+
+    const rol = normalizarTexto(usuarioActivo?.role);
+
+    const esAdmin = rol === "admin" || rol === "administrador";
+    const esCapacitaciones = rol === "capacitaciones";
+
+    // El gestor solo puede entrar a su módulo
+    if (esCapacitaciones && tab !== "capacitaciones") {
+        tab = "capacitaciones";
     }
-  });
-  if (tab === "proyectos") renderMenuProyectos();
-  if (tab === "admin") renderMenuAdmin();
-  if (tab === "pendientes") renderTasks();
-  if (tab === "horas") sincronizarJornadasDesdeNube(renderVistaJornada);
-  if (tab === "diasRegistrados") sincronizarJornadasDesdeNube(renderListaDiasRegistrados);
-  if (tab === "historial") sincronizarJornadasDesdeNube(renderCarpetasHistorial);
-  if (tab === "finalizadas") filterFinalized();
-  if (tab === "contabilidad") sincronizarJornadasDesdeNube(renderReporteContabilidad);
+
+    const tabsSoloHoras = [
+        "horas",
+        "diasRegistrados",
+        "historial"
+    ];
+
+    if (
+        tabsSoloHoras.includes(tab) &&
+        !esUsuarioOperarioHoras(usuarioActivo) &&
+        !esAdmin
+    ) {
+        tab = "pendientes";
+    }
+
+    const tabs = [
+        "proyectos",
+        "admin",
+        "pendientes",
+        "horas",
+        "diasRegistrados",
+        "historial",
+        "finalizadas",
+        "contabilidad",
+        "capacitaciones"
+    ];
+
+    tabs.forEach((t) => {
+
+        const cap = t.charAt(0).toUpperCase() + t.slice(1);
+
+        const btn = document.getElementById(`btnTab${cap}`);
+        const sec = document.getElementById(`sec${cap}`);
+
+        if (btn) {
+            btn.classList.toggle("active", t === tab);
+        }
+
+        if (sec) {
+            sec.classList.toggle("hidden", t !== tab);
+            sec.classList.toggle("active", t === tab);
+        }
+
+    });
+
+    if (tab === "proyectos") renderMenuProyectos();
+
+    if (tab === "admin") renderMenuAdmin();
+
+    if (tab === "pendientes") renderTasks();
+
+    if (tab === "horas") {
+        sincronizarJornadasDesdeNube(renderVistaJornada);
+    }
+
+    if (tab === "diasRegistrados") {
+        sincronizarJornadasDesdeNube(renderListaDiasRegistrados);
+    }
+
+    if (tab === "historial") {
+        sincronizarJornadasDesdeNube(renderCarpetasHistorial);
+    }
+
+    if (tab === "finalizadas") filterFinalized();
+
+    if (tab === "contabilidad") {
+        sincronizarJornadasDesdeNube(renderReporteContabilidad);
+    }
+
+    if (tab === "capacitaciones") {
+        if (typeof cargarModuloCapacitaciones === "function") {
+            cargarModuloCapacitaciones();
+        }
+    }
 }
+
+
+async function cargarModuloCapacitaciones() {
+  const root = document.getElementById("capacitaciones-root");
+  if (!root) return;
+
+  const usuario = JSON.parse(
+    localStorage.getItem("usuario_activo") || "null"
+  );
+
+  if (!usuario) {
+    root.textContent = "Debes iniciar sesión para ver las capacitaciones.";
+    return;
+  }
+
+  const rol = normalizarTexto(usuario.role);
+  const esGestor = rol === "capacitaciones";
+  const esAdmin = rol === "admin" || rol === "administrador";
+
+  root.innerHTML = `
+    <div class="card">
+      <h2>🎓 Capacitaciones AYAX</h2>
+      <p>Cargando capacitaciones...</p>
+    </div>
+  `;
+
+  try {
+    const url = (esGestor || esAdmin)
+      ? "/api/capacitaciones"
+      : "/api/capacitaciones?empleadoId=" +
+        encodeURIComponent(usuario.phone);
+
+    const respuesta = await fetch(url);
+
+    if (!respuesta.ok) {
+      throw new Error("No fue posible consultar las capacitaciones.");
+    }
+
+    const capacitaciones = await respuesta.json();
+
+    const escapar = (valor) =>
+      String(valor ?? "").replace(/[&<>"']/g, (caracter) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[caracter]);
+
+    let contenido = `
+      <div class="card">
+        <h2>🎓 Capacitaciones AYAX</h2>
+        <p>Bienvenido, ${escapar(usuario.name)}.</p>
+      </div>
+    `;
+
+    if (esGestor || esAdmin) {
+      contenido += `
+        <div class="card">
+          <h3>Gestión de capacitaciones</h3>
+          <p>Desde aquí podrás crear, asignar y consultar capacitaciones.</p>
+
+          <button
+            type="button"
+            class="btn-primary"
+            onclick="mostrarFormularioCapacitacion()"
+          >
+            ➕ Crear nueva capacitación
+          </button>
+
+          <div id="formulario-capacitacion"></div>
+        </div>
+      `;
+    }
+
+    if (!capacitaciones.length) {
+      contenido += `
+        <div class="card">
+          <p class="empty-msg">
+            No hay capacitaciones disponibles por el momento.
+          </p>
+        </div>
+      `;
+    } else {
+      contenido += capacitaciones.map((c) => `
+        <div class="card" style="margin-bottom:12px;">
+          <h3>${escapar(c.titulo)}</h3>
+          <p>${escapar(c.descripcion || "")}</p>
+          <p>
+            <strong>Fecha de evaluación:</strong>
+            ${escapar(c.fecha_evaluacion)}
+          </p>
+          ${
+            c.estado_empleado
+              ? `<p><strong>Estado:</strong> ${escapar(c.estado_empleado)}</p>`
+              : ""
+          }
+        </div>
+      `).join("");
+    }
+
+    root.innerHTML = contenido;
+
+  } catch (error) {
+    console.error("Error cargando capacitaciones:", error);
+
+    root.innerHTML = `
+      <div class="card">
+        <h2>🎓 Capacitaciones AYAX</h2>
+        <p>No fue posible cargar las capacitaciones.</p>
+        <p>Verifica la conexión con el servidor.</p>
+      </div>
+    `;
+  }
+}
+
+
+function mostrarFormularioCapacitacion() {
+  const contenedor = document.getElementById("formulario-capacitacion");
+  if (!contenedor) return;
+
+  contenedor.innerHTML = `
+    <div class="card" style="margin-top:20px;">
+      <h3>📝 Nueva capacitación</h3>
+
+      <label><strong>Título de la capacitación</strong></label>
+      <input
+        type="text"
+        id="cap-titulo"
+        class="form-control"
+        placeholder="Ej. Seguridad industrial"
+      >
+
+      <br>
+
+      <label><strong>Descripción</strong></label>
+      <textarea
+        id="cap-descripcion"
+        class="form-control"
+        rows="3"
+        placeholder="Describe el objetivo de la capacitación"
+      ></textarea>
+
+      <br>
+
+      <label><strong>Contenido de la capacitación</strong></label>
+      <textarea
+        id="cap-contenido"
+        class="form-control"
+        rows="6"
+        placeholder="Escribe aquí el material que deben estudiar los empleados"
+      ></textarea>
+
+      <br>
+
+      <label><strong>¿A quién va dirigida?</strong></label>
+      <select id="cap-audiencia" class="form-control">
+        <option value="operarios">Operarios</option>
+        <option value="administrativos">Administrativos</option>
+      </select>
+
+      <br>
+
+      <label><strong>Fecha de evaluación</strong></label>
+      <input
+        type="date"
+        id="cap-fecha"
+        class="form-control"
+      >
+
+      <br>
+
+      <label><strong>Fotos y videos de apoyo</strong></label>
+      <input
+        type="file"
+        id="cap-archivos"
+        class="form-control"
+        accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
+        multiple
+      >
+
+      <p style="font-size:12px;color:#777;">
+        Puedes seleccionar varias fotos y videos.
+      </p>
+
+      <hr>
+
+      <h3>📋 Evaluación</h3>
+      <div id="cap-preguntas"></div>
+
+      <button
+        type="button"
+        class="btn-secondary"
+        onclick="agregarPreguntaCapacitacion()"
+      >
+        ➕ Agregar pregunta
+      </button>
+
+      <br><br>
+
+      <button
+        type="button"
+        class="btn-primary"
+        onclick="guardarNuevaCapacitacion()"
+      >
+        💾 Guardar capacitación
+      </button>
+
+      <button
+        type="button"
+        class="btn-secondary"
+        onclick="document.getElementById('formulario-capacitacion').innerHTML=''"
+      >
+        Cancelar
+      </button>
+    </div>
+  `;
+
+  agregarPreguntaCapacitacion();
+}
+
+
+let contadorPreguntasCap = 0;
+
+function agregarPreguntaCapacitacion() {
+  const contenedor = document.getElementById("cap-preguntas");
+  if (!contenedor) return;
+
+  contadorPreguntasCap++;
+
+  const numero = contadorPreguntasCap;
+
+  const pregunta = document.createElement("div");
+  pregunta.className = "card";
+  pregunta.style.marginTop = "12px";
+  pregunta.dataset.pregunta = numero;
+
+  pregunta.innerHTML = `
+    <h4>Pregunta ${numero}</h4>
+
+    <input
+      type="text"
+      class="form-control pregunta-texto"
+      placeholder="Escribe la pregunta"
+    >
+
+    <div class="opciones-pregunta"></div>
+
+    <button
+      type="button"
+      class="btn-secondary"
+      onclick="agregarOpcionCapacitacion(this)"
+    >
+      ➕ Agregar opción
+    </button>
+
+    <button
+      type="button"
+      class="btn-secondary"
+      onclick="this.closest('[data-pregunta]').remove()"
+    >
+      🗑️ Eliminar pregunta
+    </button>
+  `;
+
+  contenedor.appendChild(pregunta);
+
+  agregarOpcionCapacitacion(
+    pregunta.querySelector("button")
+  );
+
+  agregarOpcionCapacitacion(
+    pregunta.querySelector("button")
+  );
+}
+
+function agregarOpcionCapacitacion(boton) {
+  const pregunta = boton.closest("[data-pregunta]");
+  if (!pregunta) return;
+
+  const contenedor = pregunta.querySelector(".opciones-pregunta");
+
+  const opcion = document.createElement("div");
+  opcion.style.marginTop = "10px";
+
+  opcion.innerHTML = `
+    <input
+      type="text"
+      class="form-control opcion-texto"
+      placeholder="Texto de la respuesta"
+    >
+
+    <input
+      type="number"
+      class="form-control opcion-puntaje"
+      placeholder="Puntaje de esta respuesta"
+      min="0"
+      step="0.01"
+      value="0"
+      style="margin-top:5px;"
+    >
+
+    <button
+      type="button"
+      class="btn-secondary"
+      onclick="this.parentElement.remove()"
+    >
+      Eliminar opción
+    </button>
+  `;
+
+  contenedor.appendChild(opcion);
+}
+
+
+async function guardarNuevaCapacitacion() {
+  const titulo = document.getElementById("cap-titulo").value.trim();
+  const descripcion = document.getElementById("cap-descripcion").value.trim();
+  const contenido = document.getElementById("cap-contenido").value.trim();
+  const audiencia = document.getElementById("cap-audiencia").value;
+  const fechaEvaluacion = document.getElementById("cap-fecha").value;
+
+  const usuario = JSON.parse(
+    localStorage.getItem("usuario_activo") || "null"
+  );
+
+  if (!usuario) {
+    alert("Debes iniciar sesión.");
+    return;
+  }
+
+  if (!titulo || !fechaEvaluacion) {
+    alert("Debes ingresar el título y la fecha de evaluación.");
+    return;
+  }
+
+  const preguntasDOM = document.querySelectorAll(
+    "#cap-preguntas [data-pregunta]"
+  );
+
+  const preguntas = [];
+
+  for (const elemento of preguntasDOM) {
+    const pregunta = elemento.querySelector(".pregunta-texto").value.trim();
+
+    const opcionesDOM = elemento.querySelectorAll(".opciones-pregunta > div");
+
+    const opciones = [];
+
+    for (const opcionDOM of opcionesDOM) {
+      const texto = opcionDOM.querySelector(".opcion-texto").value.trim();
+      const puntaje = opcionDOM.querySelector(".opcion-puntaje").value;
+
+      if (!texto || puntaje === "" || !Number.isFinite(Number(puntaje))) {
+        alert("Completa todas las opciones y sus puntajes.");
+        return;
+      }
+
+      opciones.push({
+        opcion: texto,
+        puntaje: Number(puntaje)
+      });
+    }
+
+    if (!pregunta || opciones.length < 2) {
+      alert("Cada pregunta necesita texto y al menos dos opciones.");
+      return;
+    }
+
+    preguntas.push({
+      pregunta,
+      opciones
+    });
+  }
+
+  if (!preguntas.length) {
+    alert("Debes crear al menos una pregunta.");
+    return;
+  }
+
+  const usuarios = getDBUsers();
+
+  const destinatarios = usuarios
+  .filter((u) => {
+    const rol = normalizarTexto(u.role);
+
+    const esOperario = ["operario", "operario_horas"].includes(rol);
+
+    const esAdministrativo = [
+      "contabilidad",
+      "redes",
+      "proyectos"
+    ].includes(rol);
+
+    return audiencia === "operarios"
+      ? esOperario
+      : esAdministrativo;
+  })
+
+    .map((u) => ({
+      empleadoId: String(u.phone),
+      empleadoNombre: u.name,
+      empleadoCargo: u.cargo || "",
+      etiqueta: audiencia
+    }))
+    .filter((u) => u.empleadoId);
+
+  if (!destinatarios.length) {
+    alert("No hay empleados registrados para esta audiencia.");
+    return;
+  }
+
+  const boton = document.querySelector(
+    '#formulario-capacitacion button[onclick="guardarNuevaCapacitacion()"]'
+  );
+
+  if (boton) {
+    boton.disabled = true;
+    boton.textContent = "Guardando...";
+  }
+
+  try {
+    const respuesta = await fetch("/api/capacitaciones", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        accion: "crear",
+        capacitacion: {
+          titulo,
+          descripcion,
+          contenido,
+          audiencia,
+          fechaEvaluacion,
+          creadoPor: usuario.name || ""
+        },
+        destinatarios,
+        archivos: [],
+        preguntas
+      })
+    });
+
+    const resultado = await respuesta.json();
+
+    if (!respuesta.ok) {
+      throw new Error(
+        resultado.error || "No fue posible guardar la capacitación."
+      );
+    }
+
+    alert("¡Capacitación creada y asignada correctamente!");
+
+    await cargarModuloCapacitaciones();
+
+  } catch (error) {
+    console.error("Error guardando capacitación:", error);
+    alert(error.message || "Ocurrió un error al guardar.");
+    
+    if (boton) {
+      boton.disabled = false;
+      boton.textContent = "💾 Guardar capacitación";
+    }
+  }
+}
+
+
 function horaActualHHMM() {
   const ahora = new Date();
   return `${String(ahora.getHours()).padStart(2, "0")}:${String(ahora.getMinutes()).padStart(2, "0")}`;
@@ -857,16 +1792,40 @@ function verSubVistaAdmin(tipo) {
   if (tipo === "informes") renderAdminInformes(body);
   if (tipo === "backup") renderAdminBackup(body);
 }
+
 function renderAdminUsuarios(container) {
   const users = getDBUsers();
+
   container.innerHTML = `
     <h3>Crear Usuario</h3>
-    <form id="form-admin-crear-user" style="margin-bottom:18px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
+
+    <form id="form-admin-crear-user"
+      style="margin-bottom:18px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
+
       <div class="form-row">
-        <div class="form-group" style="flex:1;"><label>Número de Teléfono *</label><input type="tel" id="u-phone" required></div>
-        <div class="form-group" style="flex:1;"><label>PIN de Acceso (4 dígitos) *</label><input type="password" id="u-pin" maxlength="4" required></div>
+        <div class="form-group" style="flex:1;">
+          <label>Número de Teléfono *</label>
+          <input type="tel" id="u-phone" required>
+        </div>
+
+        <div class="form-group" style="flex:1;">
+          <label>PIN de Acceso (4 dígitos) *</label>
+          <input type="password" id="u-pin" maxlength="4" required>
+        </div>
       </div>
-      <div class="form-group"><label>Nombre Completo *</label><input type="text" id="u-name" required></div>
+
+      <div class="form-group">
+        <label>Nombre Completo *</label>
+        <input type="text" id="u-name" required>
+      </div>
+
+      <div class="form-group">
+        <label>Cargo del Empleado *</label>
+        <input type="text" id="u-cargo"
+          placeholder="Ejemplo: Operador de grúa"
+          required>
+      </div>
+
       <div class="form-row">
         <div class="form-group" style="flex:1;">
           <label>Rol de Usuario *</label>
@@ -876,76 +1835,200 @@ function renderAdminUsuarios(container) {
             <option value="proyectos">proyectos</option>
             <option value="contabilidad">contabilidad</option>
             <option value="redes">redes</option>
+            <option value="capacitaciones">Gestor de Capacitaciones</option>
             <option value="admin">admin</option>
           </select>
         </div>
-        <div class="form-group" style="flex:1;"><label>Salario Base ($)</label><input type="number" id="u-salary" value="1750905"></div>
+
+        <div class="form-group" style="flex:1;">
+          <label>Salario Base ($)</label>
+          <input type="number" id="u-salary" value="1750905">
+        </div>
       </div>
-      <button type="submit" class="btn-primary" style="background:#27ae60;">Guardar Usuario</button>
+
+      <button type="submit" class="btn-primary"
+        style="background:#27ae60;">
+        Guardar Usuario
+      </button>
     </form>
+
     <h3>Usuarios Creados (${users.length})</h3>
+
     <div class="stack">
       ${users.map((u, idx) => `
-        <div class="open-item-card" style="flex-direction:column; align-items:stretch; gap:8px;">
+        <div class="open-item-card"
+          style="flex-direction:column; align-items:stretch; gap:8px;">
+
           <div>
-            <strong>${u.name}</strong> · <span style="color:#040B5D; font-weight:700;">${u.role}</span><br>
-            <span class="muted">Tel: ${u.phone} | PIN: ${u.pin} | Salario: $${Number(u.salary || 0).toLocaleString("es-CO")}</span>
+            <strong>${u.name}</strong> ·
+            <span style="color:#040B5D; font-weight:700;">
+              ${u.role}
+            </span>
+            <br>
+
+            <span class="muted">
+              Cargo: ${u.cargo || "Pendiente por registrar"} |
+              Tel: ${u.phone} |
+              Salario: $${Number(u.salary || 0).toLocaleString("es-CO")}
+            </span>
           </div>
+
           <div style="display:flex; gap:8px;">
-            <button type="button" class="btn-secondary-small" style="flex:1;" onclick="editarUsuarioAdmin(${idx})">Editar</button>
-            <button type="button" class="btn-danger-small" style="flex:1;" onclick="eliminarUsuarioAdmin('${u.phone}')">Eliminar</button>
+            <button type="button" class="btn-secondary-small"
+              style="flex:1;"
+              onclick="editarUsuarioAdmin(${idx})">
+              Editar
+            </button>
+
+            <button type="button" class="btn-danger-small"
+              style="flex:1;"
+              onclick="eliminarUsuarioAdmin('${u.phone}')">
+              Eliminar
+            </button>
           </div>
         </div>
       `).join("")}
     </div>
   `;
-  document.getElementById("form-admin-crear-user").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const phone = document.getElementById("u-phone").value.trim();
-    const pin = document.getElementById("u-pin").value.trim();
-    const name = document.getElementById("u-name").value.trim();
-    const role = document.getElementById("u-role").value;
-    const salary = parseFloat(document.getElementById("u-salary").value) || 0;
-    if (!/^\d{4}$/.test(pin)) {
-      alert("El PIN debe tener exactamente 4 dígitos numéricos.");
-      return;
-    }
-    const currentUsers = getDBUsers();
-    if (currentUsers.some((u) => String(u.phone).trim() === phone)) {
-      alert("Ese número de teléfono ya existe.");
-      return;
-    }
-    currentUsers.push({ phone, pin, name, role, salary });
-    saveDBUsers(currentUsers);
-    alert("Usuario guardado en Usuarios Creados.");
-    renderAdminUsuarios(container);
-  });
+
+  document.getElementById("form-admin-crear-user")
+    .addEventListener("submit", (e) => {
+
+      e.preventDefault();
+
+      const phone = document.getElementById("u-phone").value.trim();
+      const pin = document.getElementById("u-pin").value.trim();
+      const name = document.getElementById("u-name").value.trim();
+      const cargo = document.getElementById("u-cargo").value.trim();
+      const role = document.getElementById("u-role").value;
+      const salary = parseFloat(
+        document.getElementById("u-salary").value
+      ) || 0;
+
+      if (!/^\d{4}$/.test(pin)) {
+        alert("El PIN debe tener exactamente 4 dígitos numéricos.");
+        return;
+      }
+
+      if (!cargo) {
+        alert("Debes registrar el cargo del empleado.");
+        return;
+      }
+
+      const currentUsers = getDBUsers();
+
+      if (currentUsers.some(
+        (u) => String(u.phone).trim() === phone
+      )) {
+        alert("Ese número de teléfono ya existe.");
+        return;
+      }
+
+      currentUsers.push({
+        phone,
+        pin,
+        name,
+        cargo,
+        role,
+        salary
+      });
+
+      saveDBUsers(currentUsers);
+
+      alert("Usuario guardado correctamente.");
+
+      renderAdminUsuarios(container);
+    });
 }
+
+
 function editarUsuarioAdmin(index) {
   const users = getDBUsers();
   const u = users[index];
+
   if (!u) return;
+
   const nuevoNombre = prompt("Nombre completo:", u.name);
   if (nuevoNombre === null) return;
+
   const nuevoTel = prompt("Número de teléfono:", u.phone);
   if (nuevoTel === null) return;
+
   const nuevoPin = prompt("PIN de 4 dígitos:", u.pin);
   if (nuevoPin === null) return;
-  const nuevoRol = prompt("Rol (operario, operario_horas, proyectos, contabilidad, redes, admin):", u.role);
+
+  const nuevoCargo = prompt("Cargo del empleado:", u.cargo || "");
+  if (nuevoCargo === null) return;
+
+  const nuevoRol = prompt(
+    "Rol (operario, operario_horas, proyectos, contabilidad, redes, capacitaciones, admin):",
+    u.role
+  );
   if (nuevoRol === null) return;
-  const nuevoSalario = prompt("Salario base:", String(u.salary || 0));
+
+  const nuevoSalario = prompt(
+    "Salario base:",
+    String(u.salary || 0)
+  );
   if (nuevoSalario === null) return;
+
+  if (!/^\d{4}$/.test(nuevoPin.trim())) {
+    alert("El PIN debe tener exactamente 4 dígitos numéricos.");
+    return;
+  }
+
+  if (!nuevoCargo.trim()) {
+    alert("Debes registrar el cargo del empleado.");
+    return;
+  }
+
+  const rolesPermitidos = [
+    "operario",
+    "operario_horas",
+    "proyectos",
+    "contabilidad",
+    "redes",
+    "capacitaciones",
+    "admin",
+    "administrador"
+  ];
+
+  const rolNormalizado = nuevoRol.trim().toLowerCase();
+
+  if (!rolesPermitidos.includes(rolNormalizado)) {
+    alert("El rol ingresado no es válido.");
+    return;
+  }
+
+  const telefonoNormalizado = nuevoTel.trim();
+
+  if (users.some((usuario, i) =>
+    i !== index &&
+    String(usuario.phone).trim() === telefonoNormalizado
+  )) {
+    alert("Ese número de teléfono ya está registrado.");
+    return;
+  }
+
   users[index] = {
-    phone: nuevoTel.trim() || u.phone,
-    pin: /^\d{4}$/.test(nuevoPin.trim()) ? nuevoPin.trim() : u.pin,
-    name: nuevoNombre.trim() || u.name,
-    role: nuevoRol.trim() || u.role,
+    ...u,
+    phone: telefonoNormalizado,
+    pin: nuevoPin.trim(),
+    name: nuevoNombre.trim(),
+    cargo: nuevoCargo.trim(),
+    role: rolNormalizado,
     salary: Number(nuevoSalario) || 0
   };
+
   saveDBUsers(users);
-  alert("Usuario actualizado.");
-  renderAdminUsuarios(document.getElementById("subvista-admin-body"));
+
+  alert("Usuario actualizado correctamente.");
+
+  renderAdminUsuarios(
+    document.getElementById("subvista-admin-body")
+  );
 }
+
 function eliminarUsuarioAdmin(phone) {
   if (!confirm("¿Eliminar este usuario?")) return;
   const currentUsers = getDBUsers().filter((u) => String(u.phone) !== String(phone));
@@ -3125,4 +4208,3 @@ async function sincronizarJornadasDesdeNube(renderCallback) {
 async function sincronizarJornadasConNube(renderCallback) {
   await sincronizarJornadasDesdeNube(renderCallback);
 }
-
