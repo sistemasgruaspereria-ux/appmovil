@@ -1155,6 +1155,10 @@ function mostrarFormularioCapacitacion() {
 
       <label><strong>¿A quién va dirigida?</strong></label>
       <select id="cap-audiencia" class="form-control">
+       <option value="operarios">Operarios</option>
+       <option value="administrativos">Administrativos</option>
+       <option value="todos">Todos (Operarios y Administrativos)</option>
+      </select>
         <option value="operarios">Operarios</option>
         <option value="administrativos">Administrativos</option>
       </select>
@@ -1380,7 +1384,7 @@ async function guardarNuevaCapacitacion() {
 
   const usuarios = getDBUsers();
 
-  const destinatarios = usuarios
+const destinatarios = usuarios
   .filter((u) => {
     const rol = normalizarTexto(u.role);
 
@@ -1392,19 +1396,28 @@ async function guardarNuevaCapacitacion() {
       "proyectos"
     ].includes(rol);
 
-    return audiencia === "operarios"
-      ? esOperario
-      : esAdministrativo;
+    if (audiencia === "operarios") {
+      return esOperario;
+    }
+
+    if (audiencia === "administrativos") {
+      return esAdministrativo;
+    }
+
+    if (audiencia === "todos") {
+      return esOperario || esAdministrativo;
+    }
+
+    return false;
   })
-
-    .map((u) => ({
-      empleadoId: String(u.phone),
-      empleadoNombre: u.name,
-      empleadoCargo: u.cargo || "",
-      etiqueta: audiencia
-    }))
-    .filter((u) => u.empleadoId);
-
+  .map((u) => ({
+    empleadoId: String(u.phone),
+    empleadoNombre: u.name,
+    empleadoCargo: u.cargo || "",
+    etiqueta: audiencia
+  }))
+  .filter((u) => u.empleadoId);
+    
   if (!destinatarios.length) {
     alert("No hay empleados registrados para esta audiencia.");
     return;
@@ -4208,3 +4221,4 @@ async function sincronizarJornadasDesdeNube(renderCallback) {
 async function sincronizarJornadasConNube(renderCallback) {
   await sincronizarJornadasDesdeNube(renderCallback);
 }
+
