@@ -1207,15 +1207,29 @@ async function abrirCapacitacion(capacitacionId, destinatarioId) {
 
       pregunta.opciones.forEach((opcion) => {
         contenido += `
-          <label style="display:block;margin:10px 0;">
-            <input
-              type="radio"
-              name="pregunta-${escapar(pregunta.id)}"
-              value="${escapar(opcion.id)}"
-              required
-            >
-            ${escapar(opcion.opcion)}
-          </label>
+        <label style="
+           display:flex;
+           align-items:center;
+           gap:10px;
+           margin:12px 0;
+           cursor:pointer;
+           line-height:1.5;
+         ">
+           <input
+            type="radio"
+            name="pregunta-${escapar(pregunta.id)}"
+            value="${escapar(opcion.id)}"
+            required
+            style="
+             width:18px;
+             height:18px;
+             min-width:18px;
+             margin:0;
+             flex-shrink:0;
+           "
+         >
+         <span>${escapar(opcion.opcion)}</span>
+      </label>
         `;
       });
 
@@ -4435,6 +4449,7 @@ async function sincronizarJornadasDesdeNube(renderCallback) {
 async function sincronizarJornadasConNube(renderCallback) {
   await sincronizarJornadasDesdeNube(renderCallback);
 }
+
 
 
 
