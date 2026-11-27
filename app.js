@@ -1410,14 +1410,22 @@ const destinatarios = usuarios
 
     return false;
   })
-  .map((u) => ({
+  .map((u) => {
+  const rol = normalizarTexto(u.role);
+
+  const etiquetaEmpleado = ["operario", "operario_horas"].includes(rol)
+    ? "operarios"
+    : "administrativos";
+
+  return {
     empleadoId: String(u.phone),
     empleadoNombre: u.name,
     empleadoCargo: u.cargo || "",
-    etiqueta: audiencia
-  }))
+    etiqueta: etiquetaEmpleado
+  };
+})
   .filter((u) => u.empleadoId);
-    
+
   if (!destinatarios.length) {
     alert("No hay empleados registrados para esta audiencia.");
     return;
@@ -4221,5 +4229,6 @@ async function sincronizarJornadasDesdeNube(renderCallback) {
 async function sincronizarJornadasConNube(renderCallback) {
   await sincronizarJornadasDesdeNube(renderCallback);
 }
+
 
 
