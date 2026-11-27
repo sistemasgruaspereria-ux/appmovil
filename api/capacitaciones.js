@@ -137,7 +137,7 @@ export default async function handler(req, res) {
         if (
           !c.titulo ||
           !c.fechaEvaluacion ||
-          !["operarios", "administrativos"].includes(c.audiencia)
+          !["operarios", "administrativos", "todos"].includes(c.audiencia)
         ) {
           return res.status(400).json({
             error: "Faltan datos obligatorios de la capacitación",
